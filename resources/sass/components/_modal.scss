@@ -1,0 +1,70 @@
+@use '../abstracts/variables' as *;
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-16;
+    backdrop-filter: blur(2px);
+}
+
+.modal {
+    background: $bg-white;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    &--sm  { max-width: 420px; }
+    &--md  { max-width: 600px; }
+    &--lg  { max-width: 800px; }
+    &--xl  { max-width: 1000px; }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: $sp-20 $sp-24;
+        border-bottom: 1px solid $border;
+
+        h3 { font-size: 16px; font-weight: 600; }
+    }
+
+    &__body {
+        padding: $sp-24;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    &__footer {
+        display: flex;
+        gap: $sp-8;
+        justify-content: flex-end;
+        padding: $sp-16 $sp-24;
+        border-top: 1px solid $border;
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: $text-muted;
+        padding: $sp-4;
+        border-radius: $radius-sm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background $transition-fast;
+
+        &:hover { background: $bg-app; color: $text-main; }
+
+        svg { width: 20px; height: 20px; }
+    }
+}

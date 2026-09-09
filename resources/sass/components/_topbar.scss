@@ -1,0 +1,244 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.topbar {
+    height: $topbar-height;
+    background: $topbar-bg;
+    box-shadow: $topbar-shadow;
+    display: flex;
+    align-items: center;
+    gap: $sp-16;
+    padding: 0 $sp-24;
+    position: fixed;
+    top: 0;
+    left: $sidebar-width;
+    right: 0;
+    z-index: 100;
+    transition: left $transition-normal;
+
+    @include mobile {
+        left: 0;
+        padding: 0 $sp-16;
+    }
+
+    // ─── Bouton hamburger ────────────────────────────────────────────────────
+    &__toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: $text-muted;
+        padding: $sp-8;
+        border-radius: $radius-md;
+        display: flex;
+        transition: background $transition-fast;
+
+        &:hover { background: $bg-app; color: $text-main; }
+
+        svg { width: 22px; height: 22px; }
+    }
+
+    // ─── Breadcrumb ─────────────────────────────────────────────────────────
+    &__breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+        font-size: 13px;
+        color: $text-muted;
+
+        a { color: $text-muted; transition: color $transition-fast; &:hover { color: $primary; } }
+
+        .sep { opacity: 0.4; }
+        .current { color: $text-main; font-weight: 500; }
+
+        @include mobile { display: none; }
+    }
+
+    // ─── Recherche globale ───────────────────────────────────────────────────
+    &__search {
+        flex: 1;
+        max-width: 400px;
+        margin: 0 auto;
+        position: relative;
+
+        svg {
+            position: absolute;
+            left: $sp-12;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: $text-muted;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1.5px solid $border;
+            border-radius: $radius-xl;
+            font-size: 13px;
+            background: $bg-app;
+            color: $text-main;
+            outline: none;
+            transition: all $transition-fast;
+
+            &:focus {
+                border-color: $primary;
+                background: $bg-white;
+                box-shadow: 0 0 0 3px rgba(76,187,23,0.10);
+            }
+            &::placeholder { color: $text-muted; }
+        }
+
+        @include mobile { display: none; }
+    }
+
+    &__right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+    }
+
+    // ─── Raccourci POS ──────────────────────────────────────────────────────
+    &__pos-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: $radius-xl;
+        background: $primary-light;
+        color: $primary;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all $transition-fast;
+        white-space: nowrap;
+
+        svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        &:hover {
+            background: $primary;
+            color: #fff;
+        }
+
+        &--active {
+            background: $primary;
+            color: #fff;
+        }
+
+        @include mobile { span { display: none; } padding: $sp-8; border-radius: $radius-md; }
+    }
+
+    // ─── Cloche notifications ────────────────────────────────────────────────
+    &__notification {
+        position: relative;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: $sp-8;
+        border-radius: $radius-md;
+        color: $text-muted;
+        transition: background $transition-fast;
+        display: flex;
+
+        &:hover { background: $bg-app; color: $text-main; }
+
+        svg { width: 22px; height: 22px; }
+
+        &-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: $danger;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 99px;
+            min-width: 16px;
+            text-align: center;
+            border: 2px solid $bg-white;
+        }
+    }
+
+    // ─── Menu profil ────────────────────────────────────────────────────────
+    &__profile {
+        position: relative;
+
+        &-btn {
+            display: flex;
+            align-items: center;
+            gap: $sp-8;
+            padding: $sp-4 $sp-8;
+            border-radius: $radius-md;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: background $transition-fast;
+
+            &:hover { background: $bg-app; }
+        }
+
+        &-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: $primary-light;
+            border: 2px solid $primary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: $primary;
+            overflow: hidden;
+            flex-shrink: 0;
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        &-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: $text-main;
+            @include mobile { display: none; }
+        }
+
+        &-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: $bg-white;
+            border: 1px solid $border;
+            border-radius: $radius-md;
+            box-shadow: $shadow-lg;
+            min-width: 200px;
+            z-index: 300;
+            overflow: hidden;
+
+            &-header {
+                padding: $sp-12 $sp-16;
+                border-bottom: 1px solid $border;
+
+                p { font-weight: 600; font-size: 13px; }
+                span { color: $text-muted; font-size: 12px; }
+            }
+
+            &-item {
+                display: flex;
+                align-items: center;
+                gap: $sp-8;
+                padding: $sp-10 $sp-16;
+                font-size: 13.5px;
+                color: $text-main;
+                transition: background $transition-fast;
+                cursor: pointer;
+
+                &:hover { background: $bg-app; }
+
+                svg { width: 16px; height: 16px; color: $text-muted; }
+
+                &--danger { color: $danger; svg { color: $danger; } }
+            }
+        }
+    }
+}

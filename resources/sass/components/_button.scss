@@ -1,0 +1,79 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.btn {
+    @include btn-base;
+
+    &--primary {
+        background: $primary;
+        color: #fff;
+        border-color: $primary;
+        &:hover { background: $primary-dark; border-color: $primary-dark; }
+    }
+
+    &--secondary {
+        background: $secondary;
+        color: #fff;
+        border-color: $secondary;
+        &:hover { background: #0f172a; }
+    }
+
+    &--danger {
+        background: $danger;
+        color: #fff;
+        border-color: $danger;
+        &:hover { background: #dc2626; }
+    }
+
+    &--warning {
+        background: $warning;
+        color: #fff;
+        border-color: $warning;
+        &:hover { background: #d97706; }
+    }
+
+    &--outline {
+        background: transparent;
+        color: $primary;
+        border-color: $primary;
+        &:hover { background: $primary-light; }
+    }
+
+    &--ghost {
+        background: transparent;
+        color: $text-muted;
+        border-color: transparent;
+        &:hover { background: $bg-app; color: $text-main; }
+    }
+
+    &--light {
+        background: $bg-app;
+        color: $text-main;
+        border-color: $border;
+        &:hover { background: #eef2f6; }
+    }
+
+    // Tailles
+    &--sm {
+        padding: 5px $sp-12;
+        font-size: 12px;
+        gap: $sp-4;
+    }
+
+    &--lg {
+        padding: $sp-12 $sp-24;
+        font-size: 15px;
+    }
+
+    // Icône seule
+    &--icon {
+        padding: $sp-8;
+        gap: 0;
+    }
+
+    svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+}

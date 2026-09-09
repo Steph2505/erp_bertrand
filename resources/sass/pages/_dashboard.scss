@@ -1,0 +1,145 @@
+@use '../abstracts/variables' as *;
+
+// ── Stat card profit color ──────────────────────────────────────────
+.stat-card__value {
+    &--profit   { color: $success; }
+    &--loss     { color: $danger; }
+}
+
+// ── Dashboard table header ──────────────────────────────────────────
+.table-wrapper__title {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+// ── Dashboard link styles ───────────────────────────────────────────
+.dashboard__alerts-link {
+    font-size: 12px;
+    color: $primary;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+}
+
+// ── Dashboard empty state ───────────────────────────────────────────
+.dashboard__empty {
+    padding: $sp-24;
+    text-align: center;
+    color: $text-muted;
+    font-size: 13px;
+}
+
+// ── Dashboard table cell helpers ────────────────────────────────────
+.cell-reference {
+    color: $primary;
+    font-weight: 600;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+}
+
+.cell-rank {
+    color: $text-muted;
+    font-weight: 600;
+}
+
+.cell-empty {
+    text-align: center;
+    padding: $sp-24;
+    color: $text-muted;
+}
+
+.dashboard {
+    &__charts {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: $sp-20;
+        margin-top: $sp-20;
+
+        @media (max-width: 1024px) { grid-template-columns: 1fr; }
+    }
+
+    &__tables {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $sp-20;
+        margin-top: $sp-20;
+
+        @media (max-width: 900px) { grid-template-columns: 1fr; }
+    }
+
+    &__chart-card {
+        background: $bg-white;
+        border-radius: $radius-lg;
+        border: 1px solid $border;
+        padding: $sp-20;
+
+        h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: $sp-16;
+        }
+
+        canvas { max-height: 280px; }
+    }
+
+    &__alerts {
+        background: $bg-white;
+        border-radius: $radius-lg;
+        border: 1px solid $border;
+        overflow: hidden;
+
+        &-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: $sp-16 $sp-20;
+            border-bottom: 1px solid $border;
+
+            h3 { font-size: 15px; font-weight: 600; }
+        }
+
+        &-item {
+            display: flex;
+            align-items: center;
+            gap: $sp-12;
+            padding: $sp-12 $sp-20;
+            border-bottom: 1px solid $border;
+            font-size: 13.5px;
+
+            &:last-child { border-bottom: none; }
+
+            svg { width: 18px; height: 18px; color: $warning; flex-shrink: 0; }
+
+            &-name { flex: 1; font-weight: 500; }
+            &-stock { color: $danger; font-weight: 600; font-size: 13px; }
+        }
+    }
+}
+
+.filter-tabs {
+    display: flex;
+    gap: $sp-4;
+    background: $bg-app;
+    padding: 4px;
+    border-radius: $radius-md;
+    border: 1px solid $border;
+
+    &__btn {
+        padding: 5px $sp-12;
+        border-radius: $radius-sm;
+        font-size: 12.5px;
+        font-weight: 500;
+        cursor: pointer;
+        background: none;
+        border: none;
+        color: $text-muted;
+        transition: all $transition-fast;
+
+        &--active, &:hover {
+            background: $bg-white;
+            color: $text-main;
+            box-shadow: $shadow-sm;
+        }
+        &--active { font-weight: 600; color: $primary; }
+    }
+}

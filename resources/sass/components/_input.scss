@@ -1,0 +1,130 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    margin-bottom: $sp-16;
+
+    label {
+        font-size: 13px;
+        font-weight: 500;
+        color: $text-main;
+
+        .required { color: $danger; margin-left: 2px; }
+    }
+
+    .form-hint {
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    .form-error {
+        font-size: 12px;
+        color: $danger;
+        display: flex;
+        align-items: center;
+        gap: $sp-4;
+    }
+}
+
+.form-control {
+    @include input-base;
+
+    &--error { border-color: $danger !important; }
+}
+
+.form-select {
+    @include input-base;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748B'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right $sp-12 center;
+    background-size: 16px;
+    padding-right: 36px;
+}
+
+.form-textarea {
+    @include input-base;
+    resize: vertical;
+    min-height: 90px;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    cursor: pointer;
+    font-size: 14px;
+    color: $text-main;
+
+    input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: $primary;
+        cursor: pointer;
+    }
+}
+
+// ─── Input avec icône ────────────────────────────────────────────────────────
+.input-group {
+    position: relative;
+
+    .input-icon {
+        position: absolute;
+        left: $sp-12;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $text-muted;
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+    }
+
+    .form-control {
+        padding-left: 36px;
+    }
+
+    // Bouton icône (toggle password) — override pointer-events:none avec même scope
+    .input-icon--btn {
+        pointer-events: auto;
+        cursor: pointer;
+        background: none;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        color: $text-muted;
+        border-radius: $radius-sm;
+        transition: color $transition-fast;
+        width: auto;
+        height: auto;
+
+        &:hover { color: $text-main; }
+
+        svg { width: 18px; height: 18px; pointer-events: none; }
+    }
+
+    &--right {
+        .input-icon {
+            left: auto;
+            right: $sp-12;
+        }
+        .form-control { padding-left: $sp-12; padding-right: 40px; }
+    }
+}
+
+// ─── Grille de formulaire ────────────────────────────────────────────────────
+.form-grid {
+    display: grid;
+    gap: $sp-16;
+
+    &--2 { grid-template-columns: repeat(2, 1fr); }
+    &--3 { grid-template-columns: repeat(3, 1fr); }
+
+    @include mobile {
+        grid-template-columns: 1fr;
+    }
+}

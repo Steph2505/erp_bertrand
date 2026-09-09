@@ -1,0 +1,421 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ============================================================
+// _reports.scss — Styles partagés pour tous les rapports
+// ============================================================
+
+// ─── Formulaire de filtre ────────────────────────────────────
+.report-filter {
+  padding: $sp-16 $sp-20;
+  margin-bottom: $sp-16;
+
+  &__row {
+    display: flex;
+    gap: $sp-12;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    @include mobile {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .form-group {
+    margin: 0;
+
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+// ─── Grille de statistiques (stat-grid) ─────────────────────
+// stat-grid est déjà défini globalement mais on ajoute le mb
+.report-stats {
+  margin-bottom: $sp-20;
+
+  &--lg {
+    margin-bottom: $sp-24;
+  }
+}
+
+// ─── Valeurs colorées dans stat-card ────────────────────────
+.stat-card__value {
+  &--success { color: $success; }
+  &--danger  { color: $danger; }
+  &--info    { color: $info; }
+  &--warning { color: $warning; }
+  &--purple  { color: #7C3AED; }
+}
+
+// icône violette (dépenses)
+.stat-card__icon--purple {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
+}
+
+// ─── Header de table-wrapper ─────────────────────────────────
+.report-count {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+// ─── Cellules de tableau partagées ──────────────────────────
+.report-table {
+  // Rang/index (#1, #2…)
+  &__rank {
+    color: $text-muted;
+    font-weight: 700;
+  }
+
+  // Cellules date / texte secondaire
+  &__date {
+    font-size: 12px;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: $text-muted;
+  }
+
+  &__meta-sm {
+    font-size: 11px;
+    color: #94A3B8;
+  }
+
+  // Cellule montant positif (CA, succès)
+  &__amount-success {
+    font-weight: 600;
+    color: $success;
+    text-align: right;
+  }
+
+  // Cellule montant négatif (achat, dépense)
+  &__amount-danger {
+    font-weight: 600;
+    color: $danger;
+    text-align: right;
+  }
+
+  // Cellule montant bleu (achats)
+  &__amount-info {
+    font-weight: 600;
+    color: $info;
+    text-align: right;
+  }
+
+  // Cellule montant neutre droite
+  &__amount {
+    font-weight: 600;
+    text-align: right;
+  }
+
+  // Cellule description large
+  &__desc {
+    max-width: 300px;
+    font-size: 13px;
+  }
+
+  // Lien interne coloré (vert primaire)
+  &__link {
+    color: $primary;
+    font-weight: 500;
+
+    &:hover {
+      color: $primary-dark;
+      text-decoration: underline;
+    }
+  }
+
+  // Cellule vide (aucun résultat)
+  &__empty {
+    text-align: center;
+    padding: $sp-40;
+    color: $text-muted;
+  }
+
+  &__empty--sm {
+    text-align: center;
+    padding: $sp-24;
+    color: $text-muted;
+  }
+}
+
+// (th-right, th-success, th-danger, th-info, th-warning sont définis dans _table.scss)
+
+// ─── Ligne de total / tfoot ──────────────────────────────────
+.tfoot-total {
+  border-top: 2px solid $border;
+  background: $bg-app;
+  font-weight: 700;
+}
+
+// Ligne de sous-section dans un tableau (ex: expenses)
+.report-section-row {
+  background: $bg-app;
+
+  td {
+    font-weight: 700;
+    font-size: 11px;
+    color: $text-muted;
+    text-transform: uppercase;
+    padding: $sp-8 $sp-16;
+  }
+
+  &--blue {
+    background: #EFF6FF;
+    td { color: #1D4ED8; }
+  }
+}
+
+// Indentation des lignes enfants
+.report-indent {
+  padding-left: 28px !important;
+}
+
+// ─── Barre de progression (mini-progress) ────────────────────
+.mini-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+
+  &__bar {
+    width: 50px;
+    height: 6px;
+    background: $border;
+    border-radius: $radius-sm;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    &--lg {
+      width: 60px;
+    }
+  }
+
+  &__fill {
+    height: 100%;
+    background: $primary;
+    border-radius: $radius-sm;
+    // La largeur est dynamique (PHP), toujours en style inline
+  }
+
+  &__label {
+    font-size: 12px;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+}
+
+// ─── Grilles de mise en page spécifiques rapports ────────────
+.report-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $sp-20;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-grid-chart {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: $sp-20;
+  align-items: start;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-grid-chart--wide {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: $sp-20;
+  align-items: start;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── Canvas / graphique ──────────────────────────────────────
+.report-chart {
+  padding: $sp-20;
+
+  &__title {
+    display: block;
+    margin-bottom: $sp-16;
+    font-weight: 600;
+  }
+}
+
+// ─── Tableau avec margin top ─────────────────────────────────
+.mt-report {
+  margin-top: $sp-20;
+}
+
+// ─── Podium (trending) ───────────────────────────────────────
+.podium {
+  &__item {
+    padding: $sp-12 $sp-16;
+    border-bottom: 1px solid #F1F5F9;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+
+    &--1 { background: #F59E0B; }
+    &--2 { background: #94A3B8; }
+    &--3 { background: #CD7F32; }
+    &--other { background: $border; color: $text-muted; }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 13px;
+    @include truncate;
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: $text-muted;
+  }
+
+  &__value {
+    font-weight: 700;
+    color: $success;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+// ─── En-tête table-wrapper spécial (liens colorés) ───────────
+.report-header-success { color: $success; }
+.report-header-info    { color: $info; }
+
+// ─── Variance de caisse (POS) ────────────────────────────────
+// La couleur est dynamique (PHP), on garde l'inline pour la couleur
+// mais on ajoute une classe pour le font-weight
+.variance-value {
+  font-weight: 600;
+}
+
+// ─── Cellules jours restants (expiry) ────────────────────────
+.expiry-danger  { color: $danger; font-weight: 700; }
+.expiry-warning { color: $warning; }
+.expiry-ok      { color: $success; }
+
+// ─── Entête select inline (purchase-sale) ────────────────────
+.report-year-form {
+  display: flex;
+  gap: $sp-8;
+
+  .form-select {
+    width: auto;
+  }
+}
+
+// ─── Formulaire de filtre dans page-header__actions ──────────
+// (pour purchase-sale qui met le select dans les actions)
+.page-header__actions {
+  .report-year-form {
+    align-items: center;
+  }
+}
+
+// ─── Message vide étendu (activity log) ──────────────────────
+.report-empty-extended {
+  text-align: center;
+  padding: 60px $sp-16;
+  color: $text-muted;
+
+  &__title {
+    margin-bottom: $sp-8;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-main;
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: $text-muted;
+  }
+}
+
+// ─── Classes couleurs pour rapport dépenses ──────────────────
+// (extraites du bloc <style> inline de expenses.blade.php)
+.c-exp  { color: $danger; }
+.c-pur  { color: $info; }
+.c-tot  { color: #7C3AED; }
+.c-dim  { color: #CBD5E1; }
+.fw-600 { font-weight: 600; }
+
+// ─── Rapport dépenses — layout graphique + répartition ───────
+.expenses-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: $sp-20;
+  align-items: start;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── Responsif tableaux ──────────────────────────────────────
+@include mobile {
+  .report-grid-2,
+  .report-grid-chart,
+  .report-grid-chart--wide,
+  .expenses-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    min-width: 500px;
+  }
+
+  .report-filter__row {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

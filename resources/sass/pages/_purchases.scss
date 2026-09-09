@@ -1,0 +1,812 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Layout principal (create / edit) ────────────────────────────────────────
+.purchase-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $sp-20;
+    align-items: start;
+
+    @include tablet {
+        grid-template-columns: 1fr;
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-16;
+    }
+
+    &__sidebar {
+        position: sticky;
+        top: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-12;
+
+        @include tablet {
+            position: static;
+        }
+    }
+}
+
+// ─── Show layout (left + right 300px) ────────────────────────────────────────
+.purchase-show-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: $sp-20;
+    align-items: start;
+
+    @include tablet {
+        grid-template-columns: 1fr;
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-16;
+    }
+
+    &__sidebar {
+        position: sticky;
+        top: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-12;
+
+        @include tablet {
+            position: static;
+        }
+    }
+}
+
+// ─── Carte de formulaire ──────────────────────────────────────────────────────
+.purchase-card {
+    padding: $sp-20;
+}
+
+.purchase-card--lg {
+    padding: $sp-24;
+}
+
+// ─── Récapitulatif (sidebar) ──────────────────────────────────────────────────
+.purchase-summary {
+    &__title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: $sp-16;
+    }
+
+    &__title--sm {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        color: $text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: $sp-20;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+    }
+
+    &__row--total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    &__row--total-sm {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    &__divider {
+        height: 1px;
+        background: $border;
+    }
+
+    &__divider--light {
+        height: 1px;
+        background: #f1f5f9;
+    }
+
+    &__label {
+        color: $text-muted;
+    }
+
+    &__total-value {
+        color: $info;
+    }
+
+    &__paid-value {
+        color: #16a34a;
+    }
+
+    &__due-row {
+        display: flex;
+        justify-content: space-between;
+        padding: $sp-8 10px;
+        background: #fef2f2;
+        border-radius: $radius-sm;
+    }
+
+    &__due-label {
+        color: $danger;
+        font-weight: 600;
+    }
+
+    &__due-value {
+        color: $danger;
+    }
+
+    &__returned-value {
+        color: $danger;
+    }
+
+    &__note {
+        margin-bottom: $sp-16;
+    }
+
+    &__cta {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+// ─── Tableau articles (create / edit) ────────────────────────────────────────
+.purchase-items {
+    overflow: visible;
+
+    &__count {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    // Colonne produit
+    &__col-product {
+        min-width: 220px;
+    }
+
+    // Colonne quantité
+    &__col-qty {
+        width: 100px;
+        text-align: center;
+    }
+
+    // Colonne prix unit.
+    &__col-price {
+        width: 160px;
+    }
+
+    // Colonne total
+    &__col-total {
+        width: 130px;
+        text-align: right;
+    }
+
+    // Colonne action (supprimer)
+    &__col-action {
+        width: 36px;
+    }
+
+    // Cellule quantité
+    &__qty-input {
+        width: 70px;
+        text-align: center;
+        padding: 5px 6px;
+        border: 1.5px solid $border;
+        border-radius: $radius-sm;
+        font-size: 13px;
+    }
+
+    // Cellule prix
+    &__price-input {
+        width: 140px;
+        padding: 5px $sp-8;
+        border: 1.5px solid $border;
+        border-radius: $radius-sm;
+        font-size: 13px;
+    }
+
+    // Champ produit dans ligne
+    &__product-input {
+        font-size: 13px;
+    }
+
+    // Cellule total (texte)
+    &__line-total {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    // Ligne vide
+    &__empty-row {
+        text-align: center;
+        padding: 40px;
+        color: #94A3B8;
+    }
+
+    // Cellule de position relative (pour dropdown)
+    &__product-cell {
+        position: relative;
+    }
+
+    // Icône dans bouton ajouter ligne
+    &__add-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+// ─── Dropdown autocomplete (partagé) ─────────────────────────────────────────
+.autocomplete-dropdown {
+    position: absolute;
+    z-index: 9999;
+    background: $bg-white;
+    border: 1.5px solid $border;
+    border-radius: $radius-md;
+    box-shadow: $shadow-md;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    top: calc(100% + 4px);
+
+    &--wide {
+        max-height: 240px;
+        min-width: 260px;
+        left: 0;
+    }
+
+    &--tall {
+        max-height: 260px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+    }
+
+    &__empty {
+        padding: 12px 14px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    &__empty--lg {
+        padding: 14px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    &__item {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    &__item--product {
+        padding: 9px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    &__item--separator {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    &__item-name {
+        font-weight: 500;
+    }
+
+    &__item-stock {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-left: $sp-8;
+        flex-shrink: 0;
+    }
+
+    &__item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__item-ref {
+        font-weight: 600;
+    }
+
+    &__item-total {
+        color: $info;
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    &__item-meta {
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+
+    &__item-date {
+        margin-left: $sp-8;
+    }
+}
+
+// ─── Wrapper relatif pour autocomplete ───────────────────────────────────────
+.autocomplete-wrap {
+    position: relative;
+}
+
+// ─── Filtres de la liste achats ───────────────────────────────────────────────
+.purchase-filters {
+    padding: $sp-16 $sp-20;
+    margin-bottom: $sp-16;
+    overflow: visible;
+
+    &__grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $sp-12;
+        align-items: flex-end;
+    }
+
+    &__group {
+        flex: 1;
+        min-width: 180px;
+        margin-bottom: 0;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+        align-items: flex-end;
+
+        @include mobile {
+            width: 100%;
+            flex-direction: column;
+        }
+    }
+
+    &__submit {
+        flex: 1;
+    }
+}
+
+// ─── Tableau index ────────────────────────────────────────────────────────────
+.purchase-index {
+    &__ref-link {
+        color: $info;
+        font-weight: 600;
+    }
+
+    &__th-actions {
+        text-align: right;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: 40px;
+        color: $text-muted;
+    }
+
+    &__confirm-form {
+        display: inline;
+    }
+}
+
+// ─── Modal paiement (index) ───────────────────────────────────────────────────
+.pay-modal {
+    &__info {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: $sp-16;
+    }
+
+    &__due {
+        color: $danger;
+    }
+
+    &__checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: #f8fafc;
+        border: 1.5px solid $border;
+        border-radius: $radius-md;
+        cursor: pointer;
+        margin-bottom: 14px;
+
+        &--active {
+            border-color: $primary;
+            background: #f0fdf4;
+        }
+    }
+
+    &__checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: $primary;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    &__checkbox-title {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    &__checkbox-sub {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    &__amount-input {
+        font-size: 20px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    &__footer {
+        padding: 0;
+        border: none;
+        margin-top: $sp-16;
+        display: flex;
+        gap: $sp-8;
+        justify-content: flex-end;
+    }
+
+    &__submit {
+        min-width: 140px;
+    }
+
+    &__close-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: 20px;
+        line-height: 1;
+    }
+}
+
+// ─── Boutons d'action spécifiques ────────────────────────────────────────────
+.btn--confirm {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.btn--confirm-filled {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.btn--pay-filled {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn--return {
+    color: $danger;
+    border-color: #fca5a5;
+}
+
+.btn--full {
+    width: 100%;
+    justify-content: center;
+}
+
+// ─── Page show — informations sidebar ────────────────────────────────────────
+.purchase-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &__label {
+        color: $text-muted;
+    }
+
+    &__total {
+        color: $info;
+        font-size: 15px;
+    }
+
+    &__paid {
+        color: #16a34a;
+    }
+}
+
+// ─── Page show — paiements table ─────────────────────────────────────────────
+.payments-table {
+    margin-top: 4px;
+
+    &__date {
+        font-size: 12px;
+    }
+
+    &__amount {
+        color: $danger;
+    }
+
+    &__account {
+        font-size: 12px;
+        color: $text-muted;
+    }
+}
+
+// ─── Page show — retours table ────────────────────────────────────────────────
+.returns-table {
+    &__header-title {
+        color: $danger;
+    }
+
+    &__count {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__ref {
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__date {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__amount {
+        text-align: right;
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__reason {
+        font-size: 13px;
+        color: $text-muted;
+    }
+}
+
+// ─── Page returns index ───────────────────────────────────────────────────────
+.purchase-returns {
+    &__ref {
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__purchase-link {
+        color: $info;
+        font-weight: 600;
+    }
+
+    &__date {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__amount {
+        text-align: right;
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__th-amount {
+        text-align: right;
+    }
+
+    &__reason {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__creator {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: 40px;
+        color: $text-muted;
+    }
+}
+
+// ─── Page return-create ───────────────────────────────────────────────────────
+.purchase-return-create {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: $sp-20;
+        align-items: start;
+
+        @include tablet {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__sidebar {
+        position: sticky;
+        top: 80px;
+
+        @include tablet {
+            position: static;
+        }
+    }
+
+    &__selected-recap {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: $radius-md;
+        padding: 14px;
+        margin-bottom: $sp-20;
+        font-size: 13px;
+    }
+
+    &__recap-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__recap-supplier {
+        color: #64748b;
+        margin-left: $sp-8;
+    }
+
+    &__recap-total {
+        color: $danger;
+        font-size: 15px;
+    }
+
+    &__amount-error {
+        color: $danger;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+    }
+}
+
+// ─── Récap sidebar return-create ─────────────────────────────────────────────
+.return-summary {
+    &__empty {
+        color: #94A3B8;
+        font-size: 13px;
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &__row--returned {
+        display: flex;
+        justify-content: space-between;
+        color: $danger;
+    }
+
+    &__row--balance {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    &__label {
+        color: #64748b;
+    }
+
+    &__divider {
+        height: 1px;
+        background: $border;
+    }
+}
+
+// ─── Tableau show — pied de tableau ──────────────────────────────────────────
+.data-table {
+    tfoot td {
+        &.tfoot-label {
+            text-align: right;
+            font-weight: 600;
+            padding: 12px $sp-16;
+        }
+
+        &.tfoot-total {
+            text-align: right;
+            font-weight: 700;
+            font-size: 15px;
+            color: $info;
+            padding: 12px $sp-16;
+        }
+    }
+}
+
+// ─── Show — article produit ───────────────────────────────────────────────────
+.purchase-show {
+    &__item-name {
+        font-weight: 500;
+    }
+
+    &__item-qty {
+        text-align: center;
+    }
+
+    &__item-subtotal {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    &__th-qty {
+        text-align: center;
+    }
+
+    &__th-subtotal {
+        text-align: right;
+    }
+}
+
+// ─── Modal show — footer ──────────────────────────────────────────────────────
+.modal-actions {
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+    margin-top: $sp-8;
+}
+
+// ─── Alertes dans modal ───────────────────────────────────────────────────────
+.modal-alert {
+    margin-bottom: 12px;
+}
+
+// ─── Responsive tables ────────────────────────────────────────────────────────
+@include mobile {
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .purchase-items {
+        &__col-qty   { width: auto; }
+        &__col-price { width: auto; }
+        &__col-total { width: auto; }
+    }
+}
+
+@include tablet {
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}

@@ -1,0 +1,174 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Filtre par année ────────────────────────────────────────────────────────
+.account-year-filter {
+    display: flex;
+    gap: $sp-8;
+    align-items: center;
+
+    .form-select {
+        width: auto;
+    }
+}
+
+// ─── Grille de stat-cards (compte bancaire) ───────────────────────────────────
+.account-stats {
+    margin-bottom: $sp-24;
+}
+
+// ─── Layout principal (tableau + fiche) ───────────────────────────────────────
+.account-show-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: $sp-20;
+    align-items: start;
+
+    @include tablet {
+        grid-template-columns: 1fr;
+    }
+}
+
+// ─── Cellules de tableau ──────────────────────────────────────────────────────
+.account-table {
+    &__type {
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    &__account {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__amount-in {
+        text-align: right;
+        font-weight: 600;
+        color: $success;
+    }
+
+    &__amount-out {
+        text-align: right;
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__amount-neutral {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    &__amount-muted {
+        text-align: right;
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    &__net-positive {
+        text-align: right;
+        font-weight: 700;
+        color: $success;
+    }
+
+    &__net-negative {
+        text-align: right;
+        font-weight: 700;
+        color: $danger;
+    }
+
+    &__actions-right {
+        text-align: right;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// (th-success, th-danger, th-info, th-warning sont définis dans _table.scss)
+
+// ─── Note / légende en bas de page ───────────────────────────────────────────
+.account-note {
+    margin-top: $sp-16;
+    padding: $sp-16 $sp-20;
+    background: $bg-app;
+    border-radius: $radius-md;
+    border: 1px solid $border;
+    font-size: 13px;
+    color: $text-muted;
+}
+
+// ─── Ligne de total/pied ─────────────────────────────────────────────────────
+.account-tfoot {
+    border-top: 2px solid $border;
+    background: $bg-app;
+    font-weight: 700;
+}
+
+// ─── Fiche compte (sidebar show) ─────────────────────────────────────────────
+.account-card {
+    padding: $sp-20;
+
+    &__title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        color: $text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        gap: $sp-8;
+    }
+
+    &__label {
+        color: $text-muted;
+    }
+
+    &__balance {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    &__balance--positive { color: $success; }
+    &__balance--negative { color: $danger; }
+}
+
+// (modal-footer-std défini dans _global.scss)
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@include mobile {
+    .account-show-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        min-width: 600px;
+    }
+
+    .account-year-filter {
+        flex-direction: column;
+        align-items: stretch;
+
+        .form-select {
+            width: 100%;
+        }
+    }
+}

@@ -1,0 +1,151 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Filtre (index dépenses) ──────────────────────────────────────────────────
+.expense-filter {
+    padding: $sp-16 $sp-20;
+    margin-bottom: $sp-16;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: $sp-12;
+        align-items: flex-end;
+
+        @include tablet {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__group {
+        margin-bottom: 0;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+
+        @include mobile {
+            flex-direction: column;
+        }
+    }
+
+    &__submit {
+        flex: 1;
+    }
+}
+
+// ─── Compteur / sous-titre ───────────────────────────────────────────────────
+.expense-count {
+    font-size: 13px;
+    color: $text-muted;
+}
+
+// ─── Cellules de tableau ──────────────────────────────────────────────────────
+.expense-table {
+    &__ref {
+        font-weight: 600;
+        color: $text-muted;
+        font-size: 12px;
+    }
+
+    &__date {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__amount {
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__actions-right {
+        text-align: right;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// ─── Page vide (module en construction) ──────────────────────────────────────
+.module-placeholder {
+    text-align: center;
+    padding: 60px $sp-24;
+
+    svg {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto $sp-16;
+        display: block;
+        color: $text-muted;
+    }
+
+    h3 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: $sp-8;
+    }
+
+    p {
+        color: $text-muted;
+        max-width: 400px;
+        margin: 0 auto;
+        font-size: 14px;
+    }
+}
+
+// ─── Modal dépense ────────────────────────────────────────────────────────────
+.expense-modal {
+    &__footer {
+        padding: 0;
+        border: none;
+        margin-top: $sp-8;
+        display: flex;
+        gap: $sp-8;
+        justify-content: flex-end;
+    }
+
+    &__close-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: 20px;
+        line-height: 1;
+    }
+}
+
+// ─── Catégories de dépenses ───────────────────────────────────────────────────
+.expense-cat {
+    &__count {
+        text-align: center;
+    }
+
+    &__actions {
+        justify-content: flex-end;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@include mobile {
+    .expense-filter__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}

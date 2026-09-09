@@ -1,0 +1,328 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Filtre index devis ───────────────────────────────────────────────────────
+.quotation-filter {
+    padding: $sp-16 $sp-20;
+    margin-bottom: $sp-16;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr auto;
+        gap: $sp-12;
+        align-items: flex-end;
+
+        @include tablet {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__group {
+        margin-bottom: 0;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+
+        @include mobile {
+            flex-direction: column;
+        }
+    }
+}
+
+// ─── Cellules tableau index ───────────────────────────────────────────────────
+.quotation-table {
+    &__ref {
+        font-weight: 600;
+        color: $info;
+    }
+
+    &__date {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__expiry-ok {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__expiry-past {
+        font-size: 13px;
+        color: $danger;
+    }
+
+    &__actions-right {
+        text-align: right;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// ─── Layout show / create ─────────────────────────────────────────────────────
+.quotation-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $sp-20;
+    align-items: start;
+
+    @include tablet {
+        grid-template-columns: 1fr;
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-16;
+    }
+
+    &__sidebar {
+        position: sticky;
+        top: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-12;
+
+        @include tablet {
+            position: static;
+        }
+    }
+}
+
+// ─── Bloc parties (client / dates) ───────────────────────────────────────────
+.quotation-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $sp-20;
+    margin-bottom: $sp-20;
+
+    @include mobile {
+        grid-template-columns: 1fr;
+        gap: $sp-16;
+    }
+
+    &__label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94A3B8;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    &__name {
+        font-weight: 600;
+    }
+
+    &__meta {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__expiry-ok {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__expiry-past {
+        font-size: 13px;
+        color: $danger;
+    }
+}
+
+// ─── Récapitulatif (sidebar) ──────────────────────────────────────────────────
+.quotation-summary {
+    padding: $sp-24;
+
+    &__title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: $sp-16;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+    }
+
+    &__row--discount {
+        color: $danger;
+    }
+
+    &__row--total {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        font-size: 16px;
+        font-weight: 800;
+        border-top: 2px solid $border;
+        margin-top: $sp-8;
+    }
+
+    &__total-value {
+        color: $info;
+    }
+
+    &__divider {
+        height: 1px;
+        background: $border;
+        margin: $sp-4 0;
+    }
+
+    &__note-hint {
+        font-size: 12px;
+        color: $text-muted;
+        margin-top: $sp-12;
+    }
+
+    &__actions {
+        margin-top: $sp-16;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-8;
+    }
+
+    &__btn-full {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+// ─── Note de devis ────────────────────────────────────────────────────────────
+.quotation-note {
+    padding: $sp-20;
+
+    &__label {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    &__text {
+        font-size: 13px;
+        color: $text-muted;
+    }
+}
+
+// ─── Entête actions (status form) ────────────────────────────────────────────
+.quotation-header-actions {
+    display: flex;
+    gap: $sp-8;
+    align-items: center;
+    flex-wrap: wrap;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    &__status-form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    &__status-select {
+        width: 160px;
+
+        @include mobile {
+            width: 100%;
+        }
+    }
+}
+
+// ─── Tableau articles (create) ───────────────────────────────────────────────
+.quotation-items {
+    overflow: visible;
+
+    &__count {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__add-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    &__col-qty {
+        text-align: center;
+        width: 80px;
+    }
+
+    &__col-price {
+        text-align: right;
+        width: 150px;
+    }
+
+    &__col-total {
+        text-align: right;
+        width: 130px;
+    }
+
+    &__col-action {
+        width: 36px;
+    }
+
+    &__qty-input {
+        width: 70px;
+        text-align: center;
+        padding: 5px 6px;
+        border: 1.5px solid $border;
+        border-radius: $radius-sm;
+        font-size: 13px;
+    }
+
+    &__price-input {
+        width: 130px;
+        padding: 5px $sp-8;
+        border: 1.5px solid $border;
+        border-radius: $radius-sm;
+        font-size: 13px;
+        text-align: right;
+    }
+
+    &__line-total {
+        text-align: right;
+        font-weight: 600;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: $sp-40;
+        color: #94A3B8;
+    }
+
+    &__product-cell {
+        position: relative;
+    }
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@include mobile {
+    .quotation-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        min-width: 480px;
+    }
+
+    .quotation-filter__grid {
+        grid-template-columns: 1fr;
+    }
+}

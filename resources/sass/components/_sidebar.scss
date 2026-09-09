@@ -1,0 +1,284 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.sidebar {
+    width: $sidebar-width;
+    background: $sidebar-bg;
+    box-shadow: $sidebar-shadow;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 200;
+    transition: transform $transition-normal;
+    overflow: hidden;
+
+    // ─── En-tête sidebar ────────────────────────────────────────────────────
+    &__brand {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+        padding: $sp-20 $sp-16;
+        border-bottom: 1px solid $border;
+        min-height: $topbar-height;
+
+        &-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: $radius-md;
+            background: $primary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            svg { color: #fff; width: 20px; height: 20px; }
+        }
+
+        &-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: $text-main;
+            line-height: 1.2;
+            span {
+                display: block;
+                font-size: 11px;
+                font-weight: 400;
+                color: $text-muted;
+            }
+        }
+    }
+
+    // ─── Utilisateur connecté ────────────────────────────────────────────────
+    &__user {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+        padding: $sp-12 $sp-16;
+        border-bottom: 1px solid $border;
+
+        &-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: $primary-light;
+            border: 2px solid $primary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: $primary;
+            flex-shrink: 0;
+            overflow: hidden;
+            img { width: 100%; height: 100%; object-fit: cover; }
+        }
+
+        &-info {
+            flex: 1;
+            min-width: 0;
+            p { font-size: 13px; font-weight: 600; color: $text-main; @include truncate; }
+            span { font-size: 11px; color: $text-muted; display: block; }
+        }
+    }
+
+    // ─── Navigation ─────────────────────────────────────────────────────────
+    &__nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: $sp-8 0 $sp-16;
+    }
+
+    &__section-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: $text-muted;
+        padding: $sp-16 $sp-16 $sp-4;
+        opacity: 0.6;
+    }
+
+    // ─── Item simple ────────────────────────────────────────────────────────
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+        padding: $sp-8 $sp-16;
+        margin: 1px $sp-8;
+        border-radius: $radius-md;
+        color: $text-main;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all $transition-fast;
+        text-decoration: none;
+
+        svg {
+            width: 18px;
+            height: 18px;
+            color: $text-muted;
+            flex-shrink: 0;
+            transition: color $transition-fast;
+        }
+
+        &:hover {
+            background: $sidebar-item-hover;
+            color: $text-main;
+        }
+
+        &--active, &.active {
+            background: $sidebar-item-active-bg;
+            color: $sidebar-item-active-text;
+            font-weight: 600;
+
+            svg { color: $sidebar-item-active-text; }
+        }
+
+        &__badge {
+            margin-left: auto;
+            background: $danger;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 99px;
+            min-width: 18px;
+            text-align: center;
+        }
+    }
+
+    // ─── Groupe accordion ───────────────────────────────────────────────────
+    &__group {
+        &-trigger {
+            display: flex;
+            align-items: center;
+            gap: $sp-12;
+            padding: $sp-8 $sp-16;
+            margin: 1px $sp-8;
+            border-radius: $radius-md;
+            color: $text-main;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all $transition-fast;
+            width: 100%;
+            background: none;
+            border: none;
+
+            svg.icon {
+                width: 18px;
+                height: 18px;
+                color: $text-muted;
+                flex-shrink: 0;
+            }
+
+            svg.chevron {
+                margin-left: auto;
+                width: 14px;
+                height: 14px;
+                color: $text-muted;
+                transition: transform $transition-fast;
+            }
+
+            &:hover { background: $sidebar-item-hover; }
+
+            &--active {
+                color: $sidebar-item-active-text;
+                svg.icon { color: $sidebar-item-active-text; }
+            }
+        }
+
+        &-trigger[aria-expanded="true"] svg.chevron {
+            transform: rotate(180deg);
+        }
+
+        &-items {
+            padding-left: $sp-24;
+            overflow: hidden;
+        }
+
+        &-item {
+            display: flex;
+            align-items: center;
+            gap: $sp-8;
+            padding: 6px $sp-12 6px $sp-8;
+            margin: 1px $sp-8;
+            border-radius: $radius-md;
+            color: $text-muted;
+            font-size: 13px;
+            transition: all $transition-fast;
+            text-decoration: none;
+            position: relative;
+
+            &::before {
+                content: '';
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: $border;
+                flex-shrink: 0;
+                transition: background $transition-fast;
+            }
+
+            &:hover {
+                background: $sidebar-item-hover;
+                color: $text-main;
+            }
+
+            &--active, &.active {
+                color: $sidebar-item-active-text;
+                font-weight: 600;
+                &::before { background: $primary; }
+            }
+        }
+    }
+
+    // ─── Pied sidebar ───────────────────────────────────────────────────────
+    &__footer {
+        padding: $sp-12 $sp-16;
+        border-top: 1px solid $border;
+        flex-shrink: 0;
+    }
+
+    &__logout-btn {
+        color: $text-muted;
+        border: 1.5px solid transparent;
+        border-radius: $radius-md;
+
+        svg { color: $text-muted; }
+
+        &:hover {
+            background: rgba(239, 68, 68, 0.06);
+            color: $danger;
+            border-color: rgba(239, 68, 68, 0.18);
+            svg { color: $danger; }
+        }
+    }
+
+    &__logout-icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    // ─── Mobile ─────────────────────────────────────────────────────────────
+    @include mobile {
+        transform: translateX(-100%);
+
+        &--open { transform: translateX(0); }
+    }
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 199;
+
+    @include mobile {
+        &--visible { display: block; }
+    }
+}

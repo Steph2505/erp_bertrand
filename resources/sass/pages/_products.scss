@@ -1,0 +1,642 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Layout formulaire produit (create / edit) ────────────────────────────────
+.product-form {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: $sp-24;
+
+        @include tablet {
+            grid-template-columns: 1fr 300px;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main,
+    &__aside {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-20;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-12;
+
+        .btn {
+            &:first-child {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    }
+}
+
+// ─── Options / pack section dans create & edit ────────────────────────────────
+.product-options {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-16;
+}
+
+.pack-option-hint {
+    font-size: 12px;
+    color: $text-muted;
+    margin-top: 2px;
+}
+
+.pack-option-box {
+    margin-top: $sp-12;
+    padding: 14px;
+    background: #f0fdf4;
+    border-radius: $radius-md;
+    border: 1px solid #bbf7d0;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-12;
+}
+
+.pack-option-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #15803d;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.pack-option-hint-sm {
+    font-size: 12px;
+    color: $text-muted;
+    margin-top: 4px;
+}
+
+.pack-option-input--qty {
+    width: 120px;
+}
+
+.pack-option-input--price {
+    width: 160px;
+}
+
+// ─── Champ étendu en pleine grille ───────────────────────────────────────────
+.form-group--full {
+    grid-column: 1 / -1;
+}
+
+// ─── Image produit (edit card) ───────────────────────────────────────────────
+.product-edit__img {
+    width: 100%;
+    border-radius: $radius-md;
+    margin-bottom: $sp-12;
+    object-fit: cover;
+    max-height: 200px;
+}
+
+// ─── Grille d'aperçu des images sélectionnées (create/edit) ─────────────────
+.image-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: $sp-8;
+    margin-bottom: $sp-12;
+
+    &__img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: $radius-md;
+        object-fit: cover;
+        border: 1px solid $border;
+    }
+}
+
+// ─── Index produits : filtre stock faible ────────────────────────────────────
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+// ─── Tableau produits : cellule image + nom ───────────────────────────────────
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: $sp-12;
+
+    &__info {
+        // wrapper texte
+    }
+
+    &__name {
+        font-weight: 600;
+        color: $text-main;
+    }
+
+    &__barcode {
+        color: $text-muted;
+        font-size: 11px;
+    }
+}
+
+// ─── Placeholder image produit dans le tableau ───────────────────────────────
+.data-table__img-placeholder {
+    background: $bg-app;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+// ─── Bouton supprimer (danger) dans les actions du tableau ───────────────────
+.btn-table-delete {
+    color: $danger;
+}
+
+// ─── Cellule vide du tableau ─────────────────────────────────────────────────
+.table-empty-cell {
+    text-align: center;
+    padding: 48px;
+    color: $text-muted;
+
+    a {
+        color: $primary;
+    }
+}
+
+// ─── Table empty: smaller padding variant ───────────────────────────────────
+.table-empty-cell--sm {
+    text-align: center;
+    padding: 40px;
+    color: $text-muted;
+}
+
+// ─── Show produit ─────────────────────────────────────────────────────────────
+.product-show {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: $sp-24;
+
+        @include tablet {
+            grid-template-columns: 1fr 300px;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main,
+    &__aside {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-20;
+    }
+
+    &__img {
+        width: 100%;
+        border-radius: $radius-md;
+        object-fit: cover;
+        max-height: 250px;
+    }
+}
+
+// ─── Libellé de champ (étiquette grise en petites caps) ─────────────────────
+.field-label {
+    font-size: 12px;
+    color: $text-muted;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+// ─── Valeur prix de vente (mise en avant) ────────────────────────────────────
+.field-price-main {
+    font-size: 18px;
+    font-weight: 700;
+    color: $primary;
+}
+
+// ─── Stock faible: valeur rouge ───────────────────────────────────────────────
+.field-stock--low {
+    color: $danger;
+    font-weight: 700;
+}
+
+.field-stock--ok {
+    font-weight: 600;
+}
+
+// ─── Bloc description dans show ──────────────────────────────────────────────
+.product-show__description {
+    margin-top: $sp-16;
+    padding-top: $sp-16;
+    border-top: 1px solid $border;
+
+    .field-label {
+        margin-bottom: $sp-8;
+    }
+
+    p {
+        color: $text-muted;
+    }
+}
+
+// ─── Statut badge row (show sidebar) ─────────────────────────────────────────
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &__label {
+        font-size: 13px;
+    }
+}
+
+// ─── Liste status rows avec gap ──────────────────────────────────────────────
+.status-list {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-12;
+}
+
+// ─── Mouvement de stock: quantité colorée ────────────────────────────────────
+.movement-qty {
+    font-weight: 600;
+
+    &--positive { color: $success; }
+    &--negative { color: $danger; }
+}
+
+// ─── Unités / Catégories: colonnes de table ──────────────────────────────────
+.table-th--right {
+    text-align: right;
+}
+
+.table-cell--name {
+    font-weight: 600;
+}
+
+.table-cell--muted {
+    color: $text-muted;
+}
+
+.table-cell--muted-sm {
+    color: $text-muted;
+    font-size: 13px;
+}
+
+.table-cell--right {
+    text-align: right;
+}
+
+.table-cell--right-muted {
+    text-align: right;
+    color: $text-muted;
+    font-size: 13px;
+}
+
+// ─── Catégorie : nom + slug ───────────────────────────────────────────────────
+.cat-cell {
+    &__name { font-weight: 600; }
+    &__slug { font-size: 11px; color: #94A3B8; }
+}
+
+// ─── "En usage" label dans les tables ────────────────────────────────────────
+.in-use-label {
+    font-size: 12px;
+    color: #94A3B8;
+}
+
+// ─── Modal footer sans padding / border ─────────────────────────────────────
+.modal-footer-inline {
+    padding: 0;
+    border: none;
+    margin-top: $sp-16;
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+}
+
+.modal-footer-inline--sm {
+    padding: 0;
+    border: none;
+    margin-top: $sp-8;
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+}
+
+// ─── Form grid avec gap custom (modal) ──────────────────────────────────────
+.form-grid--gap-16 {
+    gap: $sp-16;
+}
+
+// ─── Packs index ─────────────────────────────────────────────────────────────
+.pack-index {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: $sp-24;
+
+        @include tablet {
+            grid-template-columns: 1fr 300px;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main,
+    &__aside {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-20;
+    }
+}
+
+// ─── Pack cell dans le tableau (nom + barcode) ────────────────────────────────
+.pack-cell {
+    display: flex;
+    align-items: center;
+    gap: $sp-12;
+
+    &__img-placeholder {
+        background: $primary-light;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    &__name {
+        font-weight: 600;
+        color: $text-main;
+    }
+
+    &__barcode {
+        color: $text-muted;
+        font-size: 11px;
+    }
+}
+
+// ─── Marge colorée (packs index) ─────────────────────────────────────────────
+.margin-value {
+    font-weight: 600;
+
+    &--positive { color: $success; }
+    &--negative { color: $danger; }
+}
+
+// ─── Disponibilité packs ─────────────────────────────────────────────────────
+.pack-available {
+    &__count { /* strong */ }
+
+    &__label {
+        font-size: 11px;
+        color: $text-muted;
+    }
+}
+
+// ─── Icône toggle actif/inactif dans actions ────────────────────────────────
+.btn-toggle--warning { color: $warning; }
+.btn-toggle--success { color: $success; }
+
+// ─── Alerte info margin-bottom ───────────────────────────────────────────────
+.alert--mb {
+    margin-bottom: $sp-20;
+}
+
+// ─── Packs create / edit layout ──────────────────────────────────────────────
+.pack-form {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: $sp-24;
+
+        @include tablet {
+            grid-template-columns: 1fr 300px;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main,
+    &__aside {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-20;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-12;
+
+        .btn:first-child {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+}
+
+// ─── Résumé pack (carte verte) ───────────────────────────────────────────────
+.pack-summary-card {
+    background: rgba(76, 187, 23, 0.04);
+    border-color: rgba(76, 187, 23, 0.2);
+}
+
+.pack-summary {
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-8;
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &__label {
+        color: $text-muted;
+    }
+
+    &__divider {
+        display: flex;
+        justify-content: space-between;
+        padding-top: $sp-8;
+        border-top: 1px solid rgba(76, 187, 23, 0.2);
+    }
+
+    &__total-value {
+        color: $primary;
+    }
+}
+
+// ─── Composition header hint ─────────────────────────────────────────────────
+.composition-hint {
+    font-size: 12px;
+    color: $text-muted;
+}
+
+// ─── product-autocomplete margin ─────────────────────────────────────────────
+.product-autocomplete--mb {
+    margin-bottom: $sp-16;
+}
+
+// ─── Pack show ────────────────────────────────────────────────────────────────
+.pack-show {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: $sp-24;
+
+        @include tablet {
+            grid-template-columns: 1fr 300px;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main,
+    &__aside {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-20;
+    }
+
+    &__img-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    &__img {
+        width: 100%;
+        object-fit: cover;
+        max-height: 250px;
+    }
+}
+
+// ─── Disponibilité résumé (pack show) ────────────────────────────────────────
+.pack-availability {
+    margin-top: $sp-16;
+    padding: $sp-16;
+    border-radius: $radius-md;
+    border: 1px solid;
+
+    &--ok {
+        background: rgba(76, 187, 23, 0.06);
+        border-color: rgba(76, 187, 23, 0.2);
+    }
+
+    &--empty {
+        background: rgba(239, 68, 68, 0.06);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    &__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    &__label {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__count {
+        font-size: 24px;
+        font-weight: 700;
+
+        &--ok { color: $primary; }
+        &--empty { color: $danger; }
+    }
+
+    &__icon {
+        font-size: 40px;
+    }
+}
+
+// ─── Low stock cell dans pack show ───────────────────────────────────────────
+.pack-stock-cell {
+    &--low { color: $danger; }
+}
+
+// ─── Mouvement quantité pack show / show produit ─────────────────────────────
+.mv-qty {
+    font-weight: 600;
+    &--positive { color: $success; }
+    &--negative { color: $danger; }
+}
+
+// ─── Tarification pack show ───────────────────────────────────────────────────
+.price-row {
+    padding: 12px 0;
+    border-bottom: 1px solid $border;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &__group-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-muted;
+    }
+
+    &__buy {
+        font-size: 11px;
+        color: $text-muted;
+    }
+
+    &__sell {
+        font-size: 16px;
+        font-weight: 700;
+        color: $primary;
+        text-align: right;
+    }
+
+    &__margin {
+        font-size: 11px;
+        text-align: right;
+
+        &--positive { color: $success; }
+        &--negative { color: $danger; }
+    }
+}
+
+.price-empty {
+    color: $text-muted;
+    font-size: 13px;
+}
+
+// ─── Pack show : statut sidebar ──────────────────────────────────────────────
+.pack-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $sp-12;
+
+    &__label {
+        font-size: 13px;
+    }
+}
+
+.pack-description {
+    font-size: 13px;
+    color: $text-muted;
+}

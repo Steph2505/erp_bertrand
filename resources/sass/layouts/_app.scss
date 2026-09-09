@@ -1,0 +1,38 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    margin-left: $sidebar-width;
+    padding-top: $topbar-height;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left $transition-normal;
+
+    @include mobile {
+        margin-left: 0;
+    }
+}
+
+.page-content {
+    flex: 1;
+    padding: $sp-24;
+
+    @include mobile {
+        padding: $sp-16;
+    }
+}
+
+.page-footer {
+    padding: $sp-16 $sp-24;
+    border-top: 1px solid $border;
+    font-size: 12px;
+    color: $text-muted;
+    text-align: center;
+}

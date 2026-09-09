@@ -1,0 +1,29 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.card {
+    @include card;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-20;
+
+        h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+    }
+
+    &__body { /* default */ }
+
+    &__footer {
+        margin-top: $sp-20;
+        padding-top: $sp-16;
+        border-top: 1px solid $border;
+        display: flex;
+        justify-content: flex-end;
+        gap: $sp-8;
+    }
+}

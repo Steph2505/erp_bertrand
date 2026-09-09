@@ -1,0 +1,187 @@
+@use '../abstracts/variables' as *;
+
+body {
+    background-color: $bg-app;
+}
+
+// ─── Utilitaires généraux ───────────────────────────────────────────────────
+.d-flex        { display: flex; }
+.align-center  { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-8  { gap: $sp-8; }
+.gap-12 { gap: $sp-12; }
+.gap-16 { gap: $sp-16; }
+.gap-24 { gap: $sp-24; }
+
+.mt-4  { margin-top: $sp-4; }
+.mt-8  { margin-top: $sp-8; }
+.mt-16 { margin-top: $sp-16; }
+.mt-24 { margin-top: $sp-24; }
+.mb-4  { margin-bottom: $sp-4; }
+.mb-8  { margin-bottom: $sp-8; }
+.mb-16 { margin-bottom: $sp-16; }
+.mb-24 { margin-bottom: $sp-24; }
+
+.p-16 { padding: $sp-16; }
+.p-24 { padding: $sp-24; }
+
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+
+// ─── Page header ─────────────────────────────────────────────────────────────
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $sp-24;
+    gap: $sp-16;
+
+    @media (max-width: 768px) {
+        flex-wrap: wrap;
+        gap: $sp-12;
+    }
+
+    &__title {
+        h2 { margin-bottom: 4px; }
+        p  { color: $text-muted; font-size: 13px; }
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+        flex-wrap: wrap;
+    }
+}
+
+// ─── Flex utilitaires ────────────────────────────────────────────────────────
+.flex             { display: flex; }
+.flex-col         { display: flex; flex-direction: column; }
+.flex-wrap        { flex-wrap: wrap; }
+.flex-1           { flex: 1; }
+.items-center     { align-items: center; }
+.items-start      { align-items: flex-start; }
+.items-end        { align-items: flex-end; }
+.justify-center   { justify-content: center; }
+.justify-end      { justify-content: flex-end; }
+.flex-center      { display: flex; align-items: center; justify-content: center; }
+.flex-between     { display: flex; align-items: center; justify-content: space-between; }
+
+// ─── Espacements supplémentaires ─────────────────────────────────────────────
+.mt-0  { margin-top: 0; }
+.mt-32 { margin-top: $sp-32; }
+.mb-0  { margin-bottom: 0; }
+.mb-32 { margin-bottom: $sp-32; }
+.ml-auto { margin-left: auto; }
+.mr-auto { margin-right: auto; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.p-0   { padding: 0; }
+.p-8   { padding: $sp-8; }
+.p-12  { padding: $sp-12; }
+.px-12 { padding-left: $sp-12; padding-right: $sp-12; }
+.px-16 { padding-left: $sp-16; padding-right: $sp-16; }
+.py-8  { padding-top: $sp-8; padding-bottom: $sp-8; }
+.py-12 { padding-top: $sp-12; padding-bottom: $sp-12; }
+
+// ─── Tailles ─────────────────────────────────────────────────────────────────
+.h-full   { height: 100%; }
+.min-w-0  { min-width: 0; }
+.max-w-full { max-width: 100%; }
+
+// ─── Typographie ─────────────────────────────────────────────────────────────
+.font-500  { font-weight: 500; }
+.font-600  { font-weight: 600; }
+.font-700  { font-weight: 700; }
+.font-800  { font-weight: 800; }
+.text-xs   { font-size: 11px; }
+.text-sm   { font-size: 12px; }
+.text-md   { font-size: 13px; }
+.text-base { font-size: 14px; }
+.text-lg   { font-size: 16px; }
+.text-xl   { font-size: 18px; }
+.text-2xl  { font-size: 22px; }
+.text-muted  { color: $text-muted; }
+.text-main   { color: $text-main; }
+.text-primary { color: $primary; }
+.text-danger  { color: $danger; }
+.text-success { color: $success; }
+.text-warning { color: $warning; }
+.text-info    { color: $info; }
+.truncate     { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nowrap       { white-space: nowrap; }
+.uppercase    { text-transform: uppercase; }
+.leading-tight { line-height: 1.3; }
+
+// ─── Couleurs de fond ─────────────────────────────────────────────────────────
+.bg-app     { background: $bg-app; }
+.bg-white   { background: $bg-white; }
+.bg-primary { background: $primary; }
+.bg-primary-light { background: $primary-light; }
+.bg-danger-light  { background: rgba(239,68,68,0.08); }
+.bg-success-light { background: rgba(34,197,94,0.08); }
+.bg-warning-light { background: rgba(245,158,11,0.08); }
+.bg-info-light    { background: rgba(59,130,246,0.08); }
+
+// ─── Bordures ─────────────────────────────────────────────────────────────────
+.border        { border: 1px solid $border; }
+.border-top    { border-top: 1px solid $border; }
+.border-bottom { border-bottom: 1px solid $border; }
+.rounded-sm { border-radius: $radius-sm; }
+.rounded    { border-radius: $radius-md; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-full { border-radius: 99px; }
+
+// ─── Position ─────────────────────────────────────────────────────────────────
+.relative { position: relative; }
+.absolute { position: absolute; }
+.hidden   { display: none; }
+.block    { display: block; }
+.inline-flex { display: inline-flex; }
+.overflow-hidden { overflow: hidden; }
+.overflow-auto   { overflow: auto; }
+
+// ─── Éléments communs ────────────────────────────────────────────────────────
+.divider {
+    height: 1px;
+    background: $border;
+    margin: $sp-4 0;
+}
+
+.icon-sm svg { width: 14px; height: 14px; }
+.icon-md svg { width: 18px; height: 18px; }
+.icon-lg svg { width: 22px; height: 22px; }
+
+// ─── Colonnes grille simples ──────────────────────────────────────────────────
+.col-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: $sp-16; }
+.col-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: $sp-16; }
+.col-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: $sp-16; }
+
+@media (max-width: 768px) {
+    .col-2, .col-3, .col-4 { grid-template-columns: 1fr; }
+    .hide-mobile { display: none !important; }
+}
+
+@media (max-width: 1024px) {
+    .col-3, .col-4 { grid-template-columns: repeat(2, 1fr); }
+    .hide-tablet { display: none !important; }
+}
+
+// ─── Modal footer standard ───────────────────────────────────────────────────
+.modal-footer-std {
+    padding: 0;
+    border: none;
+    margin-top: $sp-16;
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+}
+
+// ─── Padding card ─────────────────────────────────────────────────────────────
+.p-20 { padding: $sp-20; }
+.p-24 { padding: $sp-24; }
+
+// ─── Scrollbar ───────────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: $border; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: $text-muted; }

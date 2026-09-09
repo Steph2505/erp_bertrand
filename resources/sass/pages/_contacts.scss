@@ -1,0 +1,313 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Filtre de recherche (liste clients/fournisseurs) ─────────────────────────
+.contact-filter {
+    padding: $sp-16 $sp-20;
+    margin-bottom: $sp-16;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: $sp-12;
+        align-items: flex-end;
+
+        @include tablet {
+            grid-template-columns: 1fr auto;
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__search {
+        margin-bottom: 0;
+        grid-column: span 2;
+
+        @include mobile {
+            grid-column: span 1;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+
+        .btn {
+            flex: 1;
+        }
+    }
+}
+
+// ─── Cellules du tableau ──────────────────────────────────────────────────────
+.contact-list {
+    &__name-cell {
+        font-weight: 500;
+    }
+
+    &__name-link {
+        color: inherit;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__email-cell {
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    &__amount-cell {
+        font-weight: 600;
+        color: $primary;
+    }
+
+    &__amount-cell--supplier {
+        font-weight: 600;
+        color: $info;
+    }
+
+    &__empty-cell {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+
+    &__actions-right {
+        text-align: right;
+    }
+}
+
+// ─── Modal footer (commun clients/fournisseurs/utilisateurs) ──────────────────
+.modal-footer-inline {
+    padding: 0;
+    border: none;
+    margin-top: $sp-8;
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+}
+
+// ─── Form group span 2 ───────────────────────────────────────────────────────
+.form-group--full {
+    grid-column: span 2;
+
+    @include mobile {
+        grid-column: span 1;
+    }
+}
+
+// ─── Page show client/fournisseur ─────────────────────────────────────────────
+.contact-show {
+    // En-tête subtitle
+    &__subtitle {
+        color: $text-muted;
+    }
+
+    // Grille de stat cards
+    &__stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: $sp-16;
+        margin-bottom: $sp-24;
+
+        @include tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Carte stat individuelle
+    &__stat-card {
+        padding: $sp-20;
+    }
+
+    &__stat-label {
+        font-size: 11px;
+        color: #94A3B8;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    &__stat-value {
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    &__stat-value--md {
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    &__stat-value--primary {
+        color: $primary;
+    }
+
+    &__stat-value--success {
+        color: #16a34a;
+    }
+
+    &__stat-value--info {
+        color: $info;
+    }
+
+    &__stat-value--danger {
+        color: $danger;
+    }
+
+    &__stat-value--muted {
+        color: #94A3B8;
+    }
+
+    &__stat-sub {
+        font-size: 12px;
+        color: $text-muted;
+        margin-top: 4px;
+    }
+
+    // Layout principal (tableau + fiche)
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: $sp-20;
+        align-items: start;
+
+        @include tablet {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Compteur dans le header du tableau
+    &__count {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    // Lien de référence (vente)
+    &__ref-link {
+        color: $primary;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    // Lien de référence (achat)
+    &__ref-link--purchase {
+        color: $info;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__date-cell {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__count-cell {
+        text-align: center;
+        font-size: 13px;
+    }
+
+    &__paid-cell {
+        color: #16a34a;
+        font-size: 13px;
+    }
+
+    &__due-cell--danger {
+        color: $danger;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    &__due-cell--muted {
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    &__table-actions {
+        justify-content: flex-end;
+    }
+
+    &__empty-cell {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+
+    // Fiche informations (panneau latéral)
+    &__info-card {
+        padding: $sp-20;
+    }
+
+    &__info-title {
+        font-size: 11px;
+        color: #94A3B8;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
+    &__info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    &__info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: $sp-8;
+    }
+
+    &__info-label {
+        color: $text-muted;
+        flex-shrink: 0;
+    }
+
+    &__info-value {
+        text-align: right;
+    }
+
+    &__info-email {
+        font-size: 12px;
+        word-break: break-all;
+    }
+
+    &__info-divider {
+        height: 1px;
+        background: #f1f5f9;
+    }
+
+    // Encart dette fournisseur
+    &__debt-box {
+        display: flex;
+        justify-content: space-between;
+        padding: $sp-8 10px;
+        background: #fef2f2;
+        border-radius: $radius-sm;
+    }
+
+    &__debt-label {
+        color: $danger;
+        font-weight: 600;
+    }
+
+    &__debt-value {
+        color: $danger;
+    }
+}

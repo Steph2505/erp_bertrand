@@ -1,0 +1,210 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Composition d'un pack ───────────────────────────────────────────────────
+.pack-composer {
+    border: 1px solid $border;
+    border-radius: $radius-md;
+    overflow: hidden;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: $sp-12 $sp-16;
+        background: $bg-app;
+        border-bottom: 1px solid $border;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: 1fr 100px 80px auto;
+        gap: $sp-8;
+        align-items: center;
+        padding: $sp-8 $sp-12;
+        border-bottom: 1px solid $border;
+
+        &:last-child { border-bottom: none; }
+        &:hover { background: $bg-app; }
+    }
+
+    &__product-name {
+        font-size: 13.5px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+
+        &-unit {
+            font-size: 11px;
+            color: $text-muted;
+        }
+    }
+
+    &__qty-input {
+        text-align: center;
+        width: 100%;
+        padding: 6px $sp-8;
+        border: 1.5px solid $border;
+        border-radius: $radius-sm;
+        font-size: 13px;
+        &:focus { border-color: $primary; outline: none; }
+    }
+
+    &__unit-cost {
+        font-size: 12px;
+        color: $text-muted;
+        text-align: right;
+    }
+
+    &__remove {
+        background: none;
+        border: none;
+        color: $text-muted;
+        cursor: pointer;
+        padding: $sp-4;
+        border-radius: $radius-sm;
+        display: flex;
+        transition: all $transition-fast;
+
+        &:hover { background: rgba(239,68,68,0.10); color: $danger; }
+        svg { width: 16px; height: 16px; }
+    }
+
+    &__empty {
+        padding: $sp-24;
+        text-align: center;
+        color: $text-muted;
+        font-size: 13px;
+    }
+
+    &__footer {
+        padding: $sp-12 $sp-16;
+        background: $bg-app;
+        border-top: 1px solid $border;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+
+        .total-cost {
+            font-weight: 600;
+            color: $text-main;
+            span { color: $primary; }
+        }
+    }
+}
+
+// ─── Autocomplete recherche produit ─────────────────────────────────────────
+.product-autocomplete {
+    position: relative;
+
+    &__results {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: $bg-white;
+        border: 1px solid $border;
+        border-radius: $radius-md;
+        box-shadow: $shadow-lg;
+        z-index: 50;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+        padding: $sp-8 $sp-12;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:hover, &--focused { background: $bg-app; }
+        &:not(:last-child) { border-bottom: 1px solid $border; }
+
+        &-name { font-size: 13.5px; font-weight: 500; flex: 1; }
+        &-price { font-size: 12px; color: $text-muted; white-space: nowrap; }
+        &-stock { font-size: 11px; color: $text-muted; }
+    }
+}
+
+// ─── Prix du pack avec marge ─────────────────────────────────────────────────
+.pack-price-group {
+    background: $bg-app;
+    border: 1px solid $border;
+    border-radius: $radius-md;
+    padding: $sp-16;
+    margin-bottom: $sp-12;
+
+    &__label {
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: $sp-12;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 80px;
+        gap: $sp-12;
+        align-items: end;
+    }
+
+    &__margin {
+        font-size: 12px;
+        padding: 8px 0;
+        font-weight: 600;
+
+        &--positive { color: $success; }
+        &--negative { color: $danger; }
+    }
+}
+
+// ─── Résumé pack dans liste ──────────────────────────────────────────────────
+.pack-composition-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 12px;
+
+    &__item {
+        background: $primary-light;
+        color: $primary-dark;
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+}
+
+// ─── Résultats de recherche vente ────────────────────────────────────────────
+.sale-search-results {
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: $radius-md;
+    box-shadow: $shadow-lg;
+    overflow: hidden;
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $sp-12;
+        padding: $sp-10 $sp-16;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:not(:last-child) { border-bottom: 1px solid $border; }
+        &:hover { background: $bg-app; }
+
+        &-info { flex: 1; min-width: 0; }
+        &-name { font-size: 13.5px; font-weight: 500; }
+        &-detail { font-size: 11.5px; color: $text-muted; margin-top: 2px; }
+        &-price { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+    }
+}

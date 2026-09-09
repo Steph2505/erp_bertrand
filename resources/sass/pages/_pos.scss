@@ -1,0 +1,813 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.pos-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    height: calc(100vh - #{$topbar-height});
+    gap: 0;
+    overflow: hidden;
+    margin: 0 (-$sp-24) (-$sp-24);
+
+    &--with-session {
+        height: calc(100vh - 104px);
+    }
+
+    @include tablet {
+        grid-template-columns: 1fr 320px;
+    }
+
+    @include mobile {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+}
+
+// ─── Colonne gauche : catalogue ───────────────────────────────────────────────
+.pos-catalog {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: $bg-app;
+
+    &__header {
+        padding: $sp-16;
+        background: $bg-white;
+        border-bottom: 1px solid $border;
+        display: flex;
+        gap: $sp-12;
+        flex-wrap: wrap;
+    }
+
+    &__search {
+        flex: 1;
+        position: relative;
+
+        svg {
+            position: absolute;
+            left: $sp-12;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: $text-muted;
+        }
+
+        input {
+            width: 100%;
+            padding: 9px 12px 9px 36px;
+            border: 1.5px solid $border;
+            border-radius: $radius-md;
+            font-size: 13.5px;
+            outline: none;
+            transition: border-color $transition-fast;
+            &:focus { border-color: $primary; }
+        }
+    }
+
+    &__filter-tabs {
+        display: flex;
+        gap: $sp-4;
+    }
+
+    &__tab {
+        padding: 7px $sp-16;
+        border-radius: $radius-md;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1.5px solid $border;
+        background: $bg-white;
+        color: $text-muted;
+        transition: all $transition-fast;
+
+        &--active {
+            background: $primary;
+            border-color: $primary;
+            color: #fff;
+        }
+    }
+
+    &__categories {
+        display: flex;
+        gap: $sp-8;
+        padding: $sp-12 $sp-16;
+        overflow-x: auto;
+        border-bottom: 1px solid $border;
+        background: $bg-white;
+    }
+
+    &__category-btn {
+        padding: 5px $sp-16;
+        border-radius: 99px;
+        font-size: 12.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        border: 1.5px solid $border;
+        background: $bg-white;
+        color: $text-muted;
+        transition: all $transition-fast;
+
+        &--active {
+            background: $primary;
+            border-color: $primary;
+            color: #fff;
+        }
+    }
+
+    &__grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: $sp-16;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: $sp-12;
+        align-content: start;
+    }
+}
+
+// ─── Carte produit POS ────────────────────────────────────────────────────────
+.pos-product-card {
+    background: $bg-white;
+    border: 1.5px solid $border;
+    border-radius: $radius-md;
+    padding: $sp-12;
+    cursor: pointer;
+    transition: all $transition-fast;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+        border-color: $primary;
+        box-shadow: 0 4px 12px rgba(76,187,23,0.12);
+    }
+
+    &--pack {
+        border-color: rgba(76,187,23,0.3);
+        background: rgba(76,187,23,0.02);
+    }
+
+    &__badge {
+        position: absolute;
+        top: $sp-8;
+        right: $sp-8;
+    }
+
+    &__image {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: $radius-sm;
+        object-fit: cover;
+        background: $bg-app;
+        margin-bottom: $sp-8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $text-muted;
+
+        img { width: 100%; height: 100%; object-fit: cover; border-radius: $radius-sm; }
+    }
+
+    &__name {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    &__price {
+        font-size: 14px;
+        font-weight: 700;
+        color: $primary;
+    }
+
+    &__stock {
+        font-size: 11px;
+        color: $text-muted;
+        margin-top: 2px;
+    }
+}
+
+// ─── Colonne droite : panier ─────────────────────────────────────────────────
+.pos-cart {
+    display: flex;
+    flex-direction: column;
+    background: $bg-white;
+    border-left: 1px solid $border;
+
+    &__header {
+        padding: $sp-16 $sp-20;
+        border-bottom: 1px solid $border;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h3 { font-size: 15px; font-weight: 600; }
+        span { font-size: 13px; color: $text-muted; }
+    }
+
+    &__items {
+        flex: 1;
+        overflow-y: auto;
+        padding: $sp-8;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+        padding: $sp-8 $sp-4;
+        border-bottom: 1px solid $border;
+
+        &-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            p { font-size: 11px; color: $text-muted; margin-top: 1px; }
+        }
+
+        &-qty {
+            display: flex;
+            align-items: center;
+            gap: $sp-4;
+
+            button {
+                width: 24px;
+                height: 24px;
+                border-radius: $radius-sm;
+                border: 1px solid $border;
+                background: $bg-app;
+                cursor: pointer;
+                font-size: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background $transition-fast;
+                &:hover { background: $primary; color: #fff; border-color: $primary; }
+            }
+
+            span { font-size: 13px; font-weight: 600; min-width: 24px; text-align: center; }
+        }
+
+        &-price {
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        &-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: $text-muted;
+            padding: $sp-4;
+            border-radius: $radius-sm;
+            display: flex;
+            &:hover { color: $danger; background: rgba(239,68,68,0.1); }
+            svg { width: 14px; height: 14px; }
+        }
+    }
+
+    &__totals {
+        padding: $sp-16;
+        border-top: 1px solid $border;
+        background: $bg-app;
+
+        &-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: $sp-8;
+            color: $text-muted;
+
+            &--total {
+                font-size: 16px;
+                font-weight: 700;
+                color: $text-main;
+                margin-top: $sp-8;
+                padding-top: $sp-8;
+                border-top: 1px solid $border;
+            }
+        }
+    }
+
+    &__payment {
+        padding: $sp-16;
+        border-top: 1px solid $border;
+
+        &-methods {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: $sp-8;
+            margin-bottom: $sp-12;
+        }
+
+        &-method {
+            padding: $sp-8;
+            border: 1.5px solid $border;
+            border-radius: $radius-md;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all $transition-fast;
+
+            &--active {
+                border-color: $primary;
+                background: $primary-light;
+                color: $primary-dark;
+            }
+        }
+
+        &-charge-btn {
+            width: 100%;
+            padding: $sp-12;
+            background: $primary;
+            color: #fff;
+            border: none;
+            border-radius: $radius-md;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background $transition-fast;
+
+            &:hover { background: $primary-dark; }
+            &:disabled { background: $border; cursor: not-allowed; }
+        }
+    }
+}
+
+// ─── Grid produits POS (utilisé dans pos/index.blade.php) ────────────────────
+.pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    padding: 14px;
+    overflow-y: auto;
+    // flex: 1;
+
+    @include mobile {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 8px;
+        padding: $sp-8;
+    }
+}
+
+// ─── Carte produit POS (version index) ───────────────────────────────────────
+.pos-item {
+    background: $bg-white;
+    border: 1.5px solid $border;
+    border-radius: $radius-md;
+    padding: $sp-12;
+    cursor: pointer;
+    transition: all $transition-fast;
+    text-align: center;
+
+    &:hover {
+        border-color: $primary;
+        box-shadow: 0 2px 8px rgba(76, 187, 23, 0.15);
+        transform: translateY(-1px);
+    }
+
+    &__thumb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        margin-bottom: 6px;
+        font-size: 28px;
+    }
+
+    &__img {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-sm;
+        object-fit: cover;
+    }
+
+    &__name {
+        font-size: 13px;
+        font-weight: 500;
+        color: $text-main;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    &__price {
+        font-size: 12px;
+        color: $primary;
+        font-weight: 600;
+    }
+
+    &__stock {
+        font-size: 11px;
+        color: $text-muted;
+        margin-top: 2px;
+    }
+}
+
+// ─── Panier vide ─────────────────────────────────────────────────────────────
+.pos-empty {
+    text-align: center;
+    padding: 40px $sp-20;
+    color: $text-muted;
+}
+
+// ─── Total panier ─────────────────────────────────────────────────────────────
+.pos-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: $sp-12;
+}
+
+// ─── Bouton pack sur carte produit ────────────────────────────────────────────
+.pos-pack-btn {
+    width: 100%;
+    margin-top: 4px;
+    padding: 4px 6px;
+    background: #f0fdf4;
+    border: 1.5px solid $primary;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #15803d;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+        background: #dcfce7;
+    }
+}
+
+// ─── Footer panier POS ────────────────────────────────────────────────────────
+.pos-cart__footer {
+    padding: 14px $sp-16;
+    border-top: 1px solid $border;
+    flex-shrink: 0;
+}
+
+// ─── Toggle paiement complet ───────────────────────────────────────────────────
+.pos-payment-toggle {
+    display: flex;
+    align-items: center;
+    gap: $sp-8;
+    cursor: pointer;
+    margin-bottom: 10px;
+    padding: 9px $sp-12;
+    background: #f0fdf4;
+    border-radius: $radius-md;
+    border: 1.5px solid #bbf7d0;
+
+    &__checkbox {
+        accent-color: $primary;
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    &__label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #15803d;
+    }
+
+    &__amount {
+        margin-left: auto;
+        font-size: 13px;
+        font-weight: 700;
+        color: $primary;
+    }
+}
+
+// ─── Boîte rendu monnaie ──────────────────────────────────────────────────────
+.pos-change-box {
+    background: #f0fdf4;
+    border: 1.5px solid $success;
+    border-radius: $radius-md;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+
+    strong { color: #16a34a; }
+}
+
+// ─── Footer boutons paiement ──────────────────────────────────────────────────
+.pos-payment-footer {
+    display: flex;
+    gap: $sp-8;
+
+    &__back     { flex: 1; }
+    &__validate { flex: 2; justify-content: center; }
+}
+
+// ─── Modal succès POS ─────────────────────────────────────────────────────────
+.pos-success-modal {
+    text-align: center;
+
+    &__icon  { font-size: 60px; margin-bottom: $sp-12; }
+    &__title { font-size: 20px; font-weight: 700; margin-bottom: $sp-8; }
+    &__ref   { color: $text-muted; margin-bottom: 4px; }
+    &__change {
+        color: $success;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: $sp-20;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+        justify-content: center;
+    }
+}
+
+// ─── Formulaire fermeture inline (sessions table) ─────────────────────────────
+.pos-session-close-inline {
+    margin-top: $sp-8;
+    background: #f8fafc;
+    border-radius: $radius-md;
+    padding: $sp-12;
+
+    form {
+        display: flex;
+        gap: $sp-8;
+        align-items: center;
+        flex-wrap: wrap;
+
+        @include mobile {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    input.form-control {
+        width: 180px;
+
+        @include mobile { width: 100%; }
+    }
+}
+
+// ─── Grille des caisses ───────────────────────────────────────────────────────
+.caisse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: $sp-20;
+
+    @include mobile {
+        grid-template-columns: 1fr;
+    }
+}
+
+.caisse-card {
+    background: $bg-white;
+    border: 1.5px solid $border;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow $transition-fast, border-color $transition-fast;
+
+    &:hover { box-shadow: $shadow-md; }
+    &--inactive { opacity: 0.7; }
+
+    &__header {
+        padding: $sp-20;
+        display: flex;
+        align-items: flex-start;
+        gap: $sp-16;
+        border-bottom: 1px solid $border;
+    }
+
+    &__icon {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-md;
+        background: $primary-light;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    &__meta { flex: 1; min-width: 0; }
+
+    &__name {
+        font-size: 16px;
+        font-weight: 700;
+        color: $text-main;
+        @include truncate;
+    }
+
+    &__desc {
+        font-size: 13px;
+        color: $text-muted;
+        margin-top: 2px;
+        @include truncate;
+    }
+
+    &__body {
+        padding: $sp-16 $sp-20;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-12;
+    }
+
+    &__session-live {
+        display: flex;
+        align-items: center;
+        gap: $sp-10;
+        padding: 10px $sp-12;
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        border-radius: $radius-md;
+
+        &-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: $success;
+            flex-shrink: 0;
+            animation: caisse-pulse 1.8s ease-in-out infinite;
+        }
+
+        &-info { flex: 1; min-width: 0; }
+
+        &-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #15803d;
+            @include truncate;
+        }
+
+        &-time { font-size: 11px; color: #16a34a; }
+    }
+
+    &__no-session {
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+        padding: 10px $sp-12;
+        background: $bg-app;
+        border-radius: $radius-md;
+        font-size: 13px;
+        color: $text-muted;
+        svg { width: 16px; height: 16px; flex-shrink: 0; }
+    }
+
+    &__stat {
+        display: flex;
+        align-items: center;
+        gap: $sp-8;
+        font-size: 13px;
+        color: $text-muted;
+        svg { width: 15px; height: 15px; flex-shrink: 0; }
+        strong { color: $text-main; }
+    }
+
+    &__footer {
+        padding: $sp-12 $sp-20;
+        border-top: 1px solid $border;
+        display: flex;
+        gap: $sp-8;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    &__footer-spacer { flex: 1; }
+
+    &__edit-form {
+        padding: $sp-16 $sp-20;
+        border-top: 1px solid $border;
+        background: $bg-app;
+        display: flex;
+        gap: $sp-8;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+}
+
+@keyframes caisse-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+// ─── Lien référence POS ───────────────────────────────────────────────────────
+.pos-ref-link {
+    font-weight: 600;
+    color: $primary;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+}
+
+// ─── Bannière session active ──────────────────────────────────────────────────
+.pos-session-banner {
+    background: #f0fdf4;
+    border-bottom: 1px solid #bbf7d0;
+    padding: $sp-8 $sp-20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -$sp-24;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $sp-8;
+        padding: $sp-12 $sp-16;
+    }
+
+    &__info {
+        font-size: 13px;
+        color: #15803d;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+
+        @include mobile {
+            width: 100%;
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    }
+}
+
+// ─── Panneau de clôture caisse ────────────────────────────────────────────────
+.pos-close-panel {
+    background: #fffbeb;
+    border-bottom: 1px solid #fde68a;
+    padding: 10px $sp-20;
+    margin: -$sp-24;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    @include mobile {
+        padding: $sp-12 $sp-16;
+    }
+
+    &__form {
+        display: flex;
+        gap: $sp-12;
+        align-items: center;
+        flex-wrap: wrap;
+
+        @include mobile {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    &__label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    &__input-balance {
+        width: 180px;
+
+        @include mobile {
+            width: 100%;
+        }
+    }
+
+    &__input-note {
+        width: 200px;
+
+        @include mobile {
+            width: 100%;
+        }
+    }
+}
+
+// ─── Responsive POS ───────────────────────────────────────────────────────────
+@include mobile {
+    .pos-catalog__grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+
+    .pos-cart {
+        max-height: 50vh;
+        border-left: none;
+        border-top: 1px solid $border;
+    }
+}

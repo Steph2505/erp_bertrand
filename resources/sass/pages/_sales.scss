@@ -1,0 +1,685 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Autocomplete dropdown (commun à toutes les pages ventes) ─────────────────
+.ac-dropdown {
+    position: absolute;
+    z-index: 9999;
+    background: $bg-white;
+    border: 1.5px solid $border;
+    border-radius: $radius-md;
+    box-shadow: $shadow-md;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    top: calc(100% + 4px);
+
+    &--wide {
+        max-height: 260px;
+        min-width: 280px;
+        left: 0;
+    }
+}
+
+.ac-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background $transition-fast;
+
+    &--separator {
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__name {
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    &__stock {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-left: $sp-8;
+    }
+
+    &__meta {
+        font-size: 11px;
+        color: $text-muted;
+        margin-top: 2px;
+        display: flex;
+        gap: $sp-8;
+    }
+
+    &__empty {
+        padding: 12px 14px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+}
+
+// ─── Pack toggle label ────────────────────────────────────────────────────────
+.pack-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    margin-top: 5px;
+    cursor: pointer;
+    color: #15803d;
+    font-weight: 600;
+    padding: 3px 8px;
+    background: #f0fdf4;
+    border-radius: 5px;
+    border: 1px solid #bbf7d0;
+
+    input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: $primary;
+    }
+}
+
+// ─── Formulaire layout principal (create / edit) ──────────────────────────────
+.sale-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $sp-20;
+    align-items: start;
+
+    @include tablet {
+        grid-template-columns: 1fr;
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-16;
+    }
+
+    &__sidebar {
+        position: sticky;
+        top: 80px;
+
+        @include tablet {
+            position: static;
+        }
+    }
+}
+
+// ─── Card padding standard ────────────────────────────────────────────────────
+.card--padded {
+    padding: $sp-20;
+}
+
+.card--padded-lg {
+    padding: $sp-24;
+}
+
+// ─── Table overflow visible (pour dropdowns) ──────────────────────────────────
+.table-wrapper--overflow-visible {
+    overflow: visible;
+}
+
+// ─── Table: colonne avec min-width article ────────────────────────────────────
+.col-article {
+    min-width: 220px;
+
+    @include mobile {
+        min-width: 160px;
+    }
+}
+
+// ─── Colonne relative (wrapper dropdown) ─────────────────────────────────────
+.col-relative {
+    position: relative;
+}
+
+// ─── Input sizes ─────────────────────────────────────────────────────────────
+.input--qty {
+    width: 100px;
+    text-align: center;
+}
+
+.input--price {
+    width: 130px;
+}
+
+.input--price-edit {
+    width: 130px;
+    padding: 5px 8px;
+    border: 1.5px solid $border;
+    border-radius: $radius-sm;
+    font-size: 13px;
+}
+
+.input--payment-amount {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 700;
+}
+
+// ─── Item composition / error text ───────────────────────────────────────────
+.item-composition {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.item-stock-error {
+    font-size: 11px;
+    color: $danger;
+    margin-top: 2px;
+}
+
+// ─── sale-index: filtres ──────────────────────────────────────────────────────
+.sale-index {
+    &__filters {
+        padding: $sp-16 $sp-20;
+        margin-bottom: $sp-16;
+    }
+
+    &__filter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: $sp-12;
+        align-items: flex-end;
+
+        @include tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include mobile {
+            grid-template-columns: 1fr;
+            gap: $sp-8;
+        }
+    }
+
+    &__filter-group {
+        margin-bottom: 0;
+    }
+
+    &__filter-actions {
+        display: flex;
+        gap: $sp-8;
+
+        @include mobile {
+            flex-direction: column;
+        }
+    }
+
+    &__filter-submit {
+        flex: 1;
+    }
+
+    &__header-label {
+        font-size: 14px;
+    }
+
+    &__header-total {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__ref-link {
+        color: $primary;
+        font-weight: 600;
+    }
+
+    &__client-comptoir {
+        color: #94a3b8;
+    }
+
+    &__actions-cell {
+        text-align: right;
+    }
+
+    &__actions-wrap {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    &__empty-row td {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// ─── sale-create ──────────────────────────────────────────────────────────────
+.sale-create {
+    &__btn-confirmed {
+        border-color: $info;
+        color: $info;
+    }
+
+    &__count-label {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__add-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    &__empty-row td {
+        text-align: center;
+        padding: $sp-40;
+        color: #94a3b8;
+    }
+}
+
+// ─── sale-edit ────────────────────────────────────────────────────────────────
+.sale-edit {
+    &__subtitle {
+        color: $text-muted;
+    }
+
+    &__count-label {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__empty-row td {
+        text-align: center;
+        padding: $sp-40;
+        color: #94a3b8;
+    }
+}
+
+// ─── Récapitulatif (create + edit) ───────────────────────────────────────────
+.recap {
+    &__title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: $sp-16;
+    }
+
+    &__rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: $sp-20;
+    }
+
+    &__row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+    }
+
+    &__row--total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    &__label-muted {
+        color: $text-muted;
+    }
+
+    &__total-amount {
+        color: $primary;
+    }
+
+    &__divider {
+        height: 1px;
+        background: $border;
+    }
+
+    &__note {
+        margin-bottom: $sp-16;
+    }
+
+    &__submit {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+// ─── sale-show ────────────────────────────────────────────────────────────────
+.sale-show {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: $sp-20;
+        align-items: start;
+
+        @include tablet {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-16;
+    }
+
+    &__sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        @include mobile {
+            position: sticky;
+            bottom: 0;
+            background: $bg-app;
+            padding: $sp-12;
+            margin: 0 (-$sp-16);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+        }
+    }
+
+    &__item-name {
+        font-weight: 500;
+    }
+
+    &__tfoot-label {
+        text-align: right;
+        font-weight: 600;
+        padding: 12px $sp-16;
+    }
+
+    &__tfoot-total {
+        text-align: right;
+        font-weight: 700;
+        font-size: 15px;
+        color: $primary;
+        padding: 12px $sp-16;
+    }
+
+    &__note-card {
+        padding: $sp-16 $sp-20;
+    }
+
+    &__note-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: $text-muted;
+        margin-bottom: 6px;
+    }
+
+    &__note-text {
+        font-size: 14px;
+    }
+
+    // Fiche info
+    &__info-card {
+        padding: $sp-20;
+    }
+
+    &__info-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        color: $text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__info-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    &__info-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &__info-label {
+        color: $text-muted;
+    }
+
+    &__info-label--danger {
+        color: $danger;
+    }
+
+    &__info-divider {
+        height: 1px;
+        background: #f1f5f9;
+    }
+
+    &__total-value {
+        color: $primary;
+        font-size: 15px;
+    }
+
+    &__due-value {
+        color: $danger;
+    }
+
+    &__btn-full {
+        width: 100%;
+        justify-content: center;
+    }
+
+    &__locked-notice {
+        padding: 10px 14px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: $radius-md;
+        font-size: 13px;
+        color: #991b1b;
+        text-align: center;
+    }
+
+    &__pmt-date {
+        font-size: 12px;
+    }
+
+    &__pmt-amount {
+        color: $success;
+    }
+
+    &__pmt-meta {
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    // Icon dans header de confirm
+    &__confirm-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    // Modal footer
+    &__modal-footer {
+        display: flex;
+        gap: $sp-8;
+        justify-content: flex-end;
+        margin-top: $sp-8;
+    }
+}
+
+// ─── sale-index modal paiement ────────────────────────────────────────────────
+.pay-modal {
+    &__info {
+        font-size: 13px;
+        color: $text-muted;
+        margin-bottom: $sp-16;
+    }
+
+    &__due-amount {
+        color: $danger;
+    }
+
+    &__toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: #f8fafc;
+        border: 1.5px solid $border;
+        border-radius: $radius-md;
+        cursor: pointer;
+        margin-bottom: 14px;
+    }
+
+    &__toggle-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: $primary;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    &__toggle-title {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    &__toggle-sub {
+        font-size: 12px;
+        color: $text-muted;
+    }
+
+    &__footer {
+        padding: 0;
+        border: none;
+        margin-top: $sp-16;
+        display: flex;
+        gap: $sp-8;
+        justify-content: flex-end;
+    }
+
+    &__submit-btn {
+        min-width: 140px;
+    }
+
+    &__close-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: 20px;
+        line-height: 1;
+    }
+}
+
+// ─── sale-returns ─────────────────────────────────────────────────────────────
+.sale-returns {
+    &__ref {
+        font-weight: 600;
+        color: $danger;
+    }
+
+    &__sale-link {
+        color: $primary;
+        font-weight: 600;
+    }
+
+    &__date {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__amount {
+        color: $danger;
+    }
+
+    &__meta {
+        font-size: 13px;
+        color: $text-muted;
+    }
+
+    &__empty-row td {
+        text-align: center;
+        padding: $sp-40;
+        color: $text-muted;
+    }
+}
+
+// ─── return-create ────────────────────────────────────────────────────────────
+.return-create {
+    &__sale-info {
+        background: #f0fdf4;
+        border-radius: $radius-md;
+        padding: 14px;
+        margin-bottom: $sp-20;
+        font-size: 13px;
+    }
+
+    &__sale-total {
+        color: #16a34a;
+    }
+
+    &__restore-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1.5px solid $border;
+        border-radius: $radius-md;
+        cursor: pointer;
+        margin-bottom: $sp-16;
+    }
+
+    &__restore-checkbox {
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        accent-color: $primary;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    &__restore-title {
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    &__restore-sub {
+        font-size: 12px;
+        color: $text-muted;
+        margin-top: 2px;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $sp-8;
+    }
+
+    &__recap-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: $sp-16;
+    }
+
+    &__recap-empty {
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    &__recap-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+    }
+
+    &__recap-row--danger {
+        color: $danger;
+    }
+
+    &__recap-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        font-size: 15px;
+        font-weight: 700;
+        border-top: 2px solid $border;
+        margin-top: 6px;
+    }
+}

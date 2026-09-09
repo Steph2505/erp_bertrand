@@ -1,0 +1,244 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ─── Stock status ─────────────────────────────────────────────────────────────
+.stock-status {
+    // Page principale état de stock
+
+    // Lien produit dans le tableau
+    &__product-link {
+        font-weight: 600;
+        color: $text-main;
+    }
+
+    // Cellule catégorie
+    &__category {
+        color: $text-muted;
+        font-size: 13px;
+    }
+
+    // Cellule entrepôt
+    &__warehouse {
+        font-size: 13px;
+    }
+
+    // Cellule quantité (magasin filtré)
+    &__qty {
+        text-align: right;
+
+        &--out {
+            color: $danger;
+            font-weight: 700;
+        }
+
+        &--low {
+            color: $warning;
+            font-weight: 600;
+        }
+    }
+
+    // Entête colonne droite
+    &__th-right {
+        text-align: right;
+    }
+
+    // Stock min
+    &__min {
+        text-align: right;
+        color: $text-muted;
+        font-size: 13px;
+    }
+
+    // Cellule « non affecté »
+    &__unassigned {
+        color: #94A3B8;
+        font-size: 12px;
+    }
+
+    // Liste des stocks par entrepôt (mode global)
+    &__warehouse-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    // Badge entrepôt individuel
+    &__warehouse-badge {
+        font-size: 12px;
+        background: #F1F5F9;
+        border-radius: $radius-sm;
+        padding: 2px 8px;
+        white-space: nowrap;
+
+        strong {
+            &.out   { color: $danger; }
+            &.low   { color: $warning; }
+        }
+    }
+}
+
+// ─── Ajustements de stock ─────────────────────────────────────────────────────
+.stock-adj {
+    &__ref {
+        font-weight: 600;
+    }
+}
+
+// ─── Titre de section dans modal ajustement ──────────────────────────────────
+.modal-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+// ─── Champ quantité inline (modal ajustement) ────────────────────────────────
+.qty-input-inline {
+    width: 70px;
+    text-align: center;
+    padding: 5px;
+    border: 1.5px solid $border;
+    border-radius: $radius-sm;
+    font-size: 13px;
+}
+
+// ─── Tableau dans la modal avec marge ────────────────────────────────────────
+.data-table--mb {
+    margin-bottom: $sp-16;
+}
+
+// ─── Transferts de stock ──────────────────────────────────────────────────────
+.stock-transfer {
+    &__ref {
+        font-weight: 600;
+    }
+}
+
+// ─── Cellule min-width produit dans transferts ───────────────────────────────
+.transfer-product-cell {
+    min-width: 200px;
+}
+
+// ─── Autocomplete dropdown (transferts) ─────────────────────────────────────
+.transfer-dropdown {
+    position: absolute;
+    z-index: 9999;
+    background: white;
+    border: 1.5px solid $border;
+    border-radius: $radius-md;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    max-height: 240px;
+    overflow-y: auto;
+    width: 100%;
+    min-width: 260px;
+    top: calc(100% + 4px);
+    left: 0;
+
+    &__empty {
+        padding: 12px 14px;
+        color: #94A3B8;
+        font-size: 13px;
+    }
+
+    &__item {
+        padding: 9px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        justify-content: space-between;
+
+        &:hover {
+            background: $bg-app;
+        }
+
+        &-name {
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        &-available {
+            font-size: 11px;
+            color: #94A3B8;
+        }
+    }
+}
+
+// ─── Quantité input dans transfert (override de width) ───────────────────────
+.transfer-qty-input {
+    width: 90px;
+    text-align: center;
+}
+
+// ─── Ligne en erreur (quantité > disponible) ─────────────────────────────────
+.transfer-row--error {
+    background: #fef2f2;
+}
+
+// ─── Champ input en état erreur ──────────────────────────────────────────────
+.input--qty-error {
+    border-color: $danger;
+    color: $danger;
+}
+
+// ─── Message max sous le champ quantité ──────────────────────────────────────
+.qty-max-msg {
+    font-size: 11px;
+    color: $danger;
+    margin-top: 2px;
+}
+
+// ─── Stock dispo label ───────────────────────────────────────────────────────
+.stock-available-label {
+    font-size: 11px;
+    color: $text-muted;
+}
+
+// ─── Message source manquant ─────────────────────────────────────────────────
+.transfer-hint {
+    font-size: 13px;
+    color: #94A3B8;
+    padding: 12px 16px;
+}
+
+// ─── Header articles + compteur + bouton ─────────────────────────────────────
+.transfer-items-header {
+    // Utilise .table-wrapper__header existant + span compteur
+    span {
+        font-size: 13px;
+        color: $text-muted;
+    }
+}
+
+// ─── Icône mini dans bouton ──────────────────────────────────────────────────
+.btn-icon-xs {
+    width: 14px;
+    height: 14px;
+}
+
+// ─── Modal footer inline ─────────────────────────────────────────────────────
+.modal-footer-bare {
+    padding: 0;
+    border: none;
+    display: flex;
+    gap: $sp-8;
+    justify-content: flex-end;
+}
+
+// ─── Entête colonne centré avec largeur fixe ─────────────────────────────────
+.th-center {
+    text-align: center;
+}
+
+.th-center-w {
+    text-align: center;
+    width: 100px;
+}
+
+.th-center-w2 {
+    text-align: center;
+    width: 110px;
+}
+
+// ─── Cellule centrée ─────────────────────────────────────────────────────────
+.td-center {
+    text-align: center;
+}

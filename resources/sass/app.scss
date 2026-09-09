@@ -1,0 +1,46 @@
+// ─── Abstracts ───────────────────────────────────────────────────────────────
+@use 'abstracts/variables';
+@use 'abstracts/functions';
+@use 'abstracts/mixins';
+
+// ─── Base ────────────────────────────────────────────────────────────────────
+@use 'base/reset';
+@use 'base/typography';
+@use 'base/global';
+
+// ─── Composants ──────────────────────────────────────────────────────────────
+@use 'components/button';
+@use 'components/input';
+@use 'components/table';
+@use 'components/modal';
+@use 'components/badge';
+@use 'components/card';
+@use 'components/alert';
+@use 'components/sidebar';
+@use 'components/topbar';
+@use 'components/stat-card';
+@use 'components/pack';
+
+// ─── Layouts ─────────────────────────────────────────────────────────────────
+@use 'layouts/app';
+@use 'layouts/auth';
+
+// ─── Pages ───────────────────────────────────────────────────────────────────
+@use 'pages/dashboard';
+@use 'pages/pos';
+@use 'pages/sales';
+@use 'pages/purchases';
+@use 'pages/products';
+@use 'pages/stock';
+@use 'pages/contacts';
+@use 'pages/users';
+@use 'pages/reports';
+@use 'pages/settings';
+@use 'pages/accounts';
+@use 'pages/expenses';
+@use 'pages/quotations';
+@use 'pages/print';
+@use 'pages/errors';
+
+// ─── Police Inter (Google Fonts) ─────────────────────────────────────────────
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');

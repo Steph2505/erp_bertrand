@@ -37,7 +37,7 @@
 <div class="table-wrapper">
     <div style="position:relative;">
         <div x-show="loading && rows.length > 0" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
-            <svg style="width:28px;height:28px;color:#4CBB17;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <svg style="width:28px;height:28px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
         </div>
         <table class="data-table">
             <thead><tr><th>Référence</th><th>Type</th><th>Entrepôt</th><th>Date</th><th>Raison</th><th>Créé par</th></tr></thead>
@@ -201,7 +201,7 @@ function adjPage() {
 
         addItem() {
             const sel = document.getElementById('adj-product');
-            if (!this.newItem.product_id) { alert('Sélectionnez un produit.'); return; }
+            if (!this.newItem.product_id) { window.toast('Sélectionnez un produit.', 'error'); return; }
             const opt = sel.options[sel.selectedIndex];
             this.items.push({ product_id: this.newItem.product_id, name: opt.dataset.name, quantity: this.newItem.quantity || 1 });
             this.newItem = { product_id: '', quantity: 1 };

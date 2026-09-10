@@ -42,7 +42,7 @@
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                         <label style="margin-bottom:0;">Client</label>
                         <button type="button" @click="showCreateCustomer=!showCreateCustomer;createCustomerError=''"
-                                style="font-size:12px;color:#4CBB17;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
+                                style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                             <span x-text="showCreateCustomer ? 'Annuler' : 'Nouveau client'"></span>
                         </button>
@@ -206,7 +206,7 @@
                                 <input type="number" :name="'items['+idx+'][quantity]'"
                                        x-model.number="item.quantity" min="1" @input="recalc()"
                                        class="form-control input--qty"
-                                       :style="item.stock !== null && (item.quantity * item.units_per_item) > item.stock ? 'border-color:#EF4444;color:#EF4444;' : ''">
+                                       :style="item.stock !== null && (item.quantity * item.units_per_item) > item.stock ? 'border-color:#C4231A;color:#C4231A;' : ''">
                                 <div x-show="item.stock !== null && (item.quantity * item.units_per_item) > item.stock"
                                      class="item-stock-error"
                                      x-text="item.is_pack_mode ? 'Max '+ Math.floor(item.stock / item.pack_quantity)+' packs' : 'Max '+item.stock"></div>
@@ -370,11 +370,11 @@ function saleForm() {
         formatMoney(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY; },
 
         submitSale(status = 'draft') {
-            if (this.items.length === 0) { alert('Ajoutez au moins un article.'); return; }
-            if (this.items.some(i => !i.item_name)) { alert('Certaines lignes sont vides.'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
+            if (this.items.some(i => !i.item_name)) { window.toast('Certaines lignes sont vides.', 'error'); return; }
             const overStock = this.items.filter(i => i.stock !== null && (i.quantity * i.units_per_item) > i.stock);
             if (overStock.length > 0) {
-                alert('Stock insuffisant :\n' + overStock.map(i => `• ${i.item_name} : demandé ${i.quantity}, disponible ${i.stock}`).join('\n'));
+                window.toast('Stock insuffisant :\n' + overStock.map(i => `• ${i.item_name} : demandé ${i.quantity}, disponible ${i.stock}`).join('\n'), 'error');
                 return;
             }
             document.getElementById('status-input').value = status;

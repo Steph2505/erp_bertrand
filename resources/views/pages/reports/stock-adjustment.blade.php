@@ -24,8 +24,8 @@
 </form>
 
 <div class="stat-grid" style="margin-bottom:20px;">
-    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Unités ajoutées</div><div class="stat-card__value" style="color:#22C55E;">+{{ \App\Helpers\FormatHelper::number($totalAdded) }}</div><div class="stat-card__trend stat-card__trend--up">Entrées manuelles</div></div><div class="stat-card__icon stat-card__icon--green"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div></div>
-    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Unités déduites</div><div class="stat-card__value" style="color:#EF4444;">−{{ \App\Helpers\FormatHelper::number($totalDeducted) }}</div><div class="stat-card__trend stat-card__trend--down">Sorties manuelles</div></div><div class="stat-card__icon stat-card__icon--red"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg></div></div>
+    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Unités ajoutées</div><div class="stat-card__value" style="color:#12864B;">+{{ \App\Helpers\FormatHelper::number($totalAdded) }}</div><div class="stat-card__trend stat-card__trend--up">Entrées manuelles</div></div><div class="stat-card__icon stat-card__icon--green"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div></div>
+    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Unités déduites</div><div class="stat-card__value" style="color:#C4231A;">−{{ \App\Helpers\FormatHelper::number($totalDeducted) }}</div><div class="stat-card__trend stat-card__trend--down">Sorties manuelles</div></div><div class="stat-card__icon stat-card__icon--red"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg></div></div>
 </div>
 
 <div class="table-wrapper">
@@ -39,7 +39,7 @@
                 <td><strong>{{ $m->product?->display_name ?? '—' }}</strong></td>
                 <td>{{ $m->warehouse?->name ?? '—' }}</td>
                 <td><span class="badge badge--{{ $m->type==='addition'?'green':($m->type==='subtraction'?'red':'gray') }}">{{ ucfirst($m->type) }}</span></td>
-                <td style="text-align:right;font-weight:600;color:{{ $m->quantity>0?'#22C55E':'#EF4444' }}">
+                <td style="text-align:right;font-weight:600;color:{{ $m->quantity>0?'#12864B':'#C4231A' }}">
                     {{ $m->quantity > 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::number($m->quantity) }}
                 </td>
                 <td style="font-size:12px;color:#64748B;">{{ $m->note ?? '—' }}</td>

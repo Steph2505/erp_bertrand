@@ -46,7 +46,7 @@
 <div class="table-wrapper">
     <div style="position:relative;">
         <div x-show="loading && rows.length > 0" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
-            <svg style="width:28px;height:28px;color:#4CBB17;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <svg style="width:28px;height:28px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
         </div>
         <table class="data-table">
             <thead><tr><th>Référence</th><th>De</th><th>Vers</th><th>Date</th><th>Statut</th><th>Note</th></tr></thead>
@@ -155,7 +155,7 @@
                                 </td>
                                 <td style="text-align:center;">
                                     <input type="number" :name="'items['+idx+'][quantity]'" x-model.number="item.quantity" min="1"
-                                           class="form-control" :style="item.quantity > item.available ? 'border-color:#EF4444;color:#EF4444;' : ''" style="width:90px;text-align:center;">
+                                           class="form-control" :style="item.quantity > item.available ? 'border-color:#C4231A;color:#C4231A;' : ''" style="width:90px;text-align:center;">
                                     <div x-show="item.quantity > item.available" class="item-stock-error" x-text="'Max ' + item.available"></div>
                                 </td>
                                 <td><button type="button" @click="items.splice(idx,1)" class="btn btn--danger btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button></td>
@@ -241,10 +241,10 @@ function tfrPage() {
         },
 
         submitTransfer(form) {
-            if (!this.items.length) { alert('Ajoutez au moins un article.'); return; }
-            if (this.items.some(i => !i.product_id)) { alert('Certaines lignes n\'ont pas de produit.'); return; }
+            if (!this.items.length) { window.toast('Ajoutez au moins un article.', 'error'); return; }
+            if (this.items.some(i => !i.product_id)) { window.toast('Certaines lignes n\'ont pas de produit.', 'error'); return; }
             const bad = this.items.filter(i => i.quantity > i.available);
-            if (bad.length) { alert('Stock insuffisant :\n' + bad.map(i => `• ${i.name} : demandé ${i.quantity}, dispo ${i.available}`).join('\n')); return; }
+            if (bad.length) { window.toast('Stock insuffisant :\n' + bad.map(i => `• ${i.name} : demandé ${i.quantity}, dispo ${i.available}`).join('\n'), 'error'); return; }
             form.submit();
         },
     };

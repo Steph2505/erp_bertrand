@@ -9,11 +9,12 @@ class SaleItem extends Model
 {
     protected $fillable = [
         'sale_id', 'product_id', 'pack_id', 'item_type', 'item_name',
-        'quantity', 'units_per_item', 'unit_price', 'discount', 'tax_rate', 'subtotal',
+        'quantity', 'units_per_item', 'unit_price', 'unit_cost', 'discount', 'tax_rate', 'subtotal',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
+        'unit_cost'  => 'decimal:2',
         'discount'   => 'decimal:2',
         'tax_rate'   => 'decimal:2',
         'subtotal'   => 'decimal:2',

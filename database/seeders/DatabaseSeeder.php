@@ -37,7 +37,6 @@ class DatabaseSeeder extends Seeder
             // ── Données transactionnelles ─────────────────────────────────────
             // PurchaseSeeder::class,
             // SaleSeeder::class,
-            // ExpenseSeeder::class,
         ]);
 
         $this->command->newLine();

@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\Setting;
 use App\Models\Unit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -12,17 +14,19 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $warehouseId = (int) Setting::get('default_warehouse_id');
+
         $piece   = Unit::where('abbreviation', 'pcs')->first();
         $kg      = Unit::where('abbreviation', 'kg')->first();
         $litre   = Unit::where('abbreviation', 'L')->first();
         $plateau = Unit::where('abbreviation', 'plat')->first();
 
-        $vien = Category::where('name', 'Viennoiseries')->first();
-        $gat  = Category::where('name', 'Gâteaux & Entremets')->first();
+        $vien = Category::where('name', 'Patisseries')->first();
+        $gat  = Category::where('name', 'Patisseries')->first();
         $pain = Category::where('name', 'Pains & Baguettes')->first();
         $bois = Category::where('name', 'Boissons')->first();
         $conf = Category::where('name', 'Confiseries')->first();
-        $tart = Category::where('name', 'Tartes & Quiches')->first();
+        $tart = Category::where('name', 'Patisseries')->first();
 
         $products = [
             // Viennoiseries
@@ -54,7 +58,7 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $p) {
-            Product::firstOrCreate(['name' => $p['name']], [
+            $product = Product::firstOrCreate(['name' => $p['name']], [
                 'slug'             => Str::slug($p['name']),
                 'category_id'      => $p['cat']?->id,
                 'unit_id'          => $p['unit']?->id,
@@ -65,6 +69,13 @@ class ProductSeeder extends Seeder
                 'can_be_packed'    => $p['packable'],
                 'is_active'        => true,
             ]);
+
+            if ($warehouseId) {
+                ProductStock::firstOrCreate(
+                    ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
+                    ['quantity' => $p['stock']]
+                );
+            }
         }
     }
 }

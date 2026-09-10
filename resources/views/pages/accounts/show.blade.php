@@ -13,7 +13,7 @@
         <p>
             {{ match($paymentAccount->type) { 'cash' => 'Caisse', 'bank' => 'Banque', 'mobile_money' => 'Mobile Money', default => $paymentAccount->type } }}
             &nbsp;—&nbsp;Solde actuel :
-            <strong style="color:{{ $paymentAccount->current_balance >= 0 ? '#22C55E' : '#EF4444' }}">
+            <strong style="color:{{ $paymentAccount->current_balance >= 0 ? '#12864B' : '#C4231A' }}">
                 {{ \App\Helpers\FormatHelper::money($paymentAccount->current_balance) }}
             </strong>
         </p>
@@ -38,7 +38,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Encaissements (filtre)</div>
-            <div class="stat-card__value" style="color:#22C55E;">{{ \App\Helpers\FormatHelper::money($totalCredits) }}</div>
+            <div class="stat-card__value" style="color:#12864B;">{{ \App\Helpers\FormatHelper::money($totalCredits) }}</div>
             <div class="stat-card__trend stat-card__trend--up">Entrées sur la période</div>
         </div>
         <div class="stat-card__icon stat-card__icon--green">
@@ -48,7 +48,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Décaissements (filtre)</div>
-            <div class="stat-card__value" style="color:#EF4444;">{{ \App\Helpers\FormatHelper::money($totalDebits) }}</div>
+            <div class="stat-card__value" style="color:#C4231A;">{{ \App\Helpers\FormatHelper::money($totalDebits) }}</div>
             <div class="stat-card__trend stat-card__trend--down">Sorties sur la période</div>
         </div>
         <div class="stat-card__icon stat-card__icon--red">
@@ -58,7 +58,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Solde actuel</div>
-            <div class="stat-card__value" style="color:{{ $paymentAccount->current_balance >= 0 ? '#22C55E' : '#EF4444' }}">
+            <div class="stat-card__value" style="color:{{ $paymentAccount->current_balance >= 0 ? '#12864B' : '#C4231A' }}">
                 {{ \App\Helpers\FormatHelper::money($paymentAccount->current_balance) }}
             </div>
             <div class="stat-card__trend stat-card__trend--flat">Tous mouvements confondus</div>
@@ -81,7 +81,7 @@
             <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control">
         </div>
         <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn--primary" style="flex:1">Filtrer</button>
+            <button type="submit" class="btn btn--primary">Filtrer</button>
             <a href="{{ route('payment-accounts.show', $paymentAccount) }}" class="btn btn--ghost">Réinitialiser</a>
         </div>
     </div>
@@ -99,8 +99,8 @@
             <th>Référence</th>
             <th>Libellé</th>
             <th>Mode</th>
-            <th style="text-align:right;color:#EF4444;">Débit (sortie)</th>
-            <th style="text-align:right;color:#22C55E;">Crédit (entrée)</th>
+            <th style="text-align:right;color:#C4231A;">Débit (sortie)</th>
+            <th style="text-align:right;color:#12864B;">Crédit (entrée)</th>
         </tr></thead>
         <tbody>
             @forelse($journal as $row)
@@ -109,7 +109,7 @@
                 <td style="font-size:12px;color:#64748B;font-weight:600;">{{ $row->reference }}</td>
                 <td>
                     @if($row->link)
-                        <a href="{{ $row->link }}" style="color:#4CBB17;font-weight:500;">{{ $row->label }}</a>
+                        <a href="{{ $row->link }}" style="color:#1749B3;font-weight:500;">{{ $row->label }}</a>
                     @else
                         {{ $row->label }}
                     @endif
@@ -119,14 +119,14 @@
                 </td>
                 <td style="text-align:right;">
                     @if($row->debit > 0)
-                        <strong style="color:#EF4444;">− {{ \App\Helpers\FormatHelper::money($row->debit) }}</strong>
+                        <strong style="color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($row->debit) }}</strong>
                     @else
                         <span style="color:#CBD5E1;">—</span>
                     @endif
                 </td>
                 <td style="text-align:right;">
                     @if($row->credit > 0)
-                        <strong style="color:#22C55E;">+ {{ \App\Helpers\FormatHelper::money($row->credit) }}</strong>
+                        <strong style="color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($row->credit) }}</strong>
                     @else
                         <span style="color:#CBD5E1;">—</span>
                     @endif
@@ -140,13 +140,13 @@
         <tfoot>
             <tr style="border-top:2px solid #E2E8F0;background:#F8FAFC;font-weight:700;">
                 <td colspan="4">TOTAL</td>
-                <td style="text-align:right;color:#EF4444;">− {{ \App\Helpers\FormatHelper::money($totalDebits) }}</td>
-                <td style="text-align:right;color:#22C55E;">+ {{ \App\Helpers\FormatHelper::money($totalCredits) }}</td>
+                <td style="text-align:right;color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($totalDebits) }}</td>
+                <td style="text-align:right;color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($totalCredits) }}</td>
             </tr>
             <tr style="background:#F8FAFC;font-weight:700;">
                 <td colspan="4">FLUX NET</td>
                 @php $net = $totalCredits - $totalDebits; @endphp
-                <td colspan="2" style="text-align:right;color:{{ $net >= 0 ? '#22C55E' : '#EF4444' }};">
+                <td colspan="2" style="text-align:right;color:{{ $net >= 0 ? '#12864B' : '#C4231A' }};">
                     {{ $net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($net) }}
                 </td>
             </tr>

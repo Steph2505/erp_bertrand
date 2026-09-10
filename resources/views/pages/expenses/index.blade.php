@@ -131,8 +131,8 @@
 
             <div class="form-grid form-grid--2">
                 <div class="form-group">
-                    <label>Catégorie</label>
-                    <select name="expense_category_id" class="form-select">
+                    <label>Catégorie <span class="required">*</span></label>
+                    <select name="expense_category_id" class="form-select" required>
                         <option value="">-- Sélectionner --</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" :selected="editExpense && editExpense.expense_category_id == {{ $cat->id }}">{{ $cat->name }}</option>
@@ -140,8 +140,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Compte de paiement</label>
-                    <select name="payment_account_id" class="form-select">
+                    <label>Compte de paiement <span class="required">*</span></label>
+                    <select name="payment_account_id" class="form-select" required>
                         <option value="">-- Sélectionner --</option>
                         @foreach($accounts as $acc)
                             <option value="{{ $acc->id }}" :selected="editExpense && editExpense.payment_account_id == {{ $acc->id }}">{{ $acc->name }}</option>

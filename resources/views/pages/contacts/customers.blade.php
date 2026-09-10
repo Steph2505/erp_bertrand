@@ -25,7 +25,7 @@
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Rechercher..." class="form-control">
         </div>
         <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn--primary" style="flex:1">Filtrer</button>
+            <button type="submit" class="btn btn--primary">Filtrer</button>
             <a href="{{ route('customers.index') }}" class="btn btn--ghost">Réinitialiser</a>
         </div>
     </div>
@@ -54,7 +54,7 @@
                     <td>{{ $customer->phone ?? '—' }}</td>
                     <td style="font-size:12px;color:#64748B;">{{ $customer->email ?? '—' }}</td>
                     <td>{{ $customer->group?->name ?? '—' }}</td>
-                    <td style="font-weight:600;color:#4CBB17;">{{ \App\Helpers\FormatHelper::money($customer->sales_sum_total ?? 0) }}</td>
+                    <td style="font-weight:600;color:#1749B3;">{{ \App\Helpers\FormatHelper::money(($customer->sales_sum_total ?? 0) + $customer->opening_balance) }}</td>
                     <td><span class="badge badge--{{ $customer->is_active ? 'green' : 'gray' }}">{{ $customer->is_active ? 'Actif' : 'Inactif' }}</span></td>
                     <td>
                         <div class="data-table__actions">
@@ -124,8 +124,17 @@
                     <input type="text" name="address" class="form-control" :value="editCustomer ? editCustomer.address : ''">
                 </div>
                 <div class="form-group">
-                    <label>Solde initial ({{ $currency }})</label>
-                    <input type="number" name="opening_balance" min="0" class="form-control" :value="editCustomer ? editCustomer.opening_balance : '0'">
+                    <label>Montant initial ({{ $currency }})</label>
+                    <input type="number" name="opening_balance" min="0" class="form-control"
+                           :value="editCustomer ? editCustomer.opening_balance : '0'"
+                           :disabled="!!editCustomer">
+                    <p class="form-hint" x-show="!!editCustomer">Non modifiable après la création — sert de base au chiffre d'affaires du client.</p>
+                    <p class="form-hint" x-show="!editCustomer">Chiffre d'affaires de départ du client, avant son utilisation dans le système.</p>
+                </div>
+                <div class="form-group">
+                    <label>Ristourne (%)</label>
+                    <input type="number" name="ristourne_percent" min="0" max="100" step="0.01" class="form-control" :value="editCustomer ? editCustomer.ristourne_percent : '0'">
+                    <p class="form-hint">Pourcentage reversé au client en fin d'année sur son chiffre d'affaires.</p>
                 </div>
             </div>
             <div class="modal__footer" style="padding:0;border:none;margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">

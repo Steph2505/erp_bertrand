@@ -25,7 +25,7 @@
 <div class="table-wrapper">
     <div class="table-wrapper__header">
         <strong>Paiements fournisseurs</strong>
-        <span style="font-size:13px;color:#64748B;">Total : <strong style="color:#EF4444;">{{ \App\Helpers\FormatHelper::money($total) }}</strong></span>
+        <span style="font-size:13px;color:#64748B;">Total : <strong style="color:#C4231A;">{{ \App\Helpers\FormatHelper::money($total) }}</strong></span>
     </div>
     <table class="data-table">
         <thead><tr>
@@ -39,14 +39,14 @@
                 <td style="font-size:12px;color:#64748B;font-weight:600;">{{ $pmt->reference }}</td>
                 <td>
                     @if($purchase)
-                        <a href="{{ route('purchases.show', $purchase->id) }}" style="color:#4CBB17;font-weight:500;">{{ $purchase->reference }}</a>
+                        <a href="{{ route('purchases.show', $purchase->id) }}" style="color:#1749B3;font-weight:500;">{{ $purchase->reference }}</a>
                     @else —
                     @endif
                 </td>
                 <td>{{ $purchase?->supplier?->name ?? '—' }}</td>
                 <td><span class="badge badge--gray">{{ $pmt->payment_method }}</span></td>
                 <td style="font-size:12px;color:#64748B;">{{ $pmt->paymentAccount?->name ?? '—' }}</td>
-                <td style="text-align:right;font-weight:600;color:#EF4444;">{{ \App\Helpers\FormatHelper::money($pmt->amount) }}</td>
+                <td style="text-align:right;font-weight:600;color:#C4231A;">{{ \App\Helpers\FormatHelper::money($pmt->amount) }}</td>
             </tr>
             @empty
             <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Aucun paiement sur la période</td></tr>

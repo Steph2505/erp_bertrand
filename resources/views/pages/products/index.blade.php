@@ -76,7 +76,7 @@
         {{-- Overlay loader --}}
         <div x-show="loading && products.length > 0"
              style="position:absolute;inset:0;background:rgba(255,255,255,0.65);z-index:10;display:flex;align-items:center;justify-content:center;">
-            <svg style="width:32px;height:32px;color:#4CBB17;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none">
+            <svg style="width:32px;height:32px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/>
                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
             </svg>
@@ -99,7 +99,7 @@
                 <template x-if="loading && products.length === 0">
                     <tr>
                         <td colspan="7" style="text-align:center;padding:48px;color:#64748B;">
-                            <svg style="width:24px;height:24px;color:#4CBB17;animation:spin 1s linear infinite;margin:0 auto 12px;" viewBox="0 0 24 24" fill="none">
+                            <svg style="width:24px;height:24px;color:#1749B3;animation:spin 1s linear infinite;margin:0 auto 12px;" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/>
                                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                             </svg>
@@ -113,7 +113,7 @@
                     <tr>
                         <td colspan="7" class="table-empty-cell">
                             Aucun produit trouvé.
-                            <a href="{{ route('products.create') }}" style="color:#4CBB17;">Ajouter le premier</a>
+                            <a href="{{ route('products.create') }}" style="color:#1749B3;">Ajouter le premier</a>
                         </td>
                     </tr>
                 </template>
@@ -295,8 +295,9 @@ function productList() {
                 if (this.products.length === 0 && this.currentPage > 1) {
                     this.goTo(this.currentPage - 1);
                 }
+                window.toast('Produit supprimé avec succès.', 'success');
             } catch(e) {
-                alert('Erreur lors de la suppression.');
+                window.toast('Erreur lors de la suppression.', 'error');
             }
         },
     };

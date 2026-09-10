@@ -8,15 +8,21 @@ use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class SettingController extends Controller
 {
     // ── Entreprise ────────────────────────────────────────────────────────────
 
-    public function company(): View
+    public function company(): View|RedirectResponse
     {
-        $settings = Setting::where('group', 'company')->pluck('value', 'key');
-        return view('pages.settings.company', compact('settings'));
+        try {
+            $settings = Setting::where('group', 'company')->pluck('value', 'key');
+            return view('pages.settings.company', compact('settings'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des paramètres entreprise');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function saveCompany(Request $request): RedirectResponse
@@ -32,8 +38,13 @@ class SettingController extends Controller
             'currency_symbol' => 'nullable|string|max:10',
         ]);
 
-        foreach ($data as $key => $value) {
-            Setting::set($key, $value, 'company');
+        try {
+            foreach ($data as $key => $value) {
+                Setting::set($key, $value, 'company');
+            }
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la sauvegarde des paramètres entreprise', ['data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la sauvegarde.');
         }
 
         return back()->with('success', 'Paramètres entreprise sauvegardés.');
@@ -41,16 +52,27 @@ class SettingController extends Controller
 
     // ── Entrepôts ─────────────────────────────────────────────────────────────
 
-    public function warehouses(): View
+    public function warehouses(): View|RedirectResponse
     {
-        $warehouses         = Warehouse::orderBy('name')->get();
-        $defaultWarehouseId = (int) Setting::get('default_warehouse_id');
-        return view('pages.settings.warehouses', compact('warehouses', 'defaultWarehouseId'));
+        try {
+            $warehouses         = Warehouse::orderBy('name')->get();
+            $defaultWarehouseId = (int) Setting::get('default_warehouse_id');
+            return view('pages.settings.warehouses', compact('warehouses', 'defaultWarehouseId'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des entrepôts');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function setDefaultWarehouse(Warehouse $warehouse): RedirectResponse
     {
-        Setting::set('default_warehouse_id', $warehouse->id, 'general');
+        try {
+            Setting::set('default_warehouse_id', $warehouse->id, 'general');
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la définition du magasin par défaut', ['warehouse_id' => $warehouse->id]);
+            return back()->with('error', 'Une erreur est survenue.');
+        }
+
         return back()->with('success', "« {$warehouse->name} » défini comme magasin par défaut.");
     }
 
@@ -63,7 +85,13 @@ class SettingController extends Controller
             'phone'   => 'nullable|string|max:30',
         ]);
 
-        Warehouse::create(array_merge($data, ['is_active' => true]));
+        try {
+            Warehouse::create(array_merge($data, ['is_active' => true]));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la création de l\'entrepôt', ['data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la création de l\'entrepôt.');
+        }
+
         return back()->with('success', 'Entrepôt créé.');
     }
 
@@ -75,7 +103,14 @@ class SettingController extends Controller
             'phone'     => 'nullable|string|max:30',
             'is_active' => 'boolean',
         ]);
-        $warehouse->update($data);
+
+        try {
+            $warehouse->update($data);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la mise à jour de l\'entrepôt', ['warehouse_id' => $warehouse->id, 'data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'entrepôt.');
+        }
+
         return back()->with('success', 'Entrepôt mis à jour.');
     }
 
@@ -88,16 +123,27 @@ class SettingController extends Controller
             return back()->withErrors(['warehouse' => 'Impossible : cet entrepôt est associé à des ventes ou des achats.']);
         }
 
-        $warehouse->delete();
+        try {
+            $warehouse->delete();
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la suppression de l\'entrepôt', ['warehouse_id' => $warehouse->id]);
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'entrepôt.');
+        }
+
         return back()->with('success', 'Entrepôt supprimé.');
     }
 
     // ── Factures ──────────────────────────────────────────────────────────────
 
-    public function invoices(): View
+    public function invoices(): View|RedirectResponse
     {
-        $settings = Setting::where('group', 'invoice')->pluck('value', 'key');
-        return view('pages.settings.invoices', compact('settings'));
+        try {
+            $settings = Setting::where('group', 'invoice')->pluck('value', 'key');
+            return view('pages.settings.invoices', compact('settings'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des paramètres factures');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function saveInvoices(Request $request): RedirectResponse
@@ -112,8 +158,13 @@ class SettingController extends Controller
             'tax_rate_default' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        foreach ($data as $key => $value) {
-            Setting::set($key, $value, 'invoice');
+        try {
+            foreach ($data as $key => $value) {
+                Setting::set($key, $value, 'invoice');
+            }
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la sauvegarde des paramètres factures', ['data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la sauvegarde.');
         }
 
         return back()->with('success', 'Paramètres factures sauvegardés.');
@@ -121,16 +172,21 @@ class SettingController extends Controller
 
     // ── Taux de TVA ───────────────────────────────────────────────────────────
 
-    public function taxRates(): View
+    public function taxRates(): View|RedirectResponse
     {
-        $raw   = Setting::get('tax_rates', null);
-        $rates = $raw ? json_decode($raw, true) : [
-            ['rate' => 0,    'label' => 'Exonéré (0%)',     'is_default' => false],
-            ['rate' => 10,   'label' => 'TVA réduite (10%)', 'is_default' => false],
-            ['rate' => 18,   'label' => 'TVA normale (18%)', 'is_default' => true],
-        ];
+        try {
+            $raw   = Setting::get('tax_rates', null);
+            $rates = $raw ? json_decode($raw, true) : [
+                ['rate' => 0,    'label' => 'Exonéré (0%)',     'is_default' => false],
+                ['rate' => 10,   'label' => 'TVA réduite (10%)', 'is_default' => false],
+                ['rate' => 18,   'label' => 'TVA normale (18%)', 'is_default' => true],
+            ];
 
-        return view('pages.settings.tax-rates', compact('rates'));
+            return view('pages.settings.tax-rates', compact('rates'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des taux de TVA');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function saveTaxRates(Request $request): RedirectResponse
@@ -142,24 +198,29 @@ class SettingController extends Controller
             'rates.*.is_default' => 'nullable|boolean',
         ]);
 
-        $rates = collect($request->rates)->map(fn($r, $i) => [
-            'rate'       => (float) $r['rate'],
-            'label'      => trim($r['label']),
-            'is_default' => (bool) ($r['is_default'] ?? false),
-        ])->values()->toArray();
+        try {
+            $rates = collect($request->rates)->map(fn($r, $i) => [
+                'rate'       => (float) $r['rate'],
+                'label'      => trim($r['label']),
+                'is_default' => (bool) ($r['is_default'] ?? false),
+            ])->values()->toArray();
 
-        // Un seul taux par défaut
-        $hasDefault = collect($rates)->contains('is_default', true);
-        if (! $hasDefault && count($rates) > 0) {
-            $rates[0]['is_default'] = true;
-        }
+            // Un seul taux par défaut
+            $hasDefault = collect($rates)->contains('is_default', true);
+            if (! $hasDefault && count($rates) > 0) {
+                $rates[0]['is_default'] = true;
+            }
 
-        Setting::set('tax_rates', json_encode($rates), 'tax');
+            Setting::set('tax_rates', json_encode($rates), 'tax');
 
-        // Synchroniser aussi le taux par défaut dans les paramètres factures
-        $default = collect($rates)->firstWhere('is_default', true);
-        if ($default) {
-            Setting::set('tax_rate_default', $default['rate'], 'invoice');
+            // Synchroniser aussi le taux par défaut dans les paramètres factures
+            $default = collect($rates)->firstWhere('is_default', true);
+            if ($default) {
+                Setting::set('tax_rate_default', $default['rate'], 'invoice');
+            }
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la sauvegarde des taux de TVA', ['rates' => $request->rates]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la sauvegarde des taux.');
         }
 
         return back()->with('success', 'Taux de TVA sauvegardés.');

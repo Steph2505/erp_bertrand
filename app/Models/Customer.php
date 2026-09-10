@@ -13,12 +13,13 @@ class Customer extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'address', 'tax_number',
-        'customer_group_id', 'price_group_id', 'opening_balance', 'is_active',
+        'customer_group_id', 'price_group_id', 'opening_balance', 'ristourne_percent', 'is_active',
     ];
 
     protected $casts = [
-        'is_active'       => 'boolean',
-        'opening_balance' => 'decimal:2',
+        'is_active'         => 'boolean',
+        'opening_balance'   => 'decimal:2',
+        'ristourne_percent' => 'decimal:2',
     ];
 
     public function group(): BelongsTo    { return $this->belongsTo(CustomerGroup::class, 'customer_group_id'); }

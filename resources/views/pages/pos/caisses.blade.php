@@ -41,7 +41,7 @@
 @if($openSessions->count() > 0)
 <div x-show="showSessions" x-collapse class="card mb-24" style="border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.03);">
     <div style="padding:14px 20px;border-bottom:1px solid rgba(34,197,94,0.2);display:flex;align-items:center;gap:10px;">
-        <span style="width:10px;height:10px;border-radius:50%;background:#22C55E;display:inline-block;animation:caisse-pulse 1.8s ease-in-out infinite;flex-shrink:0;"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:#12864B;display:inline-block;animation:caisse-pulse 1.8s ease-in-out infinite;flex-shrink:0;"></span>
         <strong style="font-size:14px;color:#15803d;">{{ $openSessions->count() }} session(s) ouverte(s) en ce moment</strong>
     </div>
     @foreach($openSessions as $session)

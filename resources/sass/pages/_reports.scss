@@ -289,7 +289,7 @@
     color: white;
     flex-shrink: 0;
 
-    &--1 { background: #F59E0B; }
+    &--1 { background: $gold-500; }
     &--2 { background: #94A3B8; }
     &--3 { background: #CD7F32; }
     &--other { background: $border; color: $text-muted; }

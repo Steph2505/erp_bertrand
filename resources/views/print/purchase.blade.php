@@ -6,19 +6,19 @@
     <title>Bon de commande {{ $purchase->reference }}</title>
     <style>
         * { margin:0;padding:0;box-sizing:border-box; }
-        body { font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1e293b;background:#fff; }
+        body { font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#0E1726;background:#fff; }
         .page { max-width:800px;margin:0 auto;padding:40px; }
         .header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px; }
-        .company-name { font-size:22px;font-weight:800;color:#1e293b;margin-bottom:4px; }
+        .company-name { font-size:22px;font-weight:800;color:#0E1726;margin-bottom:4px; }
         .company-info { font-size:12px;color:#64748B;line-height:1.7; }
         .invoice-label { font-size:26px;font-weight:900;color:#3b82f6;letter-spacing:-.5px; }
         .invoice-meta { text-align:right;font-size:13px;color:#64748B;margin-top:6px; }
-        .invoice-meta strong { color:#1e293b; }
+        .invoice-meta strong { color:#0E1726; }
         .divider { height:2px;background:linear-gradient(to right,#3b82f6,#60a5fa);margin:24px 0;border-radius:2px; }
         .parties { display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:30px; }
         .party-box { background:#f8fafc;border-radius:8px;padding:16px; }
         .party-label { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94A3B8;margin-bottom:8px; }
-        .party-name { font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px; }
+        .party-name { font-size:15px;font-weight:700;color:#0E1726;margin-bottom:4px; }
         .party-info { font-size:12px;color:#64748B;line-height:1.6; }
         table { width:100%;border-collapse:collapse;margin-bottom:24px; }
         thead { background:#f1f5f9; }
@@ -52,7 +52,7 @@
         <button onclick="window.print()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
             🖨️ Imprimer
         </button>
-        <button onclick="window.close()" style="padding:10px 20px;background:#f1f5f9;color:#1e293b;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
+        <button onclick="window.close()" style="padding:10px 20px;background:#f1f5f9;color:#0E1726;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
             Fermer
         </button>
     </div>
@@ -191,7 +191,7 @@
         @else
             <p>Merci pour votre confiance — {{ \App\Models\Setting::get('company_name', config('app.name')) }}</p>
         @endif
-        <p style="margin-top:6px;">Document généré le {{ now()->format('d/m/Y à H:i') }} — ERP Bertrand Store</p>
+        <p style="margin-top:6px;">Document généré le {{ now()->format('d/m/Y à H:i') }} — ERP Espace Mokolo d'Obala</p>
     </div>
 </div>
 </body>

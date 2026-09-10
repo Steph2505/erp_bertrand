@@ -49,7 +49,6 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                             Ajouter une ligne
                         </button>
-                        <button type="button" @click="addFreeLine()" class="btn btn--ghost btn--sm">+ Ligne libre</button>
                     </div>
                 </div>
                 <table class="data-table">
@@ -185,10 +184,6 @@ function quoteForm() {
             this.items.push({ _key: ++_key, _search: '', _open: false, _free: false, product_id: null, name: '', qty: 1, price: 0 });
         },
 
-        addFreeLine() {
-            this.items.push({ _key: ++_key, _search: '', _open: false, _free: true, product_id: null, name: '', qty: 1, price: 0 });
-        },
-
         selectInRow(idx, p) {
             Object.assign(this.items[idx], { product_id: p.id, name: p.name, price: p.price, _search: p.name, _open: false });
         },
@@ -197,8 +192,8 @@ function quoteForm() {
         fmt(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY; },
 
         submitForm() {
-            if (this.items.length === 0) { alert('Ajoutez au moins un article.'); return; }
-            if (this.items.some(i => !i.name)) { alert('Certaines lignes n\'ont pas de désignation.'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
+            if (this.items.some(i => !i.name)) { window.toast('Certaines lignes n\'ont pas de désignation.', 'error'); return; }
             const container = document.getElementById('items-container');
             container.innerHTML = '';
             const add = (n, v) => { const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = n; inp.value = v; container.appendChild(inp); };

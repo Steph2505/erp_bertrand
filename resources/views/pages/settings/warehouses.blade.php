@@ -42,7 +42,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Actifs</div>
-            <div class="stat-card__value" style="color:#22C55E;">{{ $warehouses->where('is_active', true)->count() }}</div>
+            <div class="stat-card__value" style="color:#12864B;">{{ $warehouses->where('is_active', true)->count() }}</div>
             <div class="stat-card__trend stat-card__trend--up">En service</div>
         </div>
         <div class="stat-card__icon stat-card__icon--green">

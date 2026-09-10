@@ -51,7 +51,7 @@
         <div class="stat-card__info">
             <div class="stat-card__label">Flux net {{ $year }}</div>
             {{-- La couleur dépend d'une valeur dynamique PHP — inline obligatoire --}}
-            <div class="stat-card__value" style="color:{{ $totals->net >= 0 ? '#22C55E' : '#EF4444' }}">
+            <div class="stat-card__value" style="color:{{ $totals->net >= 0 ? '#12864B' : '#C4231A' }}">
                 {{ \App\Helpers\FormatHelper::money($totals->net) }}
             </div>
             <div class="stat-card__trend stat-card__trend--{{ $totals->net >= 0 ? 'up' : 'down' }}">
@@ -93,7 +93,7 @@
                 <td class="account-table__amount-out">{{ \App\Helpers\FormatHelper::money($m->decaissements) }}</td>
                 <td class="text-right">
                     {{-- Couleur dynamique selon positif/négatif --}}
-                    <strong style="color:{{ $m->net >= 0 ? '#22C55E' : '#EF4444' }}">
+                    <strong style="color:{{ $m->net >= 0 ? '#12864B' : '#C4231A' }}">
                         {{ $m->net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($m->net) }}
                     </strong>
                 </td>
@@ -108,7 +108,7 @@
                 <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($totals->dec_depenses) }}</td>
                 <td class="account-table__amount-out">{{ \App\Helpers\FormatHelper::money($totals->decaissements) }}</td>
                 {{-- Couleur dynamique selon positif/négatif --}}
-                <td class="text-right font-700" style="color:{{ $totals->net >= 0 ? '#22C55E' : '#EF4444' }};">
+                <td class="text-right font-700" style="color:{{ $totals->net >= 0 ? '#12864B' : '#C4231A' }};">
                     {{ $totals->net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($totals->net) }}
                 </td>
             </tr>

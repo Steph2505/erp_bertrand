@@ -20,7 +20,7 @@
 
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong style="color:#22C55E;">Top clients</strong>
+            <strong style="color:#12864B;">Top clients</strong>
             <span style="font-size:13px;color:#64748B;">{{ $topCustomers->count() }} client(s)</span>
         </div>
         <table class="data-table">
@@ -34,11 +34,11 @@
                 <tr>
                     <td style="color:#64748B;font-weight:700;">#{{ $i+1 }}</td>
                     <td>
-                        <a href="{{ route('customers.show', $c->id) }}" style="color:#4CBB17;font-weight:500;">{{ $c->name }}</a>
+                        <a href="{{ route('customers.show', $c->id) }}" style="color:#1749B3;font-weight:500;">{{ $c->name }}</a>
                         @if($c->phone) <span style="font-size:11px;color:#94A3B8;">{{ $c->phone }}</span> @endif
                     </td>
                     <td style="text-align:right">{{ $c->nb_sales }}</td>
-                    <td style="text-align:right;font-weight:600;color:#22C55E;">{{ \App\Helpers\FormatHelper::money($c->total_sales) }}</td>
+                    <td style="text-align:right;font-weight:600;color:#12864B;">{{ \App\Helpers\FormatHelper::money($c->total_sales) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="4" style="text-align:center;padding:24px;color:#64748B;">Aucune vente sur la période</td></tr>
@@ -49,7 +49,7 @@
 
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong style="color:#3B82F6;">Top fournisseurs</strong>
+            <strong style="color:#1749B3;">Top fournisseurs</strong>
             <span style="font-size:13px;color:#64748B;">{{ $topSuppliers->count() }} fournisseur(s)</span>
         </div>
         <table class="data-table">
@@ -63,10 +63,10 @@
                 <tr>
                     <td style="color:#64748B;font-weight:700;">#{{ $i+1 }}</td>
                     <td>
-                        <a href="{{ route('suppliers.show', $s->id) }}" style="color:#4CBB17;font-weight:500;">{{ $s->name }}</a>
+                        <a href="{{ route('suppliers.show', $s->id) }}" style="color:#1749B3;font-weight:500;">{{ $s->name }}</a>
                     </td>
                     <td style="text-align:right">{{ $s->nb_purchases }}</td>
-                    <td style="text-align:right;font-weight:600;color:#3B82F6;">{{ \App\Helpers\FormatHelper::money($s->total_purchases) }}</td>
+                    <td style="text-align:right;font-weight:600;color:#1749B3;">{{ \App\Helpers\FormatHelper::money($s->total_purchases) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="4" style="text-align:center;padding:24px;color:#64748B;">Aucun achat sur la période</td></tr>

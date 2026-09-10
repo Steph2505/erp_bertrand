@@ -11,10 +11,8 @@ class CustomerGroupSeeder extends Seeder
     public function run(): void
     {
         $groups = [
-            ['name' => 'Particulier',   'discount' => 0],
-            ['name' => 'Professionnel', 'discount' => 10],
-            ['name' => 'Revendeur',     'discount' => 15],
-            ['name' => 'Fidèle',        'discount' => 5],
+            ['name' => 'Détaillant',   'discount' => 0],
+            ['name' => 'Grossiste', 'discount' => 0],
         ];
 
         foreach ($groups as $g) {
@@ -23,8 +21,7 @@ class CustomerGroupSeeder extends Seeder
 
         $priceGroups = [
             ['name' => 'Prix Pro',       'description' => 'Tarif professionnel'],
-            ['name' => 'Prix Revendeur', 'description' => 'Tarif revendeur bulk'],
-            ['name' => 'Prix Fidèle',    'description' => 'Tarif client fidèle'],
+            ['name' => 'Prix Revendeur', 'description' => 'Tarif revendeur bulk']
         ];
 
         foreach ($priceGroups as $pg) {

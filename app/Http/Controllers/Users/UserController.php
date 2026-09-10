@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
@@ -22,20 +23,25 @@ class UserController extends Controller
         'Administration' => ['manage settings', 'manage users'],
     ];
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $users = User::with(['roles', 'permissions'])
-            ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
-            ->latest()
-            ->paginate(20);
+        try {
+            $users = User::with(['roles', 'permissions'])
+                ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
+                ->latest()
+                ->paginate(20);
 
-        $roles            = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
-        $permissionGroups = self::PERMISSION_GROUPS;
-        $roleDefaultPerms = Role::with('permissions')->get()->mapWithKeys(fn($r) => [
-            $r->name => $r->permissions->pluck('name')->values(),
-        ]);
+            $roles            = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
+            $permissionGroups = self::PERMISSION_GROUPS;
+            $roleDefaultPerms = Role::with('permissions')->get()->mapWithKeys(fn($r) => [
+                $r->name => $r->permissions->pluck('name')->values(),
+            ]);
 
-        return view('pages.users.index', compact('users', 'roles', 'permissionGroups', 'roleDefaultPerms'));
+            return view('pages.users.index', compact('users', 'roles', 'permissionGroups', 'roleDefaultPerms'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la page des utilisateurs');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function store(Request $request): RedirectResponse
@@ -48,24 +54,31 @@ class UserController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $plainPassword = Str::random(10);
+        try {
+            $plainPassword = Str::random(10);
 
-        $user = User::create([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'password'  => Hash::make($plainPassword),
-            'is_active' => true,
-        ]);
+            $user = User::create([
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'password'  => Hash::make($plainPassword),
+                'is_active' => true,
+            ]);
 
-        if (!empty($data['role'])) {
-            $user->assignRole($data['role']);
+            if (!empty($data['role'])) {
+                $user->assignRole($data['role']);
+            }
+
+            $user->syncPermissions($data['permissions'] ?? []);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la création de l\'utilisateur', ['data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la création de l\'utilisateur.');
         }
-
-        $user->syncPermissions($data['permissions'] ?? []);
 
         try {
             $user->notify(new UserCredentials($plainPassword));
-        } catch (\Throwable) {}
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de l\'envoi des identifiants par email', ['user_id' => $user->id]);
+        }
 
         return back()->with('success', 'Utilisateur créé. Les identifiants ont été envoyés par email.');
     }
@@ -81,14 +94,19 @@ class UserController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $user->update([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'is_active' => $data['is_active'] ?? $user->is_active,
-        ]);
+        try {
+            $user->update([
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'is_active' => $data['is_active'] ?? $user->is_active,
+            ]);
 
-        $user->syncRoles($data['role'] ? [$data['role']] : []);
-        $user->syncPermissions($data['permissions'] ?? []);
+            $user->syncRoles($data['role'] ? [$data['role']] : []);
+            $user->syncPermissions($data['permissions'] ?? []);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la mise à jour de l\'utilisateur', ['user_id' => $user->id, 'data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'utilisateur.');
+        }
 
         return back()->with('success', 'Utilisateur mis à jour.');
     }
@@ -98,13 +116,25 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
-        $user->delete();
+
+        try {
+            $user->delete();
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la suppression de l\'utilisateur', ['user_id' => $user->id]);
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'utilisateur.');
+        }
+
         return back()->with('success', 'Utilisateur supprimé.');
     }
 
-    public function profile(): View
+    public function profile(): View|RedirectResponse
     {
-        return view('pages.users.profile', ['user' => auth()->user()]);
+        try {
+            return view('pages.users.profile', ['user' => auth()->user()]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement du profil utilisateur');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function updateProfile(Request $request): RedirectResponse
@@ -118,11 +148,16 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:30',
         ]);
 
-        $user->update($data);
+        try {
+            $user->update($data);
 
-        if ($request->filled('password')) {
-            $request->validate(['password' => 'min:8|confirmed']);
-            $user->update(['password' => Hash::make($request->password)]);
+            if ($request->filled('password')) {
+                $request->validate(['password' => 'min:8|confirmed']);
+                $user->update(['password' => Hash::make($request->password)]);
+            }
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la mise à jour du profil', ['user_id' => $user->id]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour du profil.');
         }
 
         return back()->with('success', 'Profil mis à jour.');

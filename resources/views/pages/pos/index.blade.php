@@ -77,6 +77,7 @@
                               this.pickCaisse(data.caisse);
                               this.showCreate = false;
                               this.newName    = '';
+                              window.toast('Caisse créée avec succès.', 'success');
                           } else {
                               this.createError = data.message || 'Erreur lors de la création.';
                           }
@@ -96,7 +97,7 @@
                     <label style="margin-bottom:0;">Caisse <span class="required">*</span></label>
                     <button type="button"
                             @click="showCreate=!showCreate; createError=''"
-                            style="font-size:12px;color:#4CBB17;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
+                            style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         <span x-text="showCreate ? 'Annuler' : 'Créer une caisse'"></span>
                     </button>
@@ -270,6 +271,13 @@
                     :class="{'pos-catalog__category-btn--active': filterCat==='packable'}">
                 Packs
             </button>
+            @foreach($categories as $category)
+                <button @click="filterCat='cat_{{ $category->id }}'"
+                        class="pos-catalog__category-btn"
+                        :class="{'pos-catalog__category-btn--active': filterCat==='cat_{{ $category->id }}'}">
+                    {{ $category->name }}
+                </button>
+            @endforeach
         </div>
 
         <div class="pos-grid">
@@ -288,7 +296,7 @@
                             <img :src="item.image_url" class="pos-item__img" alt="">
                         </template>
                         <template x-if="!item.image_url">
-                            <span x-text="item.type === 'pack' ? '📦' : '🥐'"></span>
+                            <span x-text="item.type === 'pack' ? '📦' : '📦'"></span>
                         </template>
                     </div>
                     <div class="pos-item__name" x-text="item.name"></div>
@@ -310,11 +318,25 @@
         </div>
     </div>
 
+    {{-- Bouton flottant panier (mobile uniquement) --}}
+    <button type="button" class="pos-cart-fab" @click="mobileCartOpen = true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
+        <span class="pos-cart-fab__badge" x-show="cart.length > 0" x-text="cart.length"></span>
+    </button>
+
+    {{-- Fond assombri (mobile, panier ouvert) --}}
+    <div class="pos-cart-backdrop" x-show="mobileCartOpen" x-cloak x-transition.opacity @click="mobileCartOpen = false"></div>
+
     {{-- Panier --}}
-    <div class="pos-cart">
+    <div class="pos-cart" :class="{ 'pos-cart--open': mobileCartOpen }">
         <div class="pos-cart__header">
             <strong style="font-size:15px;">Panier <span x-text="'(' + cart.length + ')'" style="color:#64748B;font-weight:400;"></span></strong>
-            <button @click="clearCart()" x-show="cart.length > 0" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;">Vider</button>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <button @click="clearCart()" x-show="cart.length > 0" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;">Vider</button>
+                <button type="button" class="pos-cart__close" @click="mobileCartOpen = false">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
         </div>
 
         <div class="pos-cart__items">
@@ -328,9 +350,9 @@
                 <div class="pos-cart__item">
                     <div class="pos-cart__item-name" x-text="item.item_name"></div>
                     <div class="pos-cart__item-qty">
-                        <button @click="decQty(idx)" style="color:#EF4444;">−</button>
+                        <button @click="decQty(idx)" style="color:#C4231A;">−</button>
                         <span x-text="item.quantity"></span>
-                        <button @click="incQty(idx)" style="color:#4CBB17;">+</button>
+                        <button @click="incQty(idx)" style="color:#1749B3;">+</button>
                     </div>
                     <div class="pos-cart__item-price" x-text="fmt(item.quantity * item.unit_price)"></div>
                     <button @click="removeItem(idx)" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:16px;">×</button>
@@ -341,7 +363,7 @@
         <div class="pos-cart__footer">
             <div class="pos-total">
                 <span>Total</span>
-                <span style="color:#4CBB17;" x-text="fmt(total)"></span>
+                <span style="color:#1749B3;" x-text="fmt(total)"></span>
             </div>
 
             {{-- Paiement --}}
@@ -428,6 +450,7 @@ function posApp() {
         lastSaleId: null,
         stockMap: {},
         packMode: {},
+        mobileCartOpen: false,
 
         get total() {
             return this.cart.reduce((s, i) => s + i.quantity * i.unit_price, 0);
@@ -443,6 +466,9 @@ function posApp() {
                 list = list.filter(p => p.can_be_packed);
             } else if (this.filterCat === 'product') {
                 list = list.filter(p => p.type === 'product');
+            } else if (this.filterCat.startsWith('cat_')) {
+                const catId = parseInt(this.filterCat.slice(4));
+                list = list.filter(p => p.category_id === catId);
             }
             return list;
         },
@@ -569,8 +595,9 @@ function posApp() {
                 this.lastSaleId  = data.sale_id;
                 this.successSale = true;
                 window.dispatchEvent(new CustomEvent('pos-sale-completed', { detail: { amount: saleAmount } }));
+                window.toast('Vente enregistrée avec succès (' + data.reference + ').', 'success');
             } else {
-                alert(data.message || 'Erreur lors de la vente. Veuillez réessayer.');
+                window.toast(data.message || 'Erreur lors de la vente. Veuillez réessayer.', 'error');
             }
         },
 
@@ -579,6 +606,7 @@ function posApp() {
             this.amountReceived = 0;
             this.fullPayment = false;
             this.showPayment = false;
+            this.mobileCartOpen = false;
             this.customerSelect = '';
             this.customerSearch = '';
             await this.loadProducts();
@@ -599,6 +627,7 @@ function posApp() {
                     this.customerSelect = data.customer.id;
                     this.customerSearch = data.customer.name;
                     this.showCreateCustomerPOS = false; this.newCustomerNamePOS = ''; this.newCustomerPhonePOS = '';
+                    window.toast('Client créé avec succès.', 'success');
                 } else {
                     this.createCustomerErrorPOS = data.message || 'Erreur.';
                 }

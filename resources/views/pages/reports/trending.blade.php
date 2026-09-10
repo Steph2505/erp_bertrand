@@ -32,12 +32,12 @@
         @foreach($items->take(3) as $i => $item)
         <div style="padding:12px 16px;{{ $i < 2 ? 'border-bottom:1px solid #F1F5F9;' : '' }}">
             <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:{{ ['#F59E0B','#94A3B8','#CD7F32'][$i] ?? '#E2E8F0' }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">#{{ $i+1 }}</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:{{ ['#B45309','#94A3B8','#CD7F32'][$i] ?? '#E2E8F0' }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">#{{ $i+1 }}</div>
                 <div style="flex:1;">
                     <div style="font-weight:600;font-size:13px;">{{ $item->item_name }}</div>
                     <div style="font-size:11px;color:#64748B;">{{ \App\Helpers\FormatHelper::number($item->total_qty) }} unités — {{ $item->nb_sales }} ventes</div>
                 </div>
-                <div style="font-weight:700;color:#22C55E;font-size:13px;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</div>
+                <div style="font-weight:700;color:#12864B;font-size:13px;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</div>
             </div>
         </div>
         @endforeach
@@ -62,7 +62,7 @@
                 <td><span class="badge badge--{{ $item->item_type==='pack'?'pack':'gray' }}">{{ $item->item_type==='pack'?'Pack':'Produit' }}</span></td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($item->total_qty) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ $item->nb_sales }}</td>
-                <td style="text-align:right;font-weight:700;color:#22C55E;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</td>
+                <td style="text-align:right;font-weight:700;color:#12864B;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</td>
             </tr>
             @empty
             <tr><td colspan="6" style="text-align:center;padding:40px;color:#64748B;">Aucune vente sur la période</td></tr>

@@ -36,7 +36,7 @@
                 <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
             </div>
 
-            <button type="submit" class="btn btn--primary btn--block w-full">Réinitialiser le mot de passe</button>
+            <button type="submit" class="btn btn--primary w-full" style="justify-content:center;">Réinitialiser le mot de passe</button>
         </form>
     </div>
 </div>
@@ -52,9 +52,9 @@ function passwordStrength() {
             if (/[0-9]/.test(val)) s += 25;
             if (/[^A-Za-z0-9]/.test(val)) s += 25;
             this.strength = s;
-            if (s <= 25)      { this.label = 'Faible';  this.color = '#EF4444'; this.labelClass = 'password-strength__label--weak'; }
-            else if (s <= 50) { this.label = 'Moyen';   this.color = '#F59E0B'; this.labelClass = 'password-strength__label--medium'; }
-            else              { this.label = 'Fort';    this.color = '#22C55E'; this.labelClass = 'password-strength__label--strong'; }
+            if (s <= 25)      { this.label = 'Faible';  this.color = '#C4231A'; this.labelClass = 'password-strength__label--weak'; }
+            else if (s <= 50) { this.label = 'Moyen';   this.color = '#B45309'; this.labelClass = 'password-strength__label--medium'; }
+            else              { this.label = 'Fort';    this.color = '#12864B'; this.labelClass = 'password-strength__label--strong'; }
         }
     }
 }

@@ -7,20 +7,28 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Warehouse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class StockStatusController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        return view('pages.stock.status', compact('warehouses', 'categories'));
+        try {
+            $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            return view('pages.stock.status', compact('warehouses', 'categories'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la page d\'état des stocks');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function apiIndex(Request $request): JsonResponse
     {
+        try {
         $warehouseId = $request->get('warehouse_id');
         $categoryId  = $request->get('category_id');
         $status      = $request->get('status');
@@ -91,5 +99,9 @@ class StockStatusController extends Controller
             'from'         => $paginator->firstItem() ?? 0,
             'to'           => $paginator->lastItem() ?? 0,
         ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de l\'état des stocks', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger l\'état des stocks.'], 500);
+        }
     }
 }

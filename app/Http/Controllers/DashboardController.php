@@ -11,64 +11,75 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Throwable;
 
 class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        $period = $request->get('period', 'today');
-        [$from, $to] = $this->getPeriodDates($period);
+        try {
+            $period = $request->get('period', 'today');
+            [$from, $to] = $this->getPeriodDates($period);
 
-        $stats       = $this->computeStats($period, $from, $to);
-        $chartData   = $this->getChartData($period, $from, $to);
-        $recentSales = $this->getRecentSales();
-        $topProducts = $this->getTopProducts($from, $to);
+            $stats       = $this->computeStats($period, $from, $to);
+            $chartData   = $this->getChartData($period, $from, $to);
+            $recentSales = $this->getRecentSales();
+            $topProducts = $this->getTopProducts($from, $to);
 
-        $lowStockProducts = Product::where('is_active', true)
-            ->whereRaw('stock_quantity <= min_stock_quantity')
-            ->orderBy('stock_quantity')
-            ->limit(10)
-            ->get();
+            $lowStockProducts = Product::where('is_active', true)
+                ->whereRaw('stock_quantity <= min_stock_quantity')
+                ->orderBy('stock_quantity')
+                ->limit(10)
+                ->get();
 
-        return view('pages.dashboard.index', array_merge(
-            compact('period', 'chartData', 'lowStockProducts', 'recentSales', 'topProducts'),
-            $stats
-        ));
+            return view('pages.dashboard.index', array_merge(
+                compact('period', 'chartData', 'lowStockProducts', 'recentSales', 'topProducts'),
+                $stats
+            ));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement du tableau de bord', ['period' => $request->get('period')]);
+            throw $e;
+        }
     }
 
     public function apiStats(Request $request): JsonResponse
     {
-        $period = $request->get('period', 'today');
-        [$from, $to] = $this->getPeriodDates($period);
+        try {
+            $period = $request->get('period', 'today');
+            [$from, $to] = $this->getPeriodDates($period);
 
-        $stats     = $this->computeStats($period, $from, $to);
-        $chartData = $this->getChartData($period, $from, $to);
+            $stats     = $this->computeStats($period, $from, $to);
+            $chartData = $this->getChartData($period, $from, $to);
 
-        $topProducts = $this->getTopProducts($from, $to);
-        $recentSales = $this->getRecentSales();
+            $topProducts = $this->getTopProducts($from, $to);
+            $recentSales = $this->getRecentSales();
 
-        $chartLabel = match($period) {
-            'today' => "Aujourd'hui (par heure)",
-            'week'  => 'Cette semaine (par jour)',
-            'month' => 'Ce mois (par jour)',
-            'year'  => 'Cette année (par mois)',
-            default => '',
-        };
+            $chartLabel = match($period) {
+                'today' => "Aujourd'hui (par heure)",
+                'week'  => 'Cette semaine (par jour)',
+                'month' => 'Ce mois (par jour)',
+                'year'  => 'Cette année (par mois)',
+                default => '',
+            };
 
-        return response()->json([
-            'totalSalesFormatted'     => FormatHelper::money($stats['totalSales']),
-            'totalPurchasesFormatted' => FormatHelper::money($stats['totalPurchases']),
-            'totalExpensesFormatted'  => FormatHelper::money($stats['totalExpenses']),
-            'netProfitFormatted'      => FormatHelper::money($stats['netProfit']),
-            'netProfitPositive'       => $stats['netProfit'] >= 0,
-            'lowStockCount'           => $stats['lowStockCount'],
-            'salesTrend'              => round($stats['salesTrend'], 1),
-            'salesTrendPositive'      => $stats['salesTrend'] >= 0,
-            'chartData'               => $chartData,
-            'chartLabel'              => $chartLabel,
-            'topProducts'             => $topProducts,
-            'recentSales'             => $recentSales,
-        ]);
+            return response()->json([
+                'totalSalesFormatted'     => FormatHelper::money($stats['totalSales']),
+                'totalPurchasesFormatted' => FormatHelper::money($stats['totalPurchases']),
+                'totalExpensesFormatted'  => FormatHelper::money($stats['totalExpenses']),
+                'netProfitFormatted'      => FormatHelper::money($stats['netProfit']),
+                'netProfitPositive'       => $stats['netProfit'] >= 0,
+                'lowStockCount'           => $stats['lowStockCount'],
+                'salesTrend'              => round($stats['salesTrend'], 1),
+                'salesTrendPositive'      => $stats['salesTrend'] >= 0,
+                'chartData'               => $chartData,
+                'chartLabel'              => $chartLabel,
+                'topProducts'             => $topProducts,
+                'recentSales'             => $recentSales,
+            ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des statistiques du tableau de bord', ['period' => $request->get('period')]);
+            return response()->json(['message' => 'Impossible de charger les statistiques.'], 500);
+        }
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────

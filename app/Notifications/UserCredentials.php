@@ -18,7 +18,7 @@ class UserCredentials extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $appName = config('app.name', 'ERP Bertrand Store');
+        $appName = config('app.name', 'ERP Espace Mokolo d\'Obala');
         $loginUrl = route('login');
 
         return (new MailMessage)

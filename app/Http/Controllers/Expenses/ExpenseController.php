@@ -10,12 +10,15 @@ use App\Models\Purchase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Throwable;
 
 class ExpenseController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        try {
         // ── Dépenses
         $expenseRows = Expense::with(['category', 'paymentAccount'])
             ->when($request->search, fn($q, $s) => $q->where('description', 'like', "%$s%")->orWhere('reference', 'like', "%$s%"))
@@ -75,29 +78,45 @@ class ExpenseController extends Controller
         $accounts   = PaymentAccount::where('is_active', true)->orderBy('name')->get();
 
         return view('pages.expenses.index', compact('expenses', 'categories', 'accounts', 'totalPeriod'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la page des dépenses', ['filters' => $request->all()]);
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
-    public function categoriesIndex(): View
+    public function categoriesIndex(): View|RedirectResponse
     {
-        $categories = ExpenseCategory::withCount('expenses')->orderBy('name')->paginate(30);
-        return view('pages.expenses.categories', compact('categories'));
+        try {
+            $categories = ExpenseCategory::withCount('expenses')->orderBy('name')->paginate(30);
+            return view('pages.expenses.categories', compact('categories'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des catégories de dépenses');
+            return redirect()->route('expenses.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'expense_category_id' => 'nullable|exists:expense_categories,id',
-            'payment_account_id'  => 'nullable|exists:payment_accounts,id',
+            'expense_category_id' => 'required|exists:expense_categories,id',
+            'payment_account_id'  => 'required|exists:payment_accounts,id',
             'expense_date'        => 'required|date',
             'amount'              => 'required|numeric|min:0.01',
             'description'         => 'nullable|string|max:500',
         ]);
 
-        $reference = 'EXP-' . date('Ymd') . '-' . str_pad(Expense::withTrashed()->count() + 1, 4, '0', STR_PAD_LEFT);
-        Expense::create(array_merge($data, ['reference' => $reference, 'created_by' => auth()->id()]));
+        try {
+            DB::transaction(function () use ($data) {
+                $reference = 'EXP-' . date('Ymd') . '-' . str_pad(Expense::withTrashed()->count() + 1, 4, '0', STR_PAD_LEFT);
+                Expense::create(array_merge($data, ['reference' => $reference, 'created_by' => auth()->id()]));
 
-        if ($data['payment_account_id'] ?? null) {
-            PaymentAccount::find($data['payment_account_id'])?->decrement('current_balance', $data['amount']);
+                if ($data['payment_account_id'] ?? null) {
+                    PaymentAccount::find($data['payment_account_id'])?->decrement('current_balance', $data['amount']);
+                }
+            });
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la création de la dépense', ['data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de l\'enregistrement de la dépense.');
         }
 
         return back()->with('success', 'Dépense enregistrée.');
@@ -106,23 +125,30 @@ class ExpenseController extends Controller
     public function update(Request $request, Expense $expense): RedirectResponse
     {
         $data = $request->validate([
-            'expense_category_id' => 'nullable|exists:expense_categories,id',
-            'payment_account_id'  => 'nullable|exists:payment_accounts,id',
+            'expense_category_id' => 'required|exists:expense_categories,id',
+            'payment_account_id'  => 'required|exists:payment_accounts,id',
             'expense_date'        => 'required|date',
             'amount'              => 'required|numeric|min:0.01',
             'description'         => 'nullable|string|max:500',
         ]);
 
-        // Inverser l'effet de l'ancienne dépense sur l'ancien compte
-        if ($expense->payment_account_id) {
-            PaymentAccount::find($expense->payment_account_id)?->increment('current_balance', $expense->amount);
-        }
+        try {
+            DB::transaction(function () use ($data, $expense) {
+                // Inverser l'effet de l'ancienne dépense sur l'ancien compte
+                if ($expense->payment_account_id) {
+                    PaymentAccount::find($expense->payment_account_id)?->increment('current_balance', $expense->amount);
+                }
 
-        $expense->update($data);
+                $expense->update($data);
 
-        // Appliquer l'effet de la nouvelle dépense sur le nouveau compte
-        if ($data['payment_account_id'] ?? null) {
-            PaymentAccount::find($data['payment_account_id'])?->decrement('current_balance', $data['amount']);
+                // Appliquer l'effet de la nouvelle dépense sur le nouveau compte
+                if ($data['payment_account_id'] ?? null) {
+                    PaymentAccount::find($data['payment_account_id'])?->decrement('current_balance', $data['amount']);
+                }
+            });
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la mise à jour de la dépense', ['expense_id' => $expense->id, 'data' => $data]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de la dépense.');
         }
 
         return back()->with('success', 'Dépense mise à jour.');
@@ -130,25 +156,47 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): RedirectResponse
     {
-        if ($expense->payment_account_id) {
-            PaymentAccount::find($expense->payment_account_id)?->increment('current_balance', $expense->amount);
+        try {
+            DB::transaction(function () use ($expense) {
+                if ($expense->payment_account_id) {
+                    PaymentAccount::find($expense->payment_account_id)?->increment('current_balance', $expense->amount);
+                }
+
+                $expense->delete();
+            });
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la suppression de la dépense', ['expense_id' => $expense->id]);
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de la dépense.');
         }
 
-        $expense->delete();
         return back()->with('success', 'Dépense supprimée.');
     }
 
     public function storeCategory(Request $request): RedirectResponse
     {
         $request->validate(['name' => 'required|string|max:191|unique:expense_categories,name']);
-        ExpenseCategory::create(['name' => $request->name]);
+
+        try {
+            ExpenseCategory::create(['name' => $request->name]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la création de la catégorie de dépense', ['name' => $request->name]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la création de la catégorie.');
+        }
+
         return back()->with('success', 'Catégorie créée.');
     }
 
     public function updateCategory(Request $request, ExpenseCategory $category): RedirectResponse
     {
         $request->validate(['name' => 'required|string|max:191|unique:expense_categories,name,' . $category->id]);
-        $category->update(['name' => $request->name]);
+
+        try {
+            $category->update(['name' => $request->name]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la mise à jour de la catégorie de dépense', ['category_id' => $category->id]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de la catégorie.');
+        }
+
         return back()->with('success', 'Catégorie mise à jour.');
     }
 
@@ -157,7 +205,14 @@ class ExpenseController extends Controller
         if ($category->expenses()->exists()) {
             return back()->withErrors(['category' => 'Impossible : cette catégorie contient des dépenses.']);
         }
-        $category->delete();
+
+        try {
+            $category->delete();
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la suppression de la catégorie de dépense', ['category_id' => $category->id]);
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de la catégorie.');
+        }
+
         return back()->with('success', 'Catégorie supprimée.');
     }
 }

@@ -65,7 +65,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
                 <tr>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:34px;height:34px;border-radius:50%;background:#4CBB17;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">
+                            <div style="width:34px;height:34px;border-radius:50%;background:#1749B3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">
                                 {{ strtoupper(substr($user->name, 0, 2)) }}
                             </div>
                             <strong>{{ $user->name }}</strong>
@@ -180,7 +180,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
             {{-- Droits d'accès --}}
             <div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                    <h4 style="font-size:13px;font-weight:700;color:#1e293b;">Droits d'accès</h4>
+                    <h4 style="font-size:13px;font-weight:700;color:#0E1726;">Droits d'accès</h4>
                     <div style="display:flex;gap:8px;">
                         <button type="button" @click="checkedPerms = {{ collect(array_merge(...array_values($permissionGroups)))->toJson() }}"
                                 style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;">Tout cocher</button>

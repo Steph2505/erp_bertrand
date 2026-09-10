@@ -49,11 +49,11 @@
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($item->total_qty) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ \App\Helpers\FormatHelper::money($item->avg_price) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ $item->nb_sales }}</td>
-                <td style="text-align:right;font-weight:600;color:#22C55E;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</td>
+                <td style="text-align:right;font-weight:600;color:#12864B;">{{ \App\Helpers\FormatHelper::money($item->total_revenue) }}</td>
                 <td style="text-align:right;">
                     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">
                         <div style="width:50px;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;">
-                            <div style="width:{{ $share }}%;height:100%;background:#4CBB17;border-radius:3px;"></div>
+                            <div style="width:{{ $share }}%;height:100%;background:#1749B3;border-radius:3px;"></div>
                         </div>
                         <span style="font-size:12px;color:#64748B;">{{ number_format($share,1) }}%</span>
                     </div>

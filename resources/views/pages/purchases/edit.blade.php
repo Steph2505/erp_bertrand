@@ -312,10 +312,10 @@ function purchaseEditForm() {
         formatMoney(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY; },
 
         submitForm(action = 'save') {
-            if (!this.selectedSupplier) { alert('Le fournisseur est obligatoire.'); return; }
-            if (this.items.length === 0) { alert('Ajoutez au moins un article.'); return; }
+            if (!this.selectedSupplier) { window.toast('Le fournisseur est obligatoire.', 'error'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
             const incomplete = this.items.filter(i => !i.product_id);
-            if (incomplete.length > 0) { alert('Certaines lignes n\'ont pas de produit sélectionné.'); return; }
+            if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de produit sélectionné.', 'error'); return; }
             document.getElementById('action-input').value = action;
             document.getElementById('purchase-form').submit();
         }

@@ -8,14 +8,14 @@
     <div class="auth-form-panel">
         <div class="auth-form-panel__logo">
             <div class="auth-form-panel__logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707"/></svg>
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
             </div>
-            <span>Bertrand Store</span>
+            <span>Espace Mokolo d'Obala</span>
         </div>
 
         <div class="auth-form-panel__form">
             <div class="auth-form-panel__header">
-                <h1>Bienvenue sur Bertrand Store</h1>
+                <h1>Bienvenue sur Espace Mokolo d'Obala</h1>
                 <p>Connectez-vous à votre espace de gestion</p>
             </div>
 
@@ -89,10 +89,10 @@
         <div class="auth-brand-panel__circle"></div>
         <div class="auth-brand-panel__content">
             <div class="auth-brand-panel__logo">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707m12.728 0-.707-.707M6.343 6.343l-.707-.707"/></svg>
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
             </div>
-            <h2 class="auth-brand-panel__title">Bertrand Store</h2>
-            <p class="auth-brand-panel__subtitle">Gérez votre pâtisserie avec efficacité. Stocks, ventes, packs et rapports en un seul endroit.</p>
+            <h2 class="auth-brand-panel__title">Espace Mokolo d'Obala</h2>
+            <p class="auth-brand-panel__subtitle">Gérez votre centre commercial avec efficacité. Stocks, ventes, packs et rapports en un seul endroit.</p>
 
             <div class="auth-brand-panel__features">
                 <div class="auth-brand-panel__feature">

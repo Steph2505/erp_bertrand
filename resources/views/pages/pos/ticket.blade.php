@@ -65,7 +65,7 @@
                     @endif
                     <tr>
                         <td colspan="3" style="text-align:right;font-weight:700;font-size:15px;padding:12px 16px;">Total</td>
-                        <td style="text-align:right;font-weight:800;font-size:17px;color:#4CBB17;padding:12px 16px;">
+                        <td style="text-align:right;font-weight:800;font-size:17px;color:#1749B3;padding:12px 16px;">
                             {{ \App\Helpers\FormatHelper::money($sale->total) }}
                         </td>
                     </tr>
@@ -83,7 +83,7 @@
             <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
                 <div style="display:flex;justify-content:space-between;">
                     <span style="color:#64748b;">Référence</span>
-                    <strong style="color:#4CBB17;">{{ $sale->reference }}</strong>
+                    <strong style="color:#1749B3;">{{ $sale->reference }}</strong>
                 </div>
                 <div style="display:flex;justify-content:space-between;">
                     <span style="color:#64748b;">Date</span>

@@ -1,25 +1,40 @@
 // ─── Couleurs principales ───────────────────────────────────────────────────
-$primary:             #4CBB17;
-$primary-light:       rgba(76, 187, 23, 0.08);
-$primary-dark:        #3a9912;
-$secondary:           #1E293B;
+$primary:             #1749B3;
+$primary-light:       rgba(23, 73, 179, 0.08);
+$primary-dark:        #123A8F;
+$secondary:           #0E1726;
 $bg-app:              #F8FAFC;
 $bg-white:            #FFFFFF;
-$text-main:           #1E293B;
+$text-main:           #334155;
 $text-muted:          #64748B;
 $border:              #E2E8F0;
-$success:             #22C55E;
-$danger:              #EF4444;
-$warning:             #F59E0B;
-$info:                #3B82F6;
+$success:             #12864B;
+$danger:              #C4231A;
+$warning:             #B45309;
+$info:                #1749B3;
+
+// ─── Bleus (nuancier complet) ───────────────────────────────────────────────
+$blue-50:   #F1F5FE;
+$blue-100:  #DDE7FA;
+$blue-500:  #2B5FCB;
+$blue-600:  #1749B3;
+$blue-700:  #123A8F;
+$blue-900:  #0B2A69;
+
+// ─── Or (accent) ────────────────────────────────────────────────────────────
+$gold-100:  #FDF3D0;
+$gold-500:  #F5C518;
+$gold-600:  #C99A05;
+$gold-800:  #8A6A00;
+$accent:    $gold-500;
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────
 $sidebar-width:             260px;
 $sidebar-bg:                #FFFFFF;
 $sidebar-shadow:            2px 0 12px rgba(0,0,0,0.06);
 $sidebar-item-hover:        #F8FAFC;
-$sidebar-item-active-bg:    rgba(76,187,23,0.08);
-$sidebar-item-active-text:  #4CBB17;
+$sidebar-item-active-bg:    rgba(23,73,179,0.08);
+$sidebar-item-active-text:  #1749B3;
 
 // ─── Topbar ─────────────────────────────────────────────────────────────────
 $topbar-height:  64px;

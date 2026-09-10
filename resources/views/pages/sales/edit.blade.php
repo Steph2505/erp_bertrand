@@ -39,7 +39,7 @@
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                         <label style="margin-bottom:0;">Client</label>
                         <button type="button" @click="showCreateCustomer=!showCreateCustomer;createCustomerError=''"
-                                style="font-size:12px;color:#4CBB17;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
+                                style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                             <span x-text="showCreateCustomer ? 'Annuler' : 'Nouveau client'"></span>
                         </button>
@@ -188,7 +188,7 @@
                                 <template x-if="item.item_type === 'pack'"><span class="badge badge--blue" style="font-size:10px;">Pack</span></template>
                                 <template x-if="item.can_be_packed && item.pack_quantity > 1">
                                     <label @click.stop style="display:inline-flex;align-items:center;gap:5px;font-size:11px;margin-top:5px;cursor:pointer;color:#15803d;font-weight:600;padding:3px 8px;background:#f0fdf4;border-radius:5px;border:1px solid #bbf7d0;">
-                                        <input type="checkbox" :checked="item.is_pack_mode" @change="togglePackMode(idx)" style="cursor:pointer;accent-color:#4CBB17;">
+                                        <input type="checkbox" :checked="item.is_pack_mode" @change="togglePackMode(idx)" style="cursor:pointer;accent-color:#1749B3;">
                                         Pack ×<span x-text="item.pack_quantity"></span>
                                     </label>
                                 </template>
@@ -196,10 +196,10 @@
                             <td style="text-align:center;">
                                 <input type="number" :name="'items['+idx+'][quantity]'"
                                        x-model.number="item.quantity" min="1" @input="recalc()"
-                                       :style="item.stock !== null && (item.quantity * item.units_per_item) > item.stock ? 'border-color:#EF4444;color:#EF4444;' : ''"
+                                       :style="item.stock !== null && (item.quantity * item.units_per_item) > item.stock ? 'border-color:#C4231A;color:#C4231A;' : ''"
                                        class="form-control" style="width:90px;text-align:center;">
                                 <div x-show="item.stock !== null && (item.quantity * item.units_per_item) > item.stock"
-                                     style="font-size:11px;color:#EF4444;margin-top:2px;"
+                                     style="font-size:11px;color:#C4231A;margin-top:2px;"
                                      x-text="item.is_pack_mode ? 'Max '+ Math.floor(item.stock / item.pack_quantity)+' packs' : 'Max '+item.stock"></div>
                             </td>
                             <td>
@@ -232,7 +232,7 @@
                 <div style="height:1px;background:#e2e8f0;"></div>
                 <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;">
                     <span>Total</span>
-                    <span style="color:#4CBB17;" x-text="formatMoney(subtotal)"></span>
+                    <span style="color:#1749B3;" x-text="formatMoney(subtotal)"></span>
                 </div>
             </div>
             <button type="button" @click="submitSale()" class="btn btn--primary" style="width:100%;justify-content:center;" :disabled="items.length === 0">
@@ -376,8 +376,8 @@ function saleEditForm() {
         formatMoney(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY; },
 
         submitSale() {
-            if (this.items.length === 0) { alert('Ajoutez au moins un article.'); return; }
-            if (this.items.some(i => !i.item_name)) { alert('Certaines lignes sont vides.'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
+            if (this.items.some(i => !i.item_name)) { window.toast('Certaines lignes sont vides.', 'error'); return; }
             document.getElementById('sale-form').submit();
         }
     };

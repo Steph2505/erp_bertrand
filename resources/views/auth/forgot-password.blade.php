@@ -30,7 +30,7 @@
                     <span class="form-error">{{ $message }}</span>
                 @enderror
             </div>
-            <button type="submit" class="btn btn--primary btn--block w-full">Envoyer le lien</button>
+            <button type="submit" class="btn btn--primary w-full" style="justify-content:center;">Envoyer le lien</button>
         </form>
 
         <div class="auth-standalone__footer">

@@ -10,13 +10,10 @@ class CustomerSeeder extends Seeder
 {
     public function run(): void
     {
-        $gpPart = CustomerGroup::where('name', 'Particulier')->first();
-        $gpPro  = CustomerGroup::where('name', 'Professionnel')->first();
-        $gpRev  = CustomerGroup::where('name', 'Revendeur')->first();
-        $gpFid  = CustomerGroup::where('name', 'Fidèle')->first();
+        $gpPart = CustomerGroup::where('name', 'Détaillant')->first();
 
         $customers = [
-            ['name' => 'Client divers',       'email' => 'clientdivers@gmail.com',    'phone' => 'xxx', 'group' => $gpPart],
+            ['name' => 'Client divers',       'email' => 'clientdivers@gmail.com',    'phone' => '', 'group' => $gpPart],
         ];
 
         foreach ($customers as $c) {

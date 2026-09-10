@@ -46,7 +46,7 @@
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($item->total_qty) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ \App\Helpers\FormatHelper::money($item->avg_price) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ $item->nb_purchases }}</td>
-                <td style="text-align:right;font-weight:600;color:#3B82F6;">{{ \App\Helpers\FormatHelper::money($item->total_amount) }}</td>
+                <td style="text-align:right;font-weight:600;color:#1749B3;">{{ \App\Helpers\FormatHelper::money($item->total_amount) }}</td>
             </tr>
             @empty
             <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Aucun achat sur la période</td></tr>
@@ -59,7 +59,7 @@
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($items->sum('total_qty')) }}</td>
                 <td></td>
                 <td style="text-align:right">{{ $items->sum('nb_purchases') }}</td>
-                <td style="text-align:right;color:#3B82F6;">{{ \App\Helpers\FormatHelper::money($items->sum('total_amount')) }}</td>
+                <td style="text-align:right;color:#1749B3;">{{ \App\Helpers\FormatHelper::money($items->sum('total_amount')) }}</td>
             </tr>
         </tfoot>
         @endif

@@ -34,10 +34,10 @@
             <th>Compte</th>
             <th>Type</th>
             <th style="text-align:right">Solde initial</th>
-            <th style="text-align:right;color:#22C55E;">Encaissements</th>
-            <th style="text-align:right;color:#EF4444;">Décaissements</th>
+            <th style="text-align:right;color:#12864B;">Encaissements</th>
+            <th style="text-align:right;color:#C4231A;">Décaissements</th>
             <th style="text-align:right;color:#2563EB;">dont Achats</th>
-            <th style="text-align:right;color:#F59E0B;">dont Dépenses</th>
+            <th style="text-align:right;color:#B45309;">dont Dépenses</th>
             <th style="text-align:right">Solde calculé</th>
             <th style="text-align:right">Solde réel</th>
             <th style="text-align:right">Écart</th>
@@ -67,8 +67,8 @@
                         </span>
                     </td>
                     <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($acc->opening) }}</td>
-                    <td style="text-align:right;color:#22C55E;font-weight:600;">+ {{ \App\Helpers\FormatHelper::money($acc->encaissements) }}</td>
-                    <td style="text-align:right;color:#EF4444;font-weight:600;">− {{ \App\Helpers\FormatHelper::money($acc->decaissements) }}</td>
+                    <td style="text-align:right;color:#12864B;font-weight:600;">+ {{ \App\Helpers\FormatHelper::money($acc->encaissements) }}</td>
+                    <td style="text-align:right;color:#C4231A;font-weight:600;">− {{ \App\Helpers\FormatHelper::money($acc->decaissements) }}</td>
                     <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($acc->dec_achats ?? 0) }}</td>
                     <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($acc->dec_depenses ?? 0) }}</td>
                     <td style="text-align:right;font-weight:600;">{{ \App\Helpers\FormatHelper::money($acc->solde_calcule) }}</td>
@@ -90,8 +90,8 @@
             <tr style="border-top:2px solid #E2E8F0;background:#F8FAFC;font-weight:700;">
                 <td colspan="2">TOTAL</td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($totOpening) }}</td>
-                <td style="text-align:right;color:#22C55E;">+ {{ \App\Helpers\FormatHelper::money($totEnc) }}</td>
-                <td style="text-align:right;color:#EF4444;">− {{ \App\Helpers\FormatHelper::money($totDec) }}</td>
+                <td style="text-align:right;color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($totEnc) }}</td>
+                <td style="text-align:right;color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($totDec) }}</td>
                 <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totDecAchats) }}</td>
                 <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totDecDep) }}</td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($totCalc) }}</td>

@@ -8,6 +8,8 @@ use App\Models\PackPrice;
 use App\Services\PackStockService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PackRepository
 {
@@ -30,22 +32,39 @@ class PackRepository
 
     public function create(array $data, array $items = [], array $prices = []): Pack
     {
-        return DB::transaction(function () use ($data, $items, $prices) {
-            $pack = Pack::create($data);
-            $this->syncItems($pack, $items);
-            $this->syncPrices($pack, $prices);
-            return $pack;
-        });
+        try {
+            return DB::transaction(function () use ($data, $items, $prices) {
+                $pack = Pack::create($data);
+                $this->syncItems($pack, $items);
+                $this->syncPrices($pack, $prices);
+                return $pack;
+            });
+        } catch (Throwable $e) {
+            Log::error('PackRepository::create a échoué', [
+                'data'      => $data,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function update(Pack $pack, array $data, array $items = [], array $prices = []): Pack
     {
-        return DB::transaction(function () use ($pack, $data, $items, $prices) {
-            $pack->update($data);
-            $this->syncItems($pack, $items);
-            $this->syncPrices($pack, $prices);
-            return $pack->fresh();
-        });
+        try {
+            return DB::transaction(function () use ($pack, $data, $items, $prices) {
+                $pack->update($data);
+                $this->syncItems($pack, $items);
+                $this->syncPrices($pack, $prices);
+                return $pack->fresh();
+            });
+        } catch (Throwable $e) {
+            Log::error('PackRepository::update a échoué', [
+                'pack_id'   => $pack->id,
+                'data'      => $data,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     private function syncItems(Pack $pack, array $items): void
@@ -79,12 +98,28 @@ class PackRepository
 
     public function delete(Pack $pack): void
     {
-        $pack->delete();
+        try {
+            $pack->delete();
+        } catch (Throwable $e) {
+            Log::error('PackRepository::delete a échoué', [
+                'pack_id'   => $pack->id,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function toggleActive(Pack $pack): void
     {
-        $pack->update(['is_active' => !$pack->is_active]);
+        try {
+            $pack->update(['is_active' => !$pack->is_active]);
+        } catch (Throwable $e) {
+            Log::error('PackRepository::toggleActive a échoué', [
+                'pack_id'   => $pack->id,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function availableCount(Pack $pack): int

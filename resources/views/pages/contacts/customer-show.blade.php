@@ -22,7 +22,7 @@
 </div>
 
 {{-- Stat cards --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;">
     <div class="card" style="padding:20px;">
         <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Factures</div>
         <div style="font-size:28px;font-weight:800;">{{ $stats->total_count }}</div>
@@ -30,8 +30,8 @@
     </div>
     <div class="card" style="padding:20px;">
         <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Chiffre d'affaires</div>
-        <div style="font-size:22px;font-weight:800;color:#4CBB17;">{{ \App\Helpers\FormatHelper::money($stats->total_ca) }}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:4px;">total confirmé + payé</div>
+        <div style="font-size:22px;font-weight:800;color:#1749B3;">{{ \App\Helpers\FormatHelper::money($stats->total_ca) }}</div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">montant initial + ventes</div>
     </div>
     <div class="card" style="padding:20px;">
         <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Total encaissé</div>
@@ -44,6 +44,19 @@
             {{ \App\Helpers\FormatHelper::money($stats->total_due) }}
         </div>
         <div style="font-size:12px;color:#64748B;margin-top:4px;">factures confirmées impayées</div>
+    </div>
+    <div class="card" style="padding:20px;">
+        <div style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Ristourne fin d'année</div>
+        <div style="font-size:22px;font-weight:800;color:{{ $customer->ristourne_percent > 0 ? '#C99A05' : '#94A3B8' }};">
+            {{ \App\Helpers\FormatHelper::money($stats->total_ca * $customer->ristourne_percent / 100) }}
+        </div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">
+            @if($customer->ristourne_percent > 0)
+                {{ rtrim(rtrim(number_format($customer->ristourne_percent, 2, '.', ''), '0'), '.') }} % du CA
+            @else
+                aucune ristourne définie
+            @endif
+        </div>
     </div>
 </div>
 
@@ -71,7 +84,7 @@
                 @forelse($sales as $sale)
                 <tr>
                     <td>
-                        <a href="{{ route('sales.show', $sale) }}" style="color:#4CBB17;font-weight:600;text-decoration:none;"
+                        <a href="{{ route('sales.show', $sale) }}" style="color:#1749B3;font-weight:600;text-decoration:none;"
                            onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                             {{ $sale->reference }}
                         </a>
@@ -140,8 +153,15 @@
             </div>
             @if($customer->opening_balance > 0)
             <div style="display:flex;justify-content:space-between;">
-                <span style="color:#64748B;">Solde initial</span>
+                <span style="color:#64748B;">Montant initial</span>
                 <strong>{{ \App\Helpers\FormatHelper::money($customer->opening_balance) }}</strong>
+            </div>
+            @endif
+            @if($customer->ristourne_percent > 0)
+            <div style="height:1px;background:#f1f5f9;"></div>
+            <div style="display:flex;justify-content:space-between;">
+                <span style="color:#64748B;">Ristourne</span>
+                <strong>{{ rtrim(rtrim(number_format($customer->ristourne_percent, 2, '.', ''), '0'), '.') }} %</strong>
             </div>
             @endif
         </div>

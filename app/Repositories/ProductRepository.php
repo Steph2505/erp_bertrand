@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\StockMovement;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ProductRepository
 {
@@ -31,18 +33,43 @@ class ProductRepository
 
     public function create(array $data): Product
     {
-        return Product::create($data);
+        try {
+            return Product::create($data);
+        } catch (Throwable $e) {
+            Log::error('ProductRepository::create a échoué', [
+                'data'      => $data,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function update(Product $product, array $data): Product
     {
-        $product->update($data);
-        return $product->fresh();
+        try {
+            $product->update($data);
+            return $product->fresh();
+        } catch (Throwable $e) {
+            Log::error('ProductRepository::update a échoué', [
+                'product_id' => $product->id,
+                'data'       => $data,
+                'exception'  => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function delete(Product $product): void
     {
-        $product->delete();
+        try {
+            $product->delete();
+        } catch (Throwable $e) {
+            Log::error('ProductRepository::delete a échoué', [
+                'product_id' => $product->id,
+                'exception'  => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     public function searchPackable(string $search): \Illuminate\Database\Eloquent\Collection
@@ -57,6 +84,10 @@ class ProductRepository
     /**
      * Ajuste le stock global ET le stock par magasin si warehouse_id est fourni.
      * Le mouvement de stock est toujours enregistré.
+     *
+     * Si $unitCost est fourni pour une entrée de stock (delta > 0), le prix d'achat
+     * du produit est recalculé au coût moyen pondéré (CMP) :
+     *   nouveau_prix = (stock_actuel × ancien_prix + delta × unitCost) / (stock_actuel + delta)
      */
     public function adjustStock(
         Product $product,
@@ -65,27 +96,49 @@ class ProductRepository
         ?string $reference   = null,
         ?int    $packId      = null,
         ?string $note        = null,
-        ?int    $warehouseId = null
+        ?int    $warehouseId = null,
+        ?float  $unitCost    = null
     ): void {
-        // Stock global (Product.stock_quantity)
-        $product->increment('stock_quantity', $delta);
+        try {
+            // Stock global (Product.stock_quantity) + recalcul CMP si un coût d'achat est fourni
+            if ($unitCost !== null && $delta > 0) {
+                $oldQty   = max(0, (int) $product->stock_quantity);
+                $oldPrice = (float) $product->buying_price;
+                $newPrice = $oldQty > 0
+                    ? (($oldQty * $oldPrice) + ($delta * $unitCost)) / ($oldQty + $delta)
+                    : $unitCost;
 
-        // Stock par magasin
-        if ($warehouseId) {
-            ProductStock::adjust($product->id, $warehouseId, $delta);
+                $product->increment('stock_quantity', $delta, ['buying_price' => round($newPrice, 2)]);
+            } else {
+                $product->increment('stock_quantity', $delta);
+            }
+
+            // Stock par magasin
+            if ($warehouseId) {
+                ProductStock::adjust($product->id, $warehouseId, $delta);
+            }
+
+            // Journal
+            StockMovement::create([
+                'product_id'   => $product->id,
+                'warehouse_id' => $warehouseId,
+                'quantity'     => $delta,
+                'type'         => $type,
+                'reference'    => $reference,
+                'pack_id'      => $packId,
+                'note'         => $note,
+                'created_by'   => auth()->id(),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('ProductRepository::adjustStock a échoué', [
+                'product_id'   => $product->id,
+                'delta'        => $delta,
+                'type'         => $type,
+                'warehouse_id' => $warehouseId,
+                'exception'    => $e->getMessage(),
+            ]);
+            throw $e;
         }
-
-        // Journal
-        StockMovement::create([
-            'product_id'   => $product->id,
-            'warehouse_id' => $warehouseId,
-            'quantity'     => $delta,
-            'type'         => $type,
-            'reference'    => $reference,
-            'pack_id'      => $packId,
-            'note'         => $note,
-            'created_by'   => auth()->id(),
-        ]);
     }
 
     /**
@@ -94,16 +147,25 @@ class ProductRepository
      */
     public function syncWarehouseStocks(Product $product, array $stocks): void
     {
-        $total = 0;
-        foreach ($stocks as $warehouseId => $quantity) {
-            $qty = max(0, (int) $quantity);
-            ProductStock::updateOrCreate(
-                ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
-                ['quantity' => $qty]
-            );
-            $total += $qty;
+        try {
+            $total = 0;
+            foreach ($stocks as $warehouseId => $quantity) {
+                $qty = max(0, (int) $quantity);
+                ProductStock::updateOrCreate(
+                    ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
+                    ['quantity' => $qty]
+                );
+                $total += $qty;
+            }
+            $product->update(['stock_quantity' => $total]);
+        } catch (Throwable $e) {
+            Log::error('ProductRepository::syncWarehouseStocks a échoué', [
+                'product_id' => $product->id,
+                'stocks'     => $stocks,
+                'exception'  => $e->getMessage(),
+            ]);
+            throw $e;
         }
-        $product->update(['stock_quantity' => $total]);
     }
 
     /**

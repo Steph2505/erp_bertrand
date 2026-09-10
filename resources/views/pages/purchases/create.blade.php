@@ -124,33 +124,39 @@
                     <template x-for="(item, idx) in items" :key="item._key">
                         <tr>
                             <td class="purchase-items__col-product">
-                                <div class="autocomplete-wrap" @click.outside="item._open=false">
-                                    <input type="text"
-                                           x-model="item._search"
-                                           @focus="item._open=true"
-                                           @input="item._open=true"
-                                           :placeholder="item.item_name || 'Rechercher un produit...'"
-                                           class="form-control purchase-items__product-input" autocomplete="off">
-                                    <input type="hidden" :name="'items['+idx+'][item_type]'" value="product">
-                                    <input type="hidden" :name="'items['+idx+'][pack_id]'" value="">
-                                    <input type="hidden" :name="'items['+idx+'][product_id]'" :value="item.product_id ?? ''">
-                                    <input type="hidden" :name="'items['+idx+'][item_name]'" :value="item.item_name">
-                                    <div x-show="item._open" x-transition class="autocomplete-dropdown autocomplete-dropdown--wide">
-                                        <template x-if="availableForRow(idx).length === 0">
-                                            <div class="autocomplete-dropdown__empty"
-                                                 x-text="selectedWarehouse ? 'Aucun produit disponible.' : 'Sélectionnez d\'abord un entrepôt.'">
-                                            </div>
-                                        </template>
-                                        <template x-for="p in availableForRow(idx)" :key="p.id">
-                                            <div @mousedown.prevent="selectProductInRow(idx, p)"
-                                                 class="autocomplete-dropdown__item--product"
-                                                 @mouseover="$el.style.background='#f8fafc'"
-                                                 @mouseout="$el.style.background='white'">
-                                                <span x-text="p.name" class="autocomplete-dropdown__item-name"></span>
-                                                <span x-text="'Stock : '+p.stock" class="autocomplete-dropdown__item-stock"></span>
-                                            </div>
-                                        </template>
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <div class="autocomplete-wrap" style="flex:1;" @click.outside="item._open=false">
+                                        <input type="text"
+                                               x-model="item._search"
+                                               @focus="item._open=true"
+                                               @input="item._open=true"
+                                               :placeholder="item.item_name || 'Rechercher un produit...'"
+                                               class="form-control purchase-items__product-input" autocomplete="off">
+                                        <input type="hidden" :name="'items['+idx+'][item_type]'" value="product">
+                                        <input type="hidden" :name="'items['+idx+'][pack_id]'" value="">
+                                        <input type="hidden" :name="'items['+idx+'][product_id]'" :value="item.product_id ?? ''">
+                                        <input type="hidden" :name="'items['+idx+'][item_name]'" :value="item.item_name">
+                                        <div x-show="item._open" x-transition class="autocomplete-dropdown autocomplete-dropdown--wide">
+                                            <template x-if="availableForRow(idx).length === 0">
+                                                <div class="autocomplete-dropdown__empty"
+                                                     x-text="selectedWarehouse ? 'Aucun produit disponible.' : 'Sélectionnez d\'abord un entrepôt.'">
+                                                </div>
+                                            </template>
+                                            <template x-for="p in availableForRow(idx)" :key="p.id">
+                                                <div @mousedown.prevent="selectProductInRow(idx, p)"
+                                                     class="autocomplete-dropdown__item--product"
+                                                     @mouseover="$el.style.background='#f8fafc'"
+                                                     @mouseout="$el.style.background='white'">
+                                                    <span x-text="p.name" class="autocomplete-dropdown__item-name"></span>
+                                                    <span x-text="'Stock : '+p.stock" class="autocomplete-dropdown__item-stock"></span>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
+                                    <button type="button" @click="openQuickCreate(idx)"
+                                            class="btn btn--ghost btn--sm btn--icon" title="Créer un nouveau produit" style="flex-shrink:0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    </button>
                                 </div>
                             </td>
                             <td style="text-align:center;">
@@ -202,6 +208,58 @@
     </div>
 </div>
 </form>
+
+{{-- Modal création rapide de produit --}}
+<div class="modal-overlay" x-show="quickCreateRowIdx !== null" x-cloak @click.self="quickCreateRowIdx = null" x-transition>
+    <div class="modal modal--sm">
+        <div class="modal__header">
+            <h3>Nouveau produit</h3>
+            <button class="modal__close" @click="quickCreateRowIdx = null">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="modal__body">
+            <div class="form-group">
+                <label>Nom <span class="required">*</span></label>
+                <input type="text" x-model="newProductName" @keydown.enter.prevent="quickCreateProduct(quickCreateRowIdx)" class="form-control" placeholder="Nom du produit">
+            </div>
+            <div class="form-grid form-grid--2">
+                <div class="form-group">
+                    <label>Prix d'achat ({{ $currency }}) <span class="required">*</span></label>
+                    <input type="number" x-model.number="newProductBuying" min="0" step="1" @keydown.enter.prevent="quickCreateProduct(quickCreateRowIdx)" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Prix de vente ({{ $currency }}) <span class="required">*</span></label>
+                    <input type="number" x-model.number="newProductSelling" min="0" step="1" @keydown.enter.prevent="quickCreateProduct(quickCreateRowIdx)" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Catégorie <span class="required">*</span></label>
+                    <select x-model="newProductCategoryId" class="form-select">
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unité <span class="required">*</span></label>
+                    <select x-model="newProductUnitId" class="form-select">
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->abbreviation }})</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <p x-show="createProductError" x-text="createProductError" style="color:#ef4444;font-size:13px;margin-top:-8px;"></p>
+            <div class="modal-footer-std">
+                <button type="button" @click="quickCreateRowIdx = null" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="quickCreateProduct(quickCreateRowIdx)" class="btn btn--primary" :disabled="creatingProduct || !newProductName.trim() || !newProductCategoryId || !newProductUnitId">
+                    <span x-show="!creatingProduct">Créer & ajouter</span>
+                    <span x-show="creatingProduct">...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 @endsection
 
@@ -211,11 +269,19 @@ function purchaseForm() {
     const products   = @json($products);
     const suppliers  = @json($suppliers);
     const warehouses = @json($warehouses);
+    const categories = @json($categories);
+    const units      = @json($units);
     let _key = 0;
 
     return {
         items: [],
         subtotal: 0,
+
+        quickCreateRowIdx: null,
+        newProductName: '', newProductBuying: 0, newProductSelling: 0,
+        newProductCategoryId: {{ $categories->first()->id ?? 'null' }},
+        newProductUnitId: {{ $units->first()->id ?? 'null' }},
+        creatingProduct: false, createProductError: '',
 
         supplierSearch: '',
         supplierOpen: false,
@@ -275,6 +341,7 @@ function purchaseForm() {
 
         removeRow(idx) {
             this.items.splice(idx, 1);
+            this.quickCreateRowIdx = null;
             this.recalc();
         },
 
@@ -285,6 +352,53 @@ function purchaseForm() {
             this.items[idx]._search    = p.name;
             this.items[idx]._open      = false;
             this.recalc();
+        },
+
+        openQuickCreate(idx) {
+            this.quickCreateRowIdx   = idx;
+            this.newProductName      = this.items[idx]._search;
+            this.newProductBuying    = 0;
+            this.newProductSelling   = 0;
+            this.newProductCategoryId = categories[0]?.id ?? null;
+            this.newProductUnitId    = units[0]?.id ?? null;
+            this.createProductError = '';
+        },
+
+        async quickCreateProduct(idx) {
+            if (!this.newProductName.trim() || !this.newProductCategoryId || !this.newProductUnitId) return;
+            this.creatingProduct = true;
+            this.createProductError = '';
+            try {
+                const res = await fetch('{{ route('products.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        name: this.newProductName,
+                        buying_price: this.newProductBuying || 0,
+                        selling_price: this.newProductSelling || 0,
+                        category_id: this.newProductCategoryId || null,
+                        unit_id: this.newProductUnitId || null,
+                    }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    data.product.stocks = data.product.stocks || {};
+                    products.push(data.product);
+                    this.selectProductInRow(idx, data.product);
+                    this.quickCreateRowIdx = null;
+                    window.toast('Produit créé avec succès.', 'success');
+                } else {
+                    this.createProductError = data.message || Object.values(data.errors ?? {})[0]?.[0] || 'Erreur lors de la création.';
+                }
+            } catch (e) {
+                this.createProductError = 'Erreur réseau.';
+            } finally {
+                this.creatingProduct = false;
+            }
         },
 
         selectSupplier(s) {
@@ -310,10 +424,10 @@ function purchaseForm() {
         },
 
         submitForm(paymentType = 'pending') {
-            if (!this.selectedSupplier) { alert('Le fournisseur est obligatoire.'); return; }
-            if (this.items.length === 0) { alert('Ajoutez au moins un article.'); return; }
+            if (!this.selectedSupplier) { window.toast('Le fournisseur est obligatoire.', 'error'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
             const incomplete = this.items.filter(i => !i.product_id);
-            if (incomplete.length > 0) { alert('Certaines lignes n\'ont pas de produit sélectionné.'); return; }
+            if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de produit sélectionné.', 'error'); return; }
             document.getElementById('payment-type-input').value = paymentType;
             document.getElementById('purchase-form').submit();
         }

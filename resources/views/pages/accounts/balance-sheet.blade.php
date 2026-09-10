@@ -33,7 +33,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Total Passif</div>
-            <div class="stat-card__value" style="color:#EF4444;">{{ \App\Helpers\FormatHelper::money($totalPassif) }}</div>
+            <div class="stat-card__value" style="color:#C4231A;">{{ \App\Helpers\FormatHelper::money($totalPassif) }}</div>
             <div class="stat-card__trend stat-card__trend--flat">Dettes fournisseurs</div>
         </div>
         <div class="stat-card__icon stat-card__icon--red">
@@ -43,7 +43,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Situation nette</div>
-            <div class="stat-card__value" style="color:{{ $situationNette >= 0 ? '#22C55E' : '#EF4444' }}">
+            <div class="stat-card__value" style="color:{{ $situationNette >= 0 ? '#12864B' : '#C4231A' }}">
                 {{ \App\Helpers\FormatHelper::money($situationNette) }}
             </div>
             <div class="stat-card__trend stat-card__trend--{{ $situationNette >= 0 ? 'up' : 'down' }}">
@@ -61,7 +61,7 @@
     {{-- ACTIF --}}
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong style="color:#22C55E;">ACTIF</strong>
+            <strong style="color:#12864B;">ACTIF</strong>
             <span style="font-size:13px;color:#64748B;">Total : <strong>{{ \App\Helpers\FormatHelper::money($totalActif) }}</strong></span>
         </div>
         <table class="data-table">
@@ -113,7 +113,7 @@
                 {{-- Total --}}
                 <tr style="border-top:2px solid #E2E8F0;">
                     <td style="font-weight:700;">TOTAL ACTIF</td>
-                    <td style="text-align:right;font-weight:700;color:#22C55E;font-size:15px;">{{ \App\Helpers\FormatHelper::money($totalActif) }}</td>
+                    <td style="text-align:right;font-weight:700;color:#12864B;font-size:15px;">{{ \App\Helpers\FormatHelper::money($totalActif) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -122,7 +122,7 @@
     {{-- PASSIF --}}
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong style="color:#EF4444;">PASSIF</strong>
+            <strong style="color:#C4231A;">PASSIF</strong>
             <span style="font-size:13px;color:#64748B;">Total : <strong>{{ \App\Helpers\FormatHelper::money($totalPassif) }}</strong></span>
         </div>
         <table class="data-table">
@@ -150,7 +150,7 @@
                 </tr>
                 <tr>
                     <td style="padding-left:28px;">Actif – Passif</td>
-                    <td style="text-align:right;font-weight:600;color:{{ $situationNette >= 0 ? '#22C55E' : '#EF4444' }};">
+                    <td style="text-align:right;font-weight:600;color:{{ $situationNette >= 0 ? '#12864B' : '#C4231A' }};">
                         {{ \App\Helpers\FormatHelper::money($situationNette) }}
                     </td>
                 </tr>
@@ -158,7 +158,7 @@
                 {{-- Total --}}
                 <tr style="border-top:2px solid #E2E8F0;">
                     <td style="font-weight:700;">TOTAL PASSIF + SITUATION NETTE</td>
-                    <td style="text-align:right;font-weight:700;color:#EF4444;font-size:15px;">{{ \App\Helpers\FormatHelper::money($totalActif) }}</td>
+                    <td style="text-align:right;font-weight:700;color:#C4231A;font-size:15px;">{{ \App\Helpers\FormatHelper::money($totalActif) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -166,9 +166,9 @@
         {{-- Note d'équilibre --}}
         <div style="padding:16px 20px;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B;">
             @if(abs($totalActif - ($totalPassif + $situationNette)) < 1)
-                <span style="color:#22C55E;font-weight:600;">✓ Bilan équilibré</span> — Actif = Passif + Situation nette
+                <span style="color:#12864B;font-weight:600;">✓ Bilan équilibré</span> — Actif = Passif + Situation nette
             @else
-                <span style="color:#EF4444;">⚠ Écart de {{ \App\Helpers\FormatHelper::money(abs($totalActif - $totalPassif - $situationNette)) }}</span>
+                <span style="color:#C4231A;">⚠ Écart de {{ \App\Helpers\FormatHelper::money(abs($totalActif - $totalPassif - $situationNette)) }}</span>
             @endif
         </div>
     </div>

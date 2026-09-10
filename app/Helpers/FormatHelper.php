@@ -39,7 +39,7 @@ class FormatHelper
     {
         $map = [
             'ordered'    => ['Commandé',           'yellow'],
-            'partial'    => ['Partiellement livré', 'blue'],
+            'partial'    => ['Partiel',            'blue'],
             'delivered'  => ['Livré',              'green'],
             'pending'    => ['En attente',         'yellow'],
             'paid'       => ['Payé',               'green'],

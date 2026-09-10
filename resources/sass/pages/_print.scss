@@ -2,6 +2,7 @@
 // Ces pages ont leur propre bloc <style> inline pour l'impression.
 // Ce fichier gère uniquement les éléments communs si une page print
 // est chargée dans le layout normal (cas rare).
+@use '../abstracts/variables' as *;
 
 .print-actions {
     display: flex;
@@ -16,7 +17,7 @@
 
 .print-btn {
     padding: 10px 20px;
-    background: #4CBB17;
+    background: $primary;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -26,6 +27,6 @@
 
     &--ghost {
         background: #f1f5f9;
-        color: #1e293b;
+        color: $secondary;
     }
 }

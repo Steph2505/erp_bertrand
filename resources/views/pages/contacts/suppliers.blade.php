@@ -25,7 +25,7 @@
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Nom, email, téléphone..." class="form-control">
         </div>
         <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn--primary" style="flex:1">Filtrer</button>
+            <button type="submit" class="btn btn--primary">Filtrer</button>
             <a href="{{ route('suppliers.index') }}" class="btn btn--ghost">Réinitialiser</a>
         </div>
     </div>

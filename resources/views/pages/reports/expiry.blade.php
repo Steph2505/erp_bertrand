@@ -15,9 +15,9 @@
 </div>
 
 <div class="stat-grid" style="margin-bottom:20px;">
-    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Expirés</div><div class="stat-card__value" style="color:#EF4444;">{{ $expired }}</div><div class="stat-card__trend stat-card__trend--down">À retirer des rayons</div></div><div class="stat-card__icon stat-card__icon--red"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg></div></div>
-    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Expirent ≤ 30j</div><div class="stat-card__value" style="color:#F59E0B;">{{ $warning }}</div><div class="stat-card__trend stat-card__trend--down">À surveiller</div></div><div class="stat-card__icon stat-card__icon--yellow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg></div></div>
-    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">OK</div><div class="stat-card__value" style="color:#22C55E;">{{ $ok }}</div><div class="stat-card__trend stat-card__trend--up">Péremption lointaine</div></div><div class="stat-card__icon stat-card__icon--green"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div></div>
+    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Expirés</div><div class="stat-card__value" style="color:#C4231A;">{{ $expired }}</div><div class="stat-card__trend stat-card__trend--down">À retirer des rayons</div></div><div class="stat-card__icon stat-card__icon--red"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg></div></div>
+    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Expirent ≤ 30j</div><div class="stat-card__value" style="color:#B45309;">{{ $warning }}</div><div class="stat-card__trend stat-card__trend--down">À surveiller</div></div><div class="stat-card__icon stat-card__icon--yellow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg></div></div>
+    <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">OK</div><div class="stat-card__value" style="color:#12864B;">{{ $ok }}</div><div class="stat-card__trend stat-card__trend--up">Péremption lointaine</div></div><div class="stat-card__icon stat-card__icon--green"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div></div>
 </div>
 
 <div class="table-wrapper">
@@ -33,11 +33,11 @@
                 <td>{{ \App\Helpers\FormatHelper::date($p->expiry_date) }}</td>
                 <td>
                     @if($p->days_left < 0)
-                        <strong style="color:#EF4444;">{{ abs($p->days_left) }}j dépassé</strong>
+                        <strong style="color:#C4231A;">{{ abs($p->days_left) }}j dépassé</strong>
                     @elseif($p->days_left === 0)
-                        <strong style="color:#EF4444;">Aujourd'hui !</strong>
+                        <strong style="color:#C4231A;">Aujourd'hui !</strong>
                     @else
-                        <span style="color:{{ $p->days_left<=30?'#F59E0B':'#22C55E' }}">{{ $p->days_left }}j</span>
+                        <span style="color:{{ $p->days_left<=30?'#B45309':'#12864B' }}">{{ $p->days_left }}j</span>
                     @endif
                 </td>
                 <td>

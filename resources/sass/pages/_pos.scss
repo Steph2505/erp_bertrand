@@ -91,18 +91,31 @@
 
     &__categories {
         display: flex;
+        align-items: center;
         gap: $sp-8;
         padding: $sp-12 $sp-16;
         overflow-x: auto;
+        overflow-y: hidden;
         border-bottom: 1px solid $border;
         background: $bg-white;
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar { height: 4px; }
+        &::-webkit-scrollbar-thumb { background: $border; border-radius: 99px; }
+        &::-webkit-scrollbar-track { background: transparent; }
     }
 
     &__category-btn {
-        padding: 5px $sp-16;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        height: 30px;
+        padding: 0 $sp-16;
         border-radius: 99px;
         font-size: 12.5px;
         font-weight: 500;
+        line-height: 1;
         white-space: nowrap;
         cursor: pointer;
         border: 1.5px solid $border;
@@ -110,10 +123,17 @@
         color: $text-muted;
         transition: all $transition-fast;
 
+        &:hover {
+            border-color: $primary;
+            color: $primary;
+        }
+
         &--active {
             background: $primary;
             border-color: $primary;
             color: #fff;
+
+            &:hover { color: #fff; }
         }
     }
 
@@ -194,9 +214,58 @@
 }
 
 // ─── Colonne droite : panier ─────────────────────────────────────────────────
+// ─── Bouton flottant panier (mobile uniquement) ───────────────────────────────
+.pos-cart-fab {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: $primary;
+    color: #fff;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $shadow-lg;
+    cursor: pointer;
+    z-index: 550;
+
+    svg { width: 24px; height: 24px; }
+
+    &__badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 99px;
+        background: $danger;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid $bg-white;
+    }
+}
+
+// ─── Fond assombri derrière le panier (mobile uniquement) ─────────────────────
+.pos-cart-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 590;
+}
+
 .pos-cart {
     display: flex;
     flex-direction: column;
+    min-height: 0;
     background: $bg-white;
     border-left: 1px solid $border;
 
@@ -206,13 +275,30 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-shrink: 0;
 
         h3 { font-size: 15px; font-weight: 600; }
         span { font-size: 13px; color: $text-muted; }
     }
 
+    &__close {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: $text-muted;
+        padding: $sp-4;
+        border-radius: $radius-sm;
+        align-items: center;
+        justify-content: center;
+
+        &:hover { background: $bg-app; color: $text-main; }
+        svg { width: 18px; height: 18px; }
+    }
+
     &__items {
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
         padding: $sp-8;
     }
@@ -805,9 +891,26 @@
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
 
+    // Le panier devient un tiroir masqué par défaut, ouvert via le bouton flottant
     .pos-cart {
-        max-height: 50vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        width: 88%;
+        max-width: 380px;
         border-left: none;
-        border-top: 1px solid $border;
+        box-shadow: $shadow-lg;
+        transform: translateX(-100%);
+        transition: transform $transition-normal;
+        z-index: 600;
+
+        &--open { transform: translateX(0); }
+    }
+
+    .pos-cart-fab,
+    .pos-cart-backdrop,
+    .pos-cart__close {
+        display: flex;
     }
 }

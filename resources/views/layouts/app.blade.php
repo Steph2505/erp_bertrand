@@ -1,15 +1,51 @@
+@php
+    $flashMessages = array_merge(
+        session('success') ? [['message' => session('success'), 'type' => 'success']] : [],
+        session('error')   ? [['message' => session('error'),   'type' => 'error']]   : [],
+        collect($errors->all())->map(fn($e) => ['message' => $e, 'type' => 'error'])->all()
+    );
+@endphp
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ERP') — Bertrand Store</title>
+    <title>@yield('title', 'ERP') — Espace Mokolo d'Obala</title>
+    <script>
+        window.CURRENCY = '{{ config('app.currency_symbol', 'XOF') }}';
+        window.__flashMessages = @json($flashMessages);
+    </script>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @stack('styles')
-    <script>window.CURRENCY = '{{ config('app.currency_symbol', 'XOF') }}';</script>
 </head>
 <body x-data="{ sidebarOpen: false }">
+
+{{-- ──────────── TOASTS ──────────── --}}
+<div class="toast-container" x-data>
+    <template x-for="t in $store.toast.items" :key="t.id">
+        <div class="toast" :class="'toast--' + t.type">
+            <div class="toast__icon">
+                <template x-if="t.type === 'success'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </template>
+                <template x-if="t.type === 'error'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                </template>
+                <template x-if="t.type === 'warning'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                </template>
+                <template x-if="t.type === 'info'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+                </template>
+            </div>
+            <div class="toast__content" x-text="t.message"></div>
+            <button class="toast__close" @click="$store.toast.remove(t.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </template>
+</div>
 
 <div class="app-wrapper">
 
@@ -19,10 +55,10 @@
         {{-- Brand --}}
         <div class="sidebar__brand">
             <div class="sidebar__brand-logo">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3"/></svg>
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}">
             </div>
             <div class="sidebar__brand-name">
-                Bertrand Store
+                Espace Mokolo d'Obala
                 <span>ERP v1.0</span>
             </div>
         </div>
@@ -204,40 +240,13 @@
 
         {{-- Contenu --}}
         <main class="page-content">
-            @if(session('success'))
-                <div class="alert alert--success" x-data="{ show: true }" x-show="show">
-                    <div class="alert__icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div>
-                    <div class="alert__content">{{ session('success') }}</div>
-                    <button class="alert__close" @click="show = false"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert--error" x-data="{ show: true }" x-show="show">
-                    <div class="alert__icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg></div>
-                    <div class="alert__content">{{ session('error') }}</div>
-                    <button class="alert__close" @click="show = false"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
-                </div>
-            @endif
-
-            @if($errors->any())
-                <div class="alert alert--error" x-data="{ show: true }" x-show="show">
-                    <div class="alert__icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg></div>
-                    <div class="alert__content">
-                        @foreach($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
-                    </div>
-                    <button class="alert__close" @click="show = false"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
-                </div>
-            @endif
 
             @yield('content')
         </main>
 
         {{-- Footer --}}
         <footer class="page-footer">
-            © {{ date('Y') }} Bertrand Store — ERP v1.0.0
+            © {{ date('Y') }} Espace Mokolo d'Obala — ERP v1.0.0
         </footer>
     </div>
 

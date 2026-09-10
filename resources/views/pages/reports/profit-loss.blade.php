@@ -2,11 +2,29 @@
 @section('title', 'Profit / Perte')
 @section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Profit / Perte</span>@endsection
 
+@php
+    $ranges = [
+        'day'   => [now()->toDateString(),               now()->toDateString()],
+        'week'  => [now()->startOfWeek()->toDateString(), now()->endOfWeek()->toDateString()],
+        'month' => [now()->startOfMonth()->toDateString(),now()->endOfMonth()->toDateString()],
+        'year'  => [now()->startOfYear()->toDateString(), now()->endOfYear()->toDateString()],
+    ];
+    $activePeriod = collect($ranges)->search(fn($r) => $r[0] === $from && $r[1] === $to) ?: null;
+@endphp
+
 @section('content')
 <div class="page-header">
     <div class="page-header__title">
         <h2>Profit / Perte</h2>
         <p>Du {{ \App\Helpers\FormatHelper::date($from) }} au {{ \App\Helpers\FormatHelper::date($to) }}</p>
+    </div>
+    <div class="page-header__actions">
+        <div class="filter-tabs">
+            @foreach(['day' => 'Jour', 'week' => 'Semaine', 'month' => 'Mois', 'year' => 'Année'] as $key => $label)
+                <a href="{{ route('reports.profit-loss', ['date_from' => $ranges[$key][0], 'date_to' => $ranges[$key][1]]) }}"
+                   class="filter-tabs__btn {{ $activePeriod === $key ? 'filter-tabs__btn--active' : '' }}">{{ $label }}</a>
+            @endforeach
+        </div>
     </div>
 </div>
 
@@ -24,7 +42,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Chiffre d'affaires</div>
-            <div class="stat-card__value" style="color:#22C55E;">{{ \App\Helpers\FormatHelper::money($revenue) }}</div>
+            <div class="stat-card__value" style="color:#12864B;">{{ \App\Helpers\FormatHelper::money($revenue) }}</div>
             <div class="stat-card__trend stat-card__trend--flat">Ventes confirmées</div>
         </div>
         <div class="stat-card__icon stat-card__icon--green">
@@ -33,9 +51,9 @@
     </div>
     <div class="stat-card">
         <div class="stat-card__info">
-            <div class="stat-card__label">Coût des achats</div>
-            <div class="stat-card__value" style="color:#3B82F6;">{{ \App\Helpers\FormatHelper::money($cogs) }}</div>
-            <div class="stat-card__trend stat-card__trend--flat">Achats confirmés</div>
+            <div class="stat-card__label">Coût des produits vendus</div>
+            <div class="stat-card__value" style="color:#1749B3;">{{ \App\Helpers\FormatHelper::money($cogs) }}</div>
+            <div class="stat-card__trend stat-card__trend--flat">Prix d'achat des articles vendus (POS + Vente)</div>
         </div>
         <div class="stat-card__icon stat-card__icon--blue">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
@@ -43,9 +61,9 @@
     </div>
     <div class="stat-card">
         <div class="stat-card__info">
-            <div class="stat-card__label">Marge brute</div>
-            <div class="stat-card__value" style="color:{{ $grossProfit >= 0 ? '#22C55E' : '#EF4444' }}">{{ \App\Helpers\FormatHelper::money($grossProfit) }}</div>
-            <div class="stat-card__trend stat-card__trend--flat">CA – Achats</div>
+            <div class="stat-card__label">Bénéfice brut</div>
+            <div class="stat-card__value" style="color:{{ $grossProfit >= 0 ? '#12864B' : '#C4231A' }}">{{ \App\Helpers\FormatHelper::money($grossProfit) }}</div>
+            <div class="stat-card__trend stat-card__trend--flat">CA – Coût des produits vendus</div>
         </div>
         <div class="stat-card__icon stat-card__icon--{{ $grossProfit >= 0 ? 'green' : 'red' }}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/></svg>
@@ -54,7 +72,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Résultat net</div>
-            <div class="stat-card__value" style="color:{{ $netProfit >= 0 ? '#22C55E' : '#EF4444' }}">{{ \App\Helpers\FormatHelper::money($netProfit) }}</div>
+            <div class="stat-card__value" style="color:{{ $netProfit >= 0 ? '#12864B' : '#C4231A' }}">{{ \App\Helpers\FormatHelper::money($netProfit) }}</div>
             <div class="stat-card__trend stat-card__trend--{{ $netProfit >= 0 ? 'up' : 'down' }}">Marge – Dépenses ({{ \App\Helpers\FormatHelper::money($expenses) }})</div>
         </div>
         <div class="stat-card__icon stat-card__icon--{{ $netProfit >= 0 ? 'green' : 'red' }}">
@@ -67,7 +85,7 @@
 
     {{-- Graphique évolution --}}
     <div class="table-wrapper" style="padding:20px;">
-        <strong style="display:block;margin-bottom:16px;">Évolution sur 12 mois</strong>
+        <strong style="display:block;margin-bottom:16px;">Ventes et bénéfice par produits vendus (POS + Vente) — évolution sur 12 mois</strong>
         <canvas id="plChart" height="100"></canvas>
     </div>
 
@@ -80,7 +98,7 @@
                 @forelse($expensesByCategory as $cat)
                 <tr>
                     <td>{{ $cat->name }}</td>
-                    <td style="text-align:right;font-weight:600;color:#EF4444;">{{ \App\Helpers\FormatHelper::money($cat->expenses_sum_amount) }}</td>
+                    <td style="text-align:right;font-weight:600;color:#C4231A;">{{ \App\Helpers\FormatHelper::money($cat->expenses_sum_amount) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="2" style="text-align:center;padding:24px;color:#64748B;">Aucune dépense</td></tr>
@@ -88,7 +106,7 @@
                 @if($expenses > 0)
                 <tr style="border-top:2px solid #E2E8F0;font-weight:700;">
                     <td>TOTAL</td>
-                    <td style="text-align:right;color:#EF4444;">{{ \App\Helpers\FormatHelper::money($expenses) }}</td>
+                    <td style="text-align:right;color:#C4231A;">{{ \App\Helpers\FormatHelper::money($expenses) }}</td>
                 </tr>
                 @endif
             </tbody>
@@ -102,20 +120,24 @@
     <table class="data-table">
         <thead><tr>
             <th>Mois</th>
-            <th style="text-align:right;color:#22C55E;">CA</th>
-            <th style="text-align:right;color:#3B82F6;">Achats</th>
-            <th style="text-align:right;color:#F59E0B;">Dépenses</th>
+            <th style="text-align:right;color:#12864B;">CA</th>
+            <th style="text-align:right;color:#1749B3;">Coût produits vendus</th>
+            <th style="text-align:right;color:#C99A05;">Bénéfice</th>
+            <th style="text-align:right;color:#B45309;">Dépenses</th>
             <th style="text-align:right">Résultat net</th>
         </tr></thead>
         <tbody>
             @foreach($monthly as $m)
-            @php $net = $m['revenue'] - $m['cogs'] - $m['expenses']; @endphp
+            @php $net = $m['profit'] - $m['expenses']; @endphp
             <tr>
                 <td><strong>{{ $m['label'] }}</strong></td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($m['revenue']) }}</td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($m['cogs']) }}</td>
+                <td style="text-align:right;font-weight:600;color:{{ $m['profit'] >= 0 ? '#12864B' : '#C4231A' }}">
+                    {{ \App\Helpers\FormatHelper::money($m['profit']) }}
+                </td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($m['expenses']) }}</td>
-                <td style="text-align:right;font-weight:600;color:{{ $net >= 0 ? '#22C55E' : '#EF4444' }}">
+                <td style="text-align:right;font-weight:600;color:{{ $net >= 0 ? '#12864B' : '#C4231A' }}">
                     {{ $net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($net) }}
                 </td>
             </tr>
@@ -129,13 +151,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 new Chart(document.getElementById('plChart'), {
-    type: 'bar',
     data: {
         labels: @json(collect($monthly)->pluck('label')),
         datasets: [
-            { label: 'CA', data: @json(collect($monthly)->pluck('revenue')), backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 4 },
-            { label: 'Achats', data: @json(collect($monthly)->pluck('cogs')), backgroundColor: 'rgba(59,130,246,.65)', borderRadius: 4 },
-            { label: 'Dépenses', data: @json(collect($monthly)->pluck('expenses')), backgroundColor: 'rgba(245,158,11,.65)', borderRadius: 4 },
+            { type: 'bar', label: 'Ventes (CA)', data: @json(collect($monthly)->pluck('revenue')), backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 4 },
+            { type: 'bar', label: 'Coût produits vendus', data: @json(collect($monthly)->pluck('cogs')), backgroundColor: 'rgba(59,130,246,.65)', borderRadius: 4 },
+            { type: 'bar', label: 'Dépenses', data: @json(collect($monthly)->pluck('expenses')), backgroundColor: 'rgba(245,158,11,.65)', borderRadius: 4 },
+            { type: 'line', label: 'Bénéfice', data: @json(collect($monthly)->pluck('profit')), borderColor: '#C99A05', backgroundColor: 'rgba(201,154,5,.1)', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#C99A05', tension: .3, fill: false },
         ]
     },
     options: {

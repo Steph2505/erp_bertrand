@@ -2,7 +2,7 @@
 
 return [
 
-    'name' => env('APP_NAME', 'Bertrand Store'),
+    'name' => env('APP_NAME', 'Espace Mokolo d\'Obala'),
 
     'env' => env('APP_ENV', 'production'),
 

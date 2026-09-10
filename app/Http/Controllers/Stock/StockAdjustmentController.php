@@ -13,45 +13,56 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Throwable;
 
 class StockAdjustmentController extends Controller
 {
     public function __construct(private readonly ProductRepository $productRepo) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
-        $products   = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'variation', 'stock_quantity', 'unit_id']);
-        return view('pages.stock.adjustments', compact('warehouses', 'products'));
+        try {
+            $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
+            $products   = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'variation', 'stock_quantity', 'unit_id']);
+            return view('pages.stock.adjustments', compact('warehouses', 'products'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la page des ajustements de stock');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
     }
 
     public function apiIndex(Request $request): JsonResponse
     {
-        $paginator = StockAdjustment::with(['warehouse', 'createdBy'])
-            ->when($request->search, fn($q, $s) => $q->where('reference', 'like', "%$s%"))
-            ->when($request->type,   fn($q, $t) => $q->where('type', $t))
-            ->latest()
-            ->paginate(10, ['*'], 'page', $request->integer('page', 1));
+        try {
+            $paginator = StockAdjustment::with(['warehouse', 'createdBy'])
+                ->when($request->search, fn($q, $s) => $q->where('reference', 'like', "%$s%"))
+                ->when($request->type,   fn($q, $t) => $q->where('type', $t))
+                ->latest()
+                ->paginate(10, ['*'], 'page', $request->integer('page', 1));
 
-        return response()->json([
-            'data' => $paginator->getCollection()->map(fn($a) => [
-                'id'              => $a->id,
-                'reference'       => $a->reference,
-                'type'            => $a->type,
-                'type_label'      => $a->type === 'addition' ? '+ Entrée' : '− Sortie',
-                'type_badge'      => $a->type === 'addition' ? 'badge--green' : 'badge--red',
-                'warehouse'       => $a->warehouse?->name ?? '—',
-                'adjustment_date' => \App\Helpers\FormatHelper::date($a->adjustment_date),
-                'reason'          => $a->reason ?? '—',
-                'created_by'      => $a->createdBy?->name ?? '—',
-            ]),
-            'total'        => $paginator->total(),
-            'per_page'     => $paginator->perPage(),
-            'current_page' => $paginator->currentPage(),
-            'last_page'    => $paginator->lastPage(),
-            'from'         => $paginator->firstItem() ?? 0,
-            'to'           => $paginator->lastItem() ?? 0,
-        ]);
+            return response()->json([
+                'data' => $paginator->getCollection()->map(fn($a) => [
+                    'id'              => $a->id,
+                    'reference'       => $a->reference,
+                    'type'            => $a->type,
+                    'type_label'      => $a->type === 'addition' ? '+ Entrée' : '− Sortie',
+                    'type_badge'      => $a->type === 'addition' ? 'badge--green' : 'badge--red',
+                    'warehouse'       => $a->warehouse?->name ?? '—',
+                    'adjustment_date' => \App\Helpers\FormatHelper::date($a->adjustment_date),
+                    'reason'          => $a->reason ?? '—',
+                    'created_by'      => $a->createdBy?->name ?? '—',
+                ]),
+                'total'        => $paginator->total(),
+                'per_page'     => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'from'         => $paginator->firstItem() ?? 0,
+                'to'           => $paginator->lastItem() ?? 0,
+            ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des ajustements de stock', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger les ajustements.'], 500);
+        }
     }
 
     public function store(Request $request): RedirectResponse
@@ -66,35 +77,40 @@ class StockAdjustmentController extends Controller
             'items.*.quantity'   => 'required|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $reference = 'ADJ-' . date('Ymd') . '-' . str_pad(StockAdjustment::count() + 1, 4, '0', STR_PAD_LEFT);
+        try {
+            DB::transaction(function () use ($request) {
+                $reference = 'ADJ-' . date('Ymd') . '-' . str_pad(StockAdjustment::count() + 1, 4, '0', STR_PAD_LEFT);
 
-            StockAdjustment::create([
-                'reference'       => $reference,
-                'warehouse_id'    => $request->warehouse_id,
-                'adjustment_date' => $request->adjustment_date,
-                'type'            => $request->type,
-                'reason'          => $request->reason,
-                'created_by'      => auth()->id(),
-            ]);
+                StockAdjustment::create([
+                    'reference'       => $reference,
+                    'warehouse_id'    => $request->warehouse_id,
+                    'adjustment_date' => $request->adjustment_date,
+                    'type'            => $request->type,
+                    'reason'          => $request->reason,
+                    'created_by'      => auth()->id(),
+                ]);
 
-            $delta = $request->type === 'addition' ? 1 : -1;
+                $delta = $request->type === 'addition' ? 1 : -1;
 
-            $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
+                $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
 
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $this->productRepo->adjustStock(
-                    $product,
-                    $delta * (int) $item['quantity'],
-                    'adjustment',
-                    $reference,
-                    null,
-                    $request->reason,
-                    $warehouseId
-                );
-            }
-        });
+                foreach ($request->items as $item) {
+                    $product = Product::findOrFail($item['product_id']);
+                    $this->productRepo->adjustStock(
+                        $product,
+                        $delta * (int) $item['quantity'],
+                        'adjustment',
+                        $reference,
+                        null,
+                        $request->reason,
+                        $warehouseId
+                    );
+                }
+            });
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de l\'enregistrement de l\'ajustement de stock', ['request' => $request->except('_token')]);
+            return back()->withInput()->with('error', 'Une erreur est survenue lors de l\'enregistrement de l\'ajustement.');
+        }
 
         return back()->with('success', 'Ajustement de stock enregistré.');
     }

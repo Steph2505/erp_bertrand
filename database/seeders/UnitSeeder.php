@@ -11,13 +11,11 @@ class UnitSeeder extends Seeder
     {
         $units = [
             ['name' => 'Pièce',      'abbreviation' => 'pcs'],
-            ['name' => 'Kilogramme', 'abbreviation' => 'kg'],
+            ['name' => 'carton', 'abbreviation' => 'ctn'],
             ['name' => 'Gramme',     'abbreviation' => 'g'],
             ['name' => 'Litre',      'abbreviation' => 'L'],
-            ['name' => 'Centilitre', 'abbreviation' => 'cl'],
             ['name' => 'Boîte',      'abbreviation' => 'bte'],
             ['name' => 'ballot',     'abbreviation' => 'blt'],
-            ['name' => 'Plateau',    'abbreviation' => 'plat'],
         ];
 
         foreach ($units as $unit) {

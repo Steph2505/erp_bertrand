@@ -152,9 +152,9 @@
 
         @if($purchase->payment_status !== 'paid')
         <button @click="open=true" class="btn btn--pay-filled btn--full">
-            Enregistrer un paiement
+            <span>Enregistrer un paiement</span>
             @if($purchase->status === 'draft')
-                <span style="font-size:11px;opacity:.8;margin-left:4px;">(confirme automatiquement)</span>
+                <span style="font-size:11px;opacity:.8;">(confirme automatiquement)</span>
             @endif
         </button>
         @endif
@@ -209,26 +209,29 @@
             <div class="form-grid form-grid--2">
                 <div class="form-group">
                     <label>Montant ({{ $currency }}) <span class="required">*</span></label>
-                    <input type="number" x-model="amount" min="1" step="1" class="form-control"
+                    <input type="number" x-model="amount" min="1" step="1" class="form-control" :class="{'form-control--error': errors.amount}"
                            placeholder="{{ number_format($purchase->amount_due, 0, ',', ' ') }}" required>
+                    <span class="form-error" x-show="errors.amount" x-text="errors.amount"></span>
                 </div>
                 <div class="form-group">
                     <label>Mode de paiement <span class="required">*</span></label>
-                    <select x-model="mode" class="form-select">
+                    <select x-model="mode" class="form-select" :class="{'form-control--error': errors.mode}">
                         <option value="cash">Espèces</option>
                         <option value="bank_transfer">Virement</option>
                         <option value="mobile_money">Mobile Money</option>
                         <option value="check">Chèque</option>
                     </select>
+                    <span class="form-error" x-show="errors.mode" x-text="errors.mode"></span>
                 </div>
                 <div class="form-group" style="grid-column:1/-1">
-                    <label>Compte débité</label>
-                    <select x-model="accountId" class="form-select">
-                        <option value="">— Compte par défaut —</option>
+                    <label>Compte débité <span class="required">*</span></label>
+                    <select x-model="accountId" class="form-select" :class="{'form-control--error': errors.accountId}">
+                        <option value="">-- Sélectionner --</option>
                         @foreach($accounts as $acc)
                         <option value="{{ $acc->id }}">{{ $acc->name }} ({{ \App\Helpers\FormatHelper::money($acc->current_balance) }})</option>
                         @endforeach
                     </select>
+                    <span class="form-error" x-show="errors.accountId" x-text="errors.accountId"></span>
                 </div>
             </div>
             <div class="modal-actions">
@@ -250,9 +253,16 @@
 function payForm(url) {
     return {
         open: false, loading: false, success: '', error: '',
-        amount: '', mode: 'cash', accountId: '',
+        amount: '{{ number_format($purchase->amount_due, 0, '.', '') }}', mode: 'cash', accountId: '{{ $accounts->first()->id ?? '' }}',
+        errors: { amount: '', mode: '', accountId: '' },
         submit() {
-            this.error = ''; this.success = ''; this.loading = true;
+            this.error = ''; this.success = '';
+            this.errors = { amount: '', mode: '', accountId: '' };
+            if (!this.amount)    this.errors.amount    = 'Le montant est obligatoire.';
+            if (!this.mode)      this.errors.mode      = 'Le mode de paiement est obligatoire.';
+            if (!this.accountId) this.errors.accountId = 'Le compte de paiement est obligatoire.';
+            if (this.errors.amount || this.errors.mode || this.errors.accountId) return;
+            this.loading = true;
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -271,12 +281,20 @@ function payForm(url) {
                 this.loading = false;
                 if (data.success) {
                     this.success = 'Paiement enregistré.';
+                    window.toastAfterReload('Paiement enregistré avec succès.', 'success');
                     setTimeout(() => window.location.reload(), 900);
+                } else if (data.errors) {
+                    this.errors.amount    = data.errors.amount?.[0]    ?? '';
+                    this.errors.mode      = data.errors.payment_mode?.[0] ?? '';
+                    this.errors.accountId = data.errors.payment_account_id?.[0] ?? '';
+                    this.error = data.message ?? 'Veuillez corriger les erreurs.';
+                    window.toast(this.error, 'error');
                 } else {
                     this.error = data.message ?? 'Erreur.';
+                    window.toast(this.error, 'error');
                 }
             })
-            .catch(() => { this.loading = false; this.error = 'Erreur réseau.'; });
+            .catch(() => { this.loading = false; this.error = 'Erreur réseau.'; window.toast('Erreur réseau.', 'error'); });
         }
     };
 }

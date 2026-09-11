@@ -23,12 +23,13 @@
     </div>
 </div>
 <div id="close-session-panel" class="pos-close-panel hidden">
-    <form method="POST" action="{{ route('pos.sessions.close', $activeSession) }}" class="pos-close-panel__form">
+    <form method="POST" action="{{ route('pos.sessions.close', $activeSession) }}" class="pos-close-panel__form"
+          @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && $el.submit())">
         @csrf
         <span class="pos-close-panel__label">Clôturer la caisse :</span>
         <input type="number" name="closing_balance" step="1" min="0" class="form-control pos-close-panel__input-balance" placeholder="Montant compté" required>
         <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Note (optionnel)">
-        <button type="submit" class="btn btn--danger btn--sm" onclick="return confirm('Confirmer la clôture ?')">Confirmer</button>
+        <button type="submit" class="btn btn--danger btn--sm">Confirmer</button>
         <button type="button" class="btn btn--ghost btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
     </form>
 </div>
@@ -560,8 +561,9 @@ function posApp() {
             this.cart.splice(idx, 1);
         },
 
-        clearCart() {
-            if (!confirm('Vider le panier ?')) return;
+        async clearCart() {
+            const ok = await window.confirmDialog('Vider le panier ?', { variant: 'danger', confirmLabel: 'Vider' });
+            if (!ok) return;
             this.cart.forEach(item => {
                 if (item.item_type === 'product') {
                     const k = 'product_' + item.product_id;

@@ -237,7 +237,23 @@
 
                 svg { width: 16px; height: 16px; color: $text-muted; }
 
-                &--danger { color: $danger; svg { color: $danger; } }
+                &--danger {
+                    justify-content: center;
+                    background: $danger;
+                    color: #fff;
+                    margin: $sp-4;
+                    border-radius: $radius-sm;
+                    width: calc(100% - #{$sp-4 * 2});
+
+                    svg { color: #fff; }
+
+                    &:hover {
+                        background: $danger;
+                        filter: brightness(0.88);
+                        color: #fff;
+                        svg { color: #fff; }
+                    }
+                }
             }
         }
     }

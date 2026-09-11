@@ -284,7 +284,8 @@ function productList() {
         },
 
         async deleteProduct(product) {
-            if (!confirm('Supprimer le produit « ' + product.name + ' » ?')) return;
+            const ok = await window.confirmDialog('Supprimer le produit « ' + product.name + ' » ?', { variant: 'danger', confirmLabel: 'Supprimer' });
+            if (!ok) return;
             try {
                 await fetch(product.delete_url, {
                     method:  'DELETE',

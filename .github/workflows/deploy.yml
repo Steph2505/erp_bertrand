@@ -41,11 +41,28 @@ env:
   REMOTE_USER: ${{ secrets.CPANEL_USERNAME }}
   REMOTE_PATH: ${{ inputs.remote_path }}
   PHP_REMOTE: /opt/alt/php82/usr/bin/php -c ~/php82-custom.ini
+  CPANEL_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ inputs.gh_environment }}
+
+    # ------------------------------------------------------------------
+    # Mutex SSH. La whitelist cPanel est GLOBALE au compte : le remove_all
+    # de fin de job supprime l'IP de tous les déploiements en cours, pas
+    # seulement la sienne. Ce groupe est volontairement identique dans les
+    # trois environnements (il ignore inputs.env_name) : dev, test et
+    # production s'exécutent donc l'un après l'autre, jamais en parallèle.
+    #   cancel-in-progress: false — on n'interrompt JAMAIS un déploiement
+    #   en cours : il serait tué entre « artisan down » et « artisan up ».
+    # Ne protège pas des autres dépôts du même compte cPanel (luxe,
+    # m-planner, prest-event…) : c'est le rôle de ssh_script/rsync_run,
+    # qui réarment la whitelist et réessaient. Voir AUDIT § 2.9.
+    # ------------------------------------------------------------------
+    concurrency:
+      group: o2switch-ssh-sc1zeucoder
+      cancel-in-progress: false
 
     steps:
       - name: Checkout
@@ -108,32 +125,123 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p 22 -H "$REMOTE_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
+      # ------------------------------------------------------------------
+      # Helpers chargés par toutes les étapes SSH qui suivent.
+      #
+      # Problème traité : un déploiement d'un AUTRE dépôt du même compte
+      # cPanel (luxe, m-planner, prest-event…) termine et appelle
+      # SshWhitelist/remove_all, qui vide la whitelist entière. Notre IP
+      # saute alors que nous sommes en plein rsync / migration / artisan up.
+      #
+      # Réponse : on distingue « SSH n'a pas pu se connecter » (code 255)
+      # de « la commande distante a échoué » (tout autre code). Seul le
+      # premier cas est réessayé, après réarmement de l'IP. Une migration
+      # qui échoue n'est donc JAMAIS rejouée en boucle.
+      # ------------------------------------------------------------------
+      - name: Helpers SSH (réarmement whitelist + retry)
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
+        run: |
+          cat > "$RUNNER_TEMP/ssh_guard.sh" <<'GUARD'
+          SSH_OPTS="-i $HOME/.ssh/id_ed25519 -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
+          SSH_ATTEMPTS="${SSH_ATTEMPTS:-3}"
+
+          whitelist_add() {
+            curl -fsS --max-time 30 \
+              -H "Authorization: cpanel ${REMOTE_USER}:${CPANEL_TOKEN}" \
+              "https://${REMOTE_HOST}:2083/execute/SshWhitelist/add?address=${RUNNER_IP}&port=22" \
+              -o "$RUNNER_TEMP/whitelist.json" 2>/dev/null || return 1
+            grep -q '"errors":null' "$RUNNER_TEMP/whitelist.json"
+          }
+
+          # ssh_run <commande…> : commande inline, sans stdin.
+          ssh_run() {
+            local attempt=1 rc
+            while :; do
+              ssh $SSH_OPTS "${REMOTE_USER}@${REMOTE_HOST}" "$@"
+              rc=$?
+              # 255 = SSH lui-même a échoué. Tout autre code vient du distant.
+              [ "$rc" -ne 255 ] && return "$rc"
+              [ "$attempt" -ge "$SSH_ATTEMPTS" ] && return 255
+              echo "::warning::SSH injoignable (tentative $attempt/$SSH_ATTEMPTS) — un autre déploiement a probablement vidé la whitelist. Réarmement de ${RUNNER_IP}."
+              whitelist_add || true
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+          }
+
+          # ssh_script <fichier> : exécute un script à distance.
+          # Le script est lu depuis un FICHIER et non un heredoc, pour rester
+          # relisible à chaque tentative (un heredoc est consommé une fois).
+          ssh_script() {
+            local f="$1" attempt=1 rc
+            while :; do
+              ssh $SSH_OPTS "${REMOTE_USER}@${REMOTE_HOST}" "bash -s" < "$f"
+              rc=$?
+              [ "$rc" -ne 255 ] && return "$rc"
+              [ "$attempt" -ge "$SSH_ATTEMPTS" ] && return 255
+              echo "::warning::SSH injoignable (tentative $attempt/$SSH_ATTEMPTS) — réarmement de ${RUNNER_IP}."
+              whitelist_add || true
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+          }
+
+          # rsync_run <args…> : idem, sur les codes de sortie réseau de rsync.
+          rsync_run() {
+            local attempt=1 rc
+            while :; do
+              rsync "$@"
+              rc=$?
+              [ "$rc" -eq 0 ] && return 0
+              # 12 protocole, 30/35 timeout, 255 SSH — les seuls cas réseau.
+              case "$rc" in 12|30|35|255) ;; *) return "$rc" ;; esac
+              [ "$attempt" -ge "$SSH_ATTEMPTS" ] && return "$rc"
+              echo "::warning::rsync interrompu (code $rc, tentative $attempt/$SSH_ATTEMPTS) — réarmement de ${RUNNER_IP}."
+              whitelist_add || true
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+          }
+          GUARD
+          echo "$RUNNER_TEMP/ssh_guard.sh prêt"
+
       # Garde-fou : on refuse de déployer dans un dossier qui ne contient pas
       # déjà un .env. Évite d'écraser le mauvais environnement sur une faute
       # de frappe dans remote_path, et rappelle l'étape d'init manuelle.
       - name: Vérifier la cible
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
-            "${REMOTE_USER}@${REMOTE_HOST}" \
-            "test -f ${REMOTE_PATH}.env" \
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          ssh_run "test -f ${REMOTE_PATH}.env" \
             || { echo "::error::${REMOTE_PATH}.env introuvable — faire l'initialisation manuelle (AUDIT_DEPLOIEMENT.md § 5) avant le premier déploiement de « ${{ inputs.env_name }} »."; exit 1; }
 
       # Mode maintenance : un ERP écrit en continu (POS, stock, caisse).
       # On ferme la boutique le temps du rsync + des migrations.
+      #
+      # À partir d'ici et jusqu'à « Mode maintenance OFF », toute sortie
+      # prématurée laisse le site fermé : d'où le marqueur DOWN, qui force
+      # l'étape de relève à s'exécuter même en cas d'annulation du job.
       - name: Mode maintenance ON
+        id: down
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
-            "${REMOTE_USER}@${REMOTE_HOST}" \
-            "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan down --retry=30 || true"
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          ssh_run "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan down --retry=30 || true"
 
       # ATTENTION --delete : tout --exclude protège AUSSI le côté distant.
       # storage/app/{public,private} et public/storage contiennent les images
       # produits/packs (spatie/laravel-medialibrary) : ils ne doivent JAMAIS
       # être supprimés par un déploiement.
       - name: Rsync vers o2switch
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          rsync -az --delete \
-            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          rsync_run -az --delete --partial \
+            -e "ssh $SSH_OPTS" \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='.vscode' \
@@ -158,71 +266,92 @@ jobs:
       # Conservée 14 jours dans ~/backups-<env>/ sur le serveur.
       - name: Dump de la base avant migrations
         if: inputs.backup
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
-            "${REMOTE_USER}@${REMOTE_HOST}" "bash -s" <<'REMOTE'
-            set -euo pipefail
-            cd "${{ inputs.remote_path }}"
-            BACKUP_DIR="$HOME/backups-${{ inputs.env_name }}"
-            mkdir -p "$BACKUP_DIR"
-            # Lecture ciblée du .env : plus sûr que « source .env » (guillemets,
-            # interpolations "${APP_NAME}", commentaires…).
-            envval() { sed -n "s/^$1=//p" .env | head -1 | tr -d '"'"'"'"' | tr -d "\r"; }
-            DB_HOST="$(envval DB_HOST)";     DB_HOST="${DB_HOST:-127.0.0.1}"
-            DB_DATABASE="$(envval DB_DATABASE)"
-            DB_USERNAME="$(envval DB_USERNAME)"
-            DB_PASSWORD="$(envval DB_PASSWORD)"
-            [ -n "$DB_DATABASE" ] || { echo "DB_DATABASE introuvable dans .env"; exit 1; }
-            MYSQL_PWD="$DB_PASSWORD" mysqldump --single-transaction --quick --no-tablespaces \
-              -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" \
-              | gzip > "$BACKUP_DIR/erp-$(date +%F-%H%M%S).sql.gz"
-            find "$BACKUP_DIR" -name '*.sql.gz' -mtime +14 -delete
-            echo "Sauvegarde : $BACKUP_DIR"
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          cat > "$RUNNER_TEMP/backup.sh" <<'REMOTE'
+          set -euo pipefail
+          cd "__REMOTE_PATH__"
+          BACKUP_DIR="$HOME/backups-__ENV_NAME__"
+          mkdir -p "$BACKUP_DIR"
+          # Lecture ciblée du .env : plus sûr que « source .env » (guillemets,
+          # interpolations "${APP_NAME}", commentaires…).
+          envval() { sed -n "s/^$1=//p" .env | head -1 | tr -d '"'"'"'"' | tr -d "\r"; }
+          DB_HOST="$(envval DB_HOST)";     DB_HOST="${DB_HOST:-127.0.0.1}"
+          DB_DATABASE="$(envval DB_DATABASE)"
+          DB_USERNAME="$(envval DB_USERNAME)"
+          DB_PASSWORD="$(envval DB_PASSWORD)"
+          [ -n "$DB_DATABASE" ] || { echo "DB_DATABASE introuvable dans .env"; exit 1; }
+          MYSQL_PWD="$DB_PASSWORD" mysqldump --single-transaction --quick --no-tablespaces \
+            -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" \
+            | gzip > "$BACKUP_DIR/erp-$(date +%F-%H%M%S).sql.gz"
+          find "$BACKUP_DIR" -name '*.sql.gz' -mtime +14 -delete
+          echo "Sauvegarde : $BACKUP_DIR"
           REMOTE
+          sed -i "s#__REMOTE_PATH__#${REMOTE_PATH}#; s#__ENV_NAME__#${{ inputs.env_name }}#" "$RUNNER_TEMP/backup.sh"
+          ssh_script "$RUNNER_TEMP/backup.sh"
 
       # Tous les seeders actifs de DatabaseSeeder sont idempotents
       # (firstOrCreate / updateOrCreate) : --seed est rejouable sans doublon.
       # ProductSeeder / PackSeeder / PurchaseSeeder / SaleSeeder — les seuls
       # non idempotents — sont déjà commentés dans DatabaseSeeder.
       #
+      # Toutes les commandes ci-dessous sont idempotentes : si la connexion
+      # SSH saute en plein milieu (whitelist vidée par un autre dépôt),
+      # ssh_script rejoue le script entier sans effet de bord.
+      #
       # route:cache échoue tant que routes/web.php contient des closures
       # (l. 94-95, 194) : on tente, et on retombe sur route:clear avec un
       # avertissement. Voir AUDIT_DEPLOIEMENT.md § 4.1.
       - name: Post-déploiement (migrations + caches Laravel)
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
-            "${REMOTE_USER}@${REMOTE_HOST}" "bash -s" <<'REMOTE'
-            set -euo pipefail
-            cd "${{ inputs.remote_path }}"
-            P="/opt/alt/php82/usr/bin/php -c $HOME/php82-custom.ini"
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          cat > "$RUNNER_TEMP/post.sh" <<'REMOTE'
+          set -euo pipefail
+          cd "__REMOTE_PATH__"
+          P="/opt/alt/php82/usr/bin/php -c $HOME/php82-custom.ini"
 
-            $P artisan optimize:clear
-            $P artisan migrate --force
-            if [ "${{ inputs.seed }}" = "true" ]; then
-              $P artisan db:seed --force
-            fi
-            # Ne casse pas le déploiement si le lien existe déjà.
-            $P artisan storage:link || true
-            $P artisan permission:cache-reset
-            $P artisan config:cache
-            $P artisan view:cache
-            $P artisan event:cache
-            if $P artisan route:cache 2>/dev/null; then
-              echo "route:cache OK"
-            else
-              $P artisan route:clear
-              echo "ROUTE_CACHE_SKIPPED"
-            fi
-            chmod -R 775 storage bootstrap/cache || true
+          $P artisan optimize:clear
+          $P artisan migrate --force
+          if [ "__SEED__" = "true" ]; then
+            $P artisan db:seed --force
+          fi
+          # Ne casse pas le déploiement si le lien existe déjà.
+          $P artisan storage:link || true
+          $P artisan permission:cache-reset
+          $P artisan config:cache
+          $P artisan view:cache
+          $P artisan event:cache
+          if $P artisan route:cache 2>/dev/null; then
+            echo "route:cache OK"
+          else
+            $P artisan route:clear
+            echo "ROUTE_CACHE_SKIPPED"
+          fi
+          chmod -R 775 storage bootstrap/cache || true
           REMOTE
+          sed -i "s#__REMOTE_PATH__#${REMOTE_PATH}#; s#__SEED__#${{ inputs.seed }}#" "$RUNNER_TEMP/post.sh"
+          ssh_script "$RUNNER_TEMP/post.sh"
 
+      # Relève du mode maintenance. C'est l'étape la plus critique du
+      # workflow : si elle échoue, le site reste fermé aux utilisateurs.
+      # D'où 6 tentatives (au lieu de 3) et une erreur bien visible.
+      # `always()` couvre aussi l'annulation manuelle du job.
       - name: Mode maintenance OFF
-        if: always()
+        # != 'skipped' et non == 'success' : si « down » a échoué APRÈS avoir
+        # exécuté artisan down (connexion coupée juste après), le site est
+        # fermé et doit quand même être relevé.
+        if: always() && steps.down.conclusion != 'skipped'
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
+          SSH_ATTEMPTS: '6'
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
-            "${REMOTE_USER}@${REMOTE_HOST}" \
-            "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan up" \
-            || echo "::error::Impossible de sortir du mode maintenance sur « ${{ inputs.env_name }} » — intervenir en SSH : artisan up"
+          . "$RUNNER_TEMP/ssh_guard.sh"
+          ssh_run "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan up" \
+            || { echo "::error::« ${{ inputs.env_name }} » est RESTÉ EN MODE MAINTENANCE après 6 tentatives. Relever à la main : ssh ${REMOTE_USER}@\$CPANEL_SERVER puis cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan up"; exit 1; }
 
       - name: Smoke test HTTP
         run: |
@@ -235,12 +364,27 @@ jobs:
             *) echo "::error::${{ inputs.app_url }}/.env répond $env_code — le document root ne pointe pas sur public/ !" ;;
           esac
 
-      # Toujours exécuté, même si le déploiement a échoué.
+      # -----------------------------------------------------------------
+      # Nettoyage de la whitelist. On tente d'abord une suppression CIBLÉE
+      # (SshWhitelist/remove) : si ce point d'API existe sur votre version
+      # de cPanel, les déploiements concurrents des autres dépôts ne sont
+      # plus coupés du tout. Sinon on retombe sur remove_all, qui vide toute
+      # la whitelist du compte — comportement des autres dépôts.
+      # -----------------------------------------------------------------
       - name: Retirer l'IP du runner de la whitelist
         if: always() && steps.runnerip.outputs.ip != ''
+        env:
+          RUNNER_IP: ${{ steps.runnerip.outputs.ip }}
         run: |
-          curl -fsS --max-time 30 \
-            -H "Authorization: cpanel ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_API_TOKEN }}" \
+          AUTH="Authorization: cpanel ${REMOTE_USER}:${CPANEL_TOKEN}"
+          if curl -fsS --max-time 30 -H "$AUTH" \
+               "https://${REMOTE_HOST}:2083/execute/SshWhitelist/remove?address=${RUNNER_IP}" \
+               -o /tmp/rm.json 2>/dev/null && grep -q '"errors":null' /tmp/rm.json; then
+            echo "IP ${RUNNER_IP} retirée de façon ciblée — les autres déploiements ne sont pas impactés."
+            exit 0
+          fi
+          echo "::warning::Suppression ciblée indisponible sur ce cPanel — repli sur remove_all, qui VIDE toute la whitelist SSH du compte."
+          curl -fsS --max-time 30 -H "$AUTH" \
             "https://${REMOTE_HOST}:2083/execute/SshWhitelist/remove_all" \
             || echo "::warning::Le retrait de l'IP a échoué — à vérifier dans cPanel."
 

@@ -1,0 +1,249 @@
+# ---------------------------------------------------------------------------
+# Workflow réutilisable — déploiement o2switch d'un environnement de l'ERP.
+# Appelé par deploy-dev.yml, deploy-test.yml et deploy-production.yml.
+# Ne se déclenche jamais tout seul.
+# ---------------------------------------------------------------------------
+name: Deploy (réutilisable)
+
+on:
+  workflow_call:
+    inputs:
+      env_name:
+        description: "Nom de l'environnement (dev | test | production)"
+        required: true
+        type: string
+      remote_path:
+        description: "Chemin absolu sur o2switch, avec / final"
+        required: true
+        type: string
+      app_url:
+        description: "URL publique, sans / final"
+        required: true
+        type: string
+      seed:
+        description: "Jouer db:seed --force après les migrations"
+        required: false
+        default: true
+        type: boolean
+      backup:
+        description: "Dump SQL gzippé avant les migrations"
+        required: false
+        default: true
+        type: boolean
+      gh_environment:
+        description: "GitHub Environment (pour les règles de protection)"
+        required: false
+        default: ''
+        type: string
+
+env:
+  REMOTE_HOST: ${{ secrets.CPANEL_SERVER }}
+  REMOTE_USER: ${{ secrets.CPANEL_USERNAME }}
+  REMOTE_PATH: ${{ inputs.remote_path }}
+  PHP_REMOTE: /opt/alt/php82/usr/bin/php -c ~/php82-custom.ini
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.gh_environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, curl, dom, exif, fileinfo, gd, intl, openssl, pdo_mysql, tokenizer, xml, zip
+          coverage: none
+
+      # Le dépôt n'embarque pas vendor/ : on le construit ici, en prod.
+      - name: Composer install (production)
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      # Contrairement aux autres dépôts (Live Sass Compiler), cet ERP utilise Vite.
+      # public/build est gitignoré : il DOIT être compilé ici avant le rsync.
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build des assets (Vite)
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Vérifier le manifest Vite
+        run: |
+          test -f public/build/manifest.json || { echo "::error::public/build/manifest.json absent — le build Vite a échoué."; exit 1; }
+          grep -q 'resources/sass/app.scss' public/build/manifest.json || { echo "::error::app.scss absent du manifest."; exit 1; }
+          grep -q 'resources/js/app.js'     public/build/manifest.json || { echo "::error::app.js absent du manifest."; exit 1; }
+          grep -q 'resources/js/pos.js'     public/build/manifest.json || { echo "::error::pos.js absent du manifest (module POS)."; exit 1; }
+
+      - name: IP du runner
+        id: runnerip
+        run: echo "ip=$(curl -fsS https://api.ipify.org)" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------
+      # Fonctions UAPI confirmées valides pour le module SshWhitelist :
+      #   - ajout    : SshWhitelist/add?address=IP&port=22
+      #   - nettoyage: SshWhitelist/remove_all (pas de suppression ciblée
+      #                par IP disponible dans ce module — remove_all vide
+      #                toute la whitelist, comme sur les autres dépôts)
+      # -----------------------------------------------------------------
+      - name: Autoriser l'IP du runner (cPanel UAPI)
+        run: |
+          curl -fsS --max-time 30 \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_API_TOKEN }}" \
+            "https://${REMOTE_HOST}:2083/execute/SshWhitelist/add?address=${{ steps.runnerip.outputs.ip }}&port=22" \
+            | tee /tmp/whitelist.json
+          grep -q '"errors":null' /tmp/whitelist.json || { echo "::error::Whitelist refusée par cPanel"; exit 1; }
+
+      - name: Clé SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 22 -H "$REMOTE_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # Garde-fou : on refuse de déployer dans un dossier qui ne contient pas
+      # déjà un .env. Évite d'écraser le mauvais environnement sur une faute
+      # de frappe dans remote_path, et rappelle l'étape d'init manuelle.
+      - name: Vérifier la cible
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${REMOTE_USER}@${REMOTE_HOST}" \
+            "test -f ${REMOTE_PATH}.env" \
+            || { echo "::error::${REMOTE_PATH}.env introuvable — faire l'initialisation manuelle (AUDIT_DEPLOIEMENT.md § 5) avant le premier déploiement de « ${{ inputs.env_name }} »."; exit 1; }
+
+      # Mode maintenance : un ERP écrit en continu (POS, stock, caisse).
+      # On ferme la boutique le temps du rsync + des migrations.
+      - name: Mode maintenance ON
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${REMOTE_USER}@${REMOTE_HOST}" \
+            "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan down --retry=30 || true"
+
+      # ATTENTION --delete : tout --exclude protège AUSSI le côté distant.
+      # storage/app/{public,private} et public/storage contiennent les images
+      # produits/packs (spatie/laravel-medialibrary) : ils ne doivent JAMAIS
+      # être supprimés par un déploiement.
+      - name: Rsync vers o2switch
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.vscode' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='phpunit.xml' \
+            --exclude='CAHIER_DES_CHARGES.md' \
+            --exclude='AUDIT_DEPLOIEMENT.md' \
+            --exclude='storage/app/public' \
+            --exclude='storage/app/private' \
+            --exclude='public/storage' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/data/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*' \
+            --exclude='bootstrap/cache/*.php' \
+            ./ "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
+
+      # Sauvegarde SQL avant migrations : 49 migrations, données réelles.
+      # Conservée 14 jours dans ~/backups-<env>/ sur le serveur.
+      - name: Dump de la base avant migrations
+        if: inputs.backup
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${REMOTE_USER}@${REMOTE_HOST}" "bash -s" <<'REMOTE'
+            set -euo pipefail
+            cd "${{ inputs.remote_path }}"
+            BACKUP_DIR="$HOME/backups-${{ inputs.env_name }}"
+            mkdir -p "$BACKUP_DIR"
+            # Lecture ciblée du .env : plus sûr que « source .env » (guillemets,
+            # interpolations "${APP_NAME}", commentaires…).
+            envval() { sed -n "s/^$1=//p" .env | head -1 | tr -d '"'"'"'"' | tr -d "\r"; }
+            DB_HOST="$(envval DB_HOST)";     DB_HOST="${DB_HOST:-127.0.0.1}"
+            DB_DATABASE="$(envval DB_DATABASE)"
+            DB_USERNAME="$(envval DB_USERNAME)"
+            DB_PASSWORD="$(envval DB_PASSWORD)"
+            [ -n "$DB_DATABASE" ] || { echo "DB_DATABASE introuvable dans .env"; exit 1; }
+            MYSQL_PWD="$DB_PASSWORD" mysqldump --single-transaction --quick --no-tablespaces \
+              -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" \
+              | gzip > "$BACKUP_DIR/erp-$(date +%F-%H%M%S).sql.gz"
+            find "$BACKUP_DIR" -name '*.sql.gz' -mtime +14 -delete
+            echo "Sauvegarde : $BACKUP_DIR"
+          REMOTE
+
+      # Tous les seeders actifs de DatabaseSeeder sont idempotents
+      # (firstOrCreate / updateOrCreate) : --seed est rejouable sans doublon.
+      # ProductSeeder / PackSeeder / PurchaseSeeder / SaleSeeder — les seuls
+      # non idempotents — sont déjà commentés dans DatabaseSeeder.
+      #
+      # route:cache échoue tant que routes/web.php contient des closures
+      # (l. 94-95, 194) : on tente, et on retombe sur route:clear avec un
+      # avertissement. Voir AUDIT_DEPLOIEMENT.md § 4.1.
+      - name: Post-déploiement (migrations + caches Laravel)
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${REMOTE_USER}@${REMOTE_HOST}" "bash -s" <<'REMOTE'
+            set -euo pipefail
+            cd "${{ inputs.remote_path }}"
+            P="/opt/alt/php82/usr/bin/php -c $HOME/php82-custom.ini"
+
+            $P artisan optimize:clear
+            $P artisan migrate --force
+            if [ "${{ inputs.seed }}" = "true" ]; then
+              $P artisan db:seed --force
+            fi
+            # Ne casse pas le déploiement si le lien existe déjà.
+            $P artisan storage:link || true
+            $P artisan permission:cache-reset
+            $P artisan config:cache
+            $P artisan view:cache
+            $P artisan event:cache
+            if $P artisan route:cache 2>/dev/null; then
+              echo "route:cache OK"
+            else
+              $P artisan route:clear
+              echo "ROUTE_CACHE_SKIPPED"
+            fi
+            chmod -R 775 storage bootstrap/cache || true
+          REMOTE
+
+      - name: Mode maintenance OFF
+        if: always()
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${REMOTE_USER}@${REMOTE_HOST}" \
+            "cd ${REMOTE_PATH} && ${PHP_REMOTE} artisan up" \
+            || echo "::error::Impossible de sortir du mode maintenance sur « ${{ inputs.env_name }} » — intervenir en SSH : artisan up"
+
+      - name: Smoke test HTTP
+        run: |
+          code=$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 30 "${{ inputs.app_url }}/login" || echo 000)
+          echo "GET ${{ inputs.app_url }}/login -> $code"
+          [ "$code" = "200" ] || echo "::warning::La page de connexion répond $code — à vérifier."
+          env_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "${{ inputs.app_url }}/.env" || echo 000)
+          case "$env_code" in
+            403|404) echo "/.env non exposé ($env_code) — OK" ;;
+            *) echo "::error::${{ inputs.app_url }}/.env répond $env_code — le document root ne pointe pas sur public/ !" ;;
+          esac
+
+      # Toujours exécuté, même si le déploiement a échoué.
+      - name: Retirer l'IP du runner de la whitelist
+        if: always() && steps.runnerip.outputs.ip != ''
+        run: |
+          curl -fsS --max-time 30 \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USERNAME }}:${{ secrets.CPANEL_API_TOKEN }}" \
+            "https://${REMOTE_HOST}:2083/execute/SshWhitelist/remove_all" \
+            || echo "::warning::Le retrait de l'IP a échoué — à vérifier dans cPanel."
+
+      - name: Nettoyage de la clé
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

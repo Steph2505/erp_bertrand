@@ -1,0 +1,24 @@
+name: Deploy — dev.espacemokolodobala.com
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+# Sur dev on itère vite : un nouveau push annule le déploiement en cours.
+concurrency:
+  group: deploy-espacemokolodobala-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      env_name:    dev
+      remote_path: /home3/sc1zeucoder/dev.espacemokolodobala.com/
+      app_url:     https://dev.espacemokolodobala.com
+      seed:        true
+      # Pas de dump : la base dev est jetable, et un mysqldump à chaque push
+      # ralentit la boucle de feedback pour rien.
+      backup:      false

@@ -1,0 +1,27 @@
+name: Deploy — espacemokolodobala.com (PRODUCTION)
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-espacemokolodobala-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      env_name:    production
+      remote_path: /home3/sc1zeucoder/espacemokolodobala.com/
+      app_url:     https://espacemokolodobala.com
+      # Les seeders actifs ne créent que des référentiels (rôles, permissions,
+      # unités, caisses, comptes de paiement) et sont idempotents.
+      seed:        true
+      backup:      true
+      # Crée l'Environment « production » dans Settings > Environments et
+      # coche « Required reviewers » : la mise en prod demandera alors une
+      # validation humaine avant de démarrer.
+      gh_environment: production

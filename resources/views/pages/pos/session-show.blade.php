@@ -68,7 +68,8 @@
 @if($session->isOpen())
 <div class="card mb-24" style="padding:20px;background:#fffbeb;border-color:#fde68a;">
     <h3 style="font-size:14px;font-weight:600;color:#92400e;margin-bottom:12px;">Clôturer la caisse</h3>
-    <form method="POST" action="{{ route('pos.sessions.close', $session) }}" class="pos-close-panel__form">
+    <form method="POST" action="{{ route('pos.sessions.close', $session) }}" class="pos-close-panel__form"
+          @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && $el.submit())">
         @csrf
         <div class="form-group" style="margin-bottom:0;">
             <label>Montant compté en caisse *</label>
@@ -79,7 +80,7 @@
             <label>Note</label>
             <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Observation (optionnel)">
         </div>
-        <button type="submit" class="btn btn--danger" onclick="return confirm('Confirmer la clôture de caisse ?')">
+        <button type="submit" class="btn btn--danger">
             Clôturer la caisse
         </button>
     </form>

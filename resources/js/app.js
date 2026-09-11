@@ -50,6 +50,44 @@ try {
     }
 } catch (e) {}
 
+// ─── Modal de confirmation global ──────────────────────────────────────────
+// Remplace les confirm() natifs du navigateur pour toutes les actions
+// destructives ou irréversibles (suppression, clôture de caisse, validation
+// d'achat/vente, paiement...). Usage : await window.confirmDialog('message').
+Alpine.store('confirmDialog', {
+    visible: false,
+    title: 'Confirmation',
+    message: '',
+    confirmLabel: 'Confirmer',
+    cancelLabel: 'Annuler',
+    variant: 'default',
+    _resolve: null,
+
+    open(message, options = {}) {
+        this.title        = options.title ?? 'Confirmation';
+        this.message       = message;
+        this.confirmLabel = options.confirmLabel ?? 'Confirmer';
+        this.cancelLabel   = options.cancelLabel ?? 'Annuler';
+        this.variant       = options.variant ?? 'default';
+        this.visible       = true;
+        return new Promise((resolve) => { this._resolve = resolve; });
+    },
+
+    confirm() {
+        this.visible = false;
+        this._resolve?.(true);
+        this._resolve = null;
+    },
+
+    cancel() {
+        this.visible = false;
+        this._resolve?.(false);
+        this._resolve = null;
+    },
+});
+
+window.confirmDialog = (message, options = {}) => Alpine.store('confirmDialog').open(message, options);
+
 Alpine.data('imagePreview', () => ({
     previews: [],
     onChange(event) {

@@ -1,4 +1,4 @@
-name: Deploy — dev.espacemokolodobala.com
+name: Deploy — dev.espacemokolodobala.site
 
 on:
   push:
@@ -20,8 +20,8 @@ jobs:
     secrets: inherit
     with:
       env_name:    dev
-      remote_path: /home3/sc1zeucoder/dev.espacemokolodobala.com/
-      app_url:     https://dev.espacemokolodobala.com
+      remote_path: /home3/sc1zeucoder/dev.espacemokolodobala.site/
+      app_url:     https://dev.espacemokolodobala.site
       seed:        true
       # Pas de dump : la base dev est jetable, et un mysqldump à chaque push
       # ralentit la boucle de feedback pour rien.

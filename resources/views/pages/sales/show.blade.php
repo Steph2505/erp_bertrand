@@ -15,7 +15,8 @@
     </div>
     <div class="page-header__actions">
         @if($sale->status === 'draft')
-        <form method="POST" action="{{ route('sales.confirm', $sale) }}">
+        <form method="POST" action="{{ route('sales.confirm', $sale) }}"
+              @submit.prevent="window.confirmDialog('Confirmer cette vente ? Le stock sera déduit et l\'opération ne pourra plus être modifiée.', {confirmLabel:'Confirmer'}).then(ok => ok && $el.submit())">
             @csrf @method('PATCH')
             <button type="submit" class="btn btn--primary">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="sale-show__confirm-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
@@ -143,7 +144,7 @@
         @endif
 
         @if($sale->status !== 'confirmed')
-        <form method="POST" action="{{ route('sales.destroy', $sale) }}" onsubmit="return confirm('Supprimer définitivement cette vente ?')">
+        <form method="POST" action="{{ route('sales.destroy', $sale) }}" @submit.prevent="window.confirmDialog('Supprimer définitivement cette vente ?', {variant:'danger', confirmLabel:'Supprimer'}).then(ok => ok && $el.submit())">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn--danger sale-show__btn-full">
                 Supprimer cette vente
@@ -237,13 +238,15 @@ function payForm(url) {
         open: false, loading: false, success: '', error: '',
         amount: '{{ number_format($sale->amount_due, 0, '.', '') }}', mode: 'cash', accountId: '{{ $accounts->first()->id ?? '' }}',
         errors: { amount: '', mode: '', accountId: '' },
-        submit() {
+        async submit() {
             this.error = ''; this.success = '';
             this.errors = { amount: '', mode: '', accountId: '' };
             if (!this.amount)    this.errors.amount    = 'Le montant est obligatoire.';
             if (!this.mode)      this.errors.mode      = 'Le mode de paiement est obligatoire.';
             if (!this.accountId) this.errors.accountId = 'Le compte de paiement est obligatoire.';
             if (this.errors.amount || this.errors.mode || this.errors.accountId) return;
+            const ok = await window.confirmDialog('Enregistrer ce paiement de ' + this.amount + ' ' + window.CURRENCY + ' ?', { confirmLabel: 'Enregistrer' });
+            if (!ok) return;
             this.loading = true;
             fetch(url, {
                 method: 'POST',

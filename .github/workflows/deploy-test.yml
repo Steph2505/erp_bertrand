@@ -1,4 +1,4 @@
-name: Deploy — test.espacemokolodobala.com
+name: Deploy — test.espacemokolodobala.site
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
     secrets: inherit
     with:
       env_name:    test
-      remote_path: /home3/sc1zeucoder/test.espacemokolodobala.com/
-      app_url:     https://test.espacemokolodobala.com
+      remote_path: /home3/sc1zeucoder/test.espacemokolodobala.site/
+      app_url:     https://test.espacemokolodobala.site
       seed:        true
       # test rejoue les migrations sur des données persistantes, exactement
       # comme la prod : c'est là qu'une migration destructive doit se voir.

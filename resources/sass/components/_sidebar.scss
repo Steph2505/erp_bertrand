@@ -243,17 +243,21 @@
     }
 
     &__logout-btn {
-        color: $text-muted;
+        justify-content: center;
+        background: $danger;
+        color: #fff;
         border: 1.5px solid transparent;
         border-radius: $radius-md;
+        appearance: none;
 
-        svg { color: $text-muted; }
+        svg { color: #fff; }
 
         &:hover {
-            background: rgba(239, 68, 68, 0.06);
-            color: $danger;
-            border-color: rgba(239, 68, 68, 0.18);
-            svg { color: $danger; }
+            background: $danger;
+            filter: brightness(0.88);
+            color: #fff;
+            border-color: transparent;
+            svg { color: #fff; }
         }
     }
 

@@ -1,4 +1,4 @@
-name: Deploy — espacemokolodobala.com (PRODUCTION)
+name: Deploy — espacemokolodobala.site (PRODUCTION)
 
 on:
   push:
@@ -15,8 +15,8 @@ jobs:
     secrets: inherit
     with:
       env_name:    production
-      remote_path: /home3/sc1zeucoder/espacemokolodobala.com/
-      app_url:     https://espacemokolodobala.com
+      remote_path: /home3/sc1zeucoder/espacemokolodobala.site/
+      app_url:     https://espacemokolodobala.site
       # Les seeders actifs ne créent que des référentiels (rôles, permissions,
       # unités, caisses, comptes de paiement) et sont idempotents.
       seed:        true

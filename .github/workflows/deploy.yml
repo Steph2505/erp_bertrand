@@ -314,8 +314,18 @@ jobs:
           cd "__REMOTE_PATH__"
           P="/opt/alt/php82/usr/bin/php -c $HOME/php82-custom.ini"
 
-          $P artisan optimize:clear
+          # config:clear AVANT migrate : bootstrap/cache/*.php est exclu du
+          # rsync et survit donc d'un déploiement à l'autre. Sans ça, migrate
+          # tournerait sur la config en cache — donc potentiellement sur
+          # l'ancienne base si le .env du serveur a changé. La commande ne
+          # fait que supprimer un fichier, elle ne touche pas à la base.
+          $P artisan config:clear
+
+          # migrate AVANT optimize:clear : optimize:clear enchaîne cache:clear,
+          # qui vide la table « cache ». Sur une base neuve cette table n'existe
+          # pas encore — c'est migrate qui la crée.
           $P artisan migrate --force
+          $P artisan optimize:clear
           if [ "__SEED__" = "true" ]; then
             $P artisan db:seed --force
           fi

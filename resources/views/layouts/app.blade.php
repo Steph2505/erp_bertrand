@@ -47,6 +47,22 @@
     </template>
 </div>
 
+{{-- ──────────── MODAL DE CONFIRMATION GLOBAL ──────────── --}}
+<div class="modal-overlay" x-data x-show="$store.confirmDialog.visible" x-cloak x-transition>
+    <div class="modal modal--sm">
+        <div class="modal__header">
+            <h3 x-text="$store.confirmDialog.title"></h3>
+        </div>
+        <div class="modal__body">
+            <p x-text="$store.confirmDialog.message" style="font-size:14px;color:#374151;line-height:1.5;"></p>
+            <div class="modal-footer-std">
+                <button type="button" class="btn btn--ghost" @click="$store.confirmDialog.cancel()" x-text="$store.confirmDialog.cancelLabel"></button>
+                <button type="button" class="btn" :class="$store.confirmDialog.variant === 'danger' ? 'btn--danger' : 'btn--primary'" @click="$store.confirmDialog.confirm()" x-text="$store.confirmDialog.confirmLabel"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="app-wrapper">
 
     {{-- ──────────── SIDEBAR ──────────── --}}
@@ -138,7 +154,7 @@
 
         {{-- Footer sidebar --}}
         <div class="sidebar__footer">
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('logout') }}" @submit.prevent="window.confirmDialog('Voulez-vous vraiment vous déconnecter ?', {confirmLabel:'Déconnexion'}).then(ok => ok && $el.submit())">
                 @csrf
                 <button type="submit" class="sidebar__item sidebar__logout-btn w-full">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="sidebar__logout-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/></svg>
@@ -226,7 +242,7 @@
                             Paramètres
                         </a>
                         <div class="topbar__dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" @submit.prevent="window.confirmDialog('Voulez-vous vraiment vous déconnecter ?', {confirmLabel:'Déconnexion'}).then(ok => ok && $el.submit())">
                             @csrf
                             <button type="submit" class="topbar__profile-dropdown-item topbar__profile-dropdown-item--danger w-full">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/></svg>

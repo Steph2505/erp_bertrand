@@ -103,8 +103,8 @@ Alpine.data('imagePreview', () => ({
 Alpine.data('productQuickCreate', (categories, units, categoryId, unitId) => ({
     categories,
     units,
-    categoryId,
-    unitId,
+    categoryId: categoryId ?? categories[0]?.id ?? null,
+    unitId: unitId ?? units[0]?.id ?? null,
 
     showCreateCategory: false,
     newCategoryName: '',

@@ -14,7 +14,8 @@
     <a href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
 </div>
 
-<form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data">
+<form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data"
+      @submit.prevent="window.confirmDialog('Enregistrer ce produit ?', {confirmLabel:'Enregistrer'}).then(ok => ok && $el.submit())">
     @csrf
     <div class="product-form__layout">
 
@@ -52,7 +53,6 @@
                             </div>
 
                             <select name="category_id" class="form-select" x-model="categoryId" x-show="!showCreateCategory">
-                                <option value="">— Sélectionner —</option>
                                 <template x-for="cat in categories" :key="cat.id">
                                     <option :value="cat.id" x-text="cat.name"></option>
                                 </template>
@@ -90,7 +90,6 @@
                             </div>
 
                             <select name="unit_id" class="form-select" x-model="unitId" x-show="!showCreateUnit">
-                                <option value="">— Sélectionner —</option>
                                 <template x-for="unit in units" :key="unit.id">
                                     <option :value="unit.id" x-text="unit.name + ' (' + unit.abbreviation + ')'"></option>
                                 </template>

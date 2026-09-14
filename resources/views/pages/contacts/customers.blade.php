@@ -20,7 +20,7 @@
 
 <form method="GET" class="table-wrapper" style="padding:16px 20px;margin-bottom:16px;">
     <div class="form-grid form-grid--3" style="gap:12px;align-items:flex-end;">
-        <div class="form-group" style="margin-bottom:0;grid-column:span 2">
+        <div class="form-group form-group--full" style="margin-bottom:0;">
             <label>Recherche (nom, téléphone, email)</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Rechercher..." class="form-control">
         </div>
@@ -105,7 +105,6 @@
                 <div class="form-group">
                     <label>Groupe client</label>
                     <select name="customer_group_id" class="form-select">
-                        <option value="">-- Aucun --</option>
                         @foreach($groups as $g)
                             <option value="{{ $g->id }}" :selected="editCustomer && editCustomer.customer_group_id == {{ $g->id }}">{{ $g->name }}</option>
                         @endforeach
@@ -119,7 +118,7 @@
                     <label>Email</label>
                     <input type="email" name="email" class="form-control" :value="editCustomer ? editCustomer.email : ''">
                 </div>
-                <div class="form-group" style="grid-column:span 2">
+                <div class="form-group form-group--full">
                     <label>Adresse</label>
                     <input type="text" name="address" class="form-control" :value="editCustomer ? editCustomer.address : ''">
                 </div>
@@ -138,7 +137,7 @@
                 </div>
             </div>
             <div class="modal__footer" style="padding:0;border:none;margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>

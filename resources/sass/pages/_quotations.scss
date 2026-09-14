@@ -1,6 +1,20 @@
 @use '../abstracts/variables' as *;
 @use '../abstracts/mixins' as *;
 
+// ─── Mise en page formulaire (nouveau devis) ─────────────────────────────────
+.quotation-create {
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: $sp-20;
+        align-items: start;
+
+        @include tablet {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
 // ─── Filtre index devis ───────────────────────────────────────────────────────
 .quotation-filter {
     padding: $sp-16 $sp-20;

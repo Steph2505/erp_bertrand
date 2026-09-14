@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\PosSession;
+use App\Models\User;
+use App\Notifications\PosSessionClosedAlert;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 use Throwable;
 
@@ -104,6 +107,15 @@ class PosSessionController extends Controller
                 'note'            => $request->note,
                 'closed_at'       => now(),
             ]);
+
+            $recipients = User::permission('receive notifications')
+                ->where('is_active', true)
+                ->where('id', '!=', auth()->id())
+                ->get();
+
+            if ($recipients->isNotEmpty()) {
+                Notification::send($recipients, new PosSessionClosedAlert($session->load(['caisse', 'user'])));
+            }
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la clôture de la caisse', ['session_id' => $session->id]);
             return back()->withInput()->with('error', 'Une erreur est survenue lors de la clôture de la caisse.');

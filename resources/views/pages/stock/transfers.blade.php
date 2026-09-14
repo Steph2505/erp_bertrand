@@ -94,8 +94,7 @@
             <div class="form-grid form-grid--3" style="margin-bottom:16px;">
                 <div class="form-group">
                     <label>Entrepôt source <span class="required">*</span></label>
-                    <select name="from_warehouse_id" x-model="fromId" class="form-select" required @change="toId=''; items=[]">
-                        <option value="">-- Sélectionner --</option>
+                    <select name="from_warehouse_id" x-model="fromId" class="form-select" required @change="toId = nextWarehouseId(fromId); items=[]">
                         @foreach($warehouses as $w)
                             <option value="{{ $w->id }}">{{ $w->name }}</option>
                         @endforeach
@@ -104,7 +103,6 @@
                 <div class="form-group">
                     <label>Entrepôt destination <span class="required">*</span></label>
                     <select name="to_warehouse_id" x-model="toId" class="form-select" required>
-                        <option value="">-- Sélectionner --</option>
                         @foreach($warehouses as $w)
                             <option value="{{ $w->id }}" :disabled="fromId == {{ $w->id }}" :style="fromId == {{ $w->id }} ? 'display:none' : ''">{{ $w->name }}</option>
                         @endforeach
@@ -165,7 +163,7 @@
                 </table>
             </div>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="button" @click="submitTransfer($el.closest('form'))" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
             </div>
         </form>
@@ -179,6 +177,7 @@
 <script>
 function tfrPage() {
     const allProducts = @json($products);
+    const allWarehouses = @json($warehouses->map(fn($w) => ['id' => $w->id, 'name' => $w->name])->values());
     let _key = 0;
     const CSRF = () => document.querySelector('meta[name=csrf-token]').content;
 
@@ -222,7 +221,14 @@ function tfrPage() {
         },
 
         // Modal
-        showModal: false, fromId: '', toId: '', items: [],
+        showModal: false,
+        fromId: '{{ $warehouses->first()->id ?? '' }}',
+        toId: '{{ optional($warehouses->skip(1)->first())->id ?? '' }}',
+        items: [],
+
+        nextWarehouseId(excludeId) {
+            return (allWarehouses.find(w => w.id != excludeId) || {}).id ?? '';
+        },
 
         availableForRow(idx) {
             if (!this.fromId) return [];

@@ -93,7 +93,7 @@
             @endif
 
             <div class="purchase-return-create__actions">
-                <a href="{{ route('purchase-returns.index') }}" class="btn btn--ghost">Annuler</a>
+                <a href="{{ route('purchase-returns.index') }}" class="btn btn--light">Annuler</a>
                 <button type="submit" class="btn btn--danger"
                         :disabled="!selectedPurchase || returnAmount <= 0 || returnAmount > (selectedPurchase?.total ?? 0)">
                     Enregistrer le retour

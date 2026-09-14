@@ -78,7 +78,7 @@
             @endif
 
             <div class="return-create__actions">
-                <a href="{{ route('sale-returns.index') }}" class="btn btn--ghost">Annuler</a>
+                <a href="{{ route('sale-returns.index') }}" class="btn btn--light">Annuler</a>
                 <button type="submit" class="btn btn--danger" :disabled="!selectedSale || returnAmount <= 0">
                     Enregistrer le retour
                 </button>

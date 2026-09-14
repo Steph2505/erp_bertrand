@@ -649,6 +649,8 @@
     &__actions {
         display: flex;
         gap: $sp-8;
+
+        @include stack-actions-mobile;
     }
 
     &__recap-title {

@@ -14,10 +14,10 @@
 
 <form method="POST" action="{{ route('quotations.store') }}" x-data="quoteForm()" @submit.prevent="submitForm">
     @csrf
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+    <div class="quotation-create__layout">
 
         {{-- Colonne gauche --}}
-        <div>
+        <div class="quotation-create__main">
             <div class="card" style="padding:24px;margin-bottom:16px;">
                 <div class="form-grid form-grid--3" style="gap:16px;">
                     <div class="form-group">
@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <div class="table-wrapper" style="overflow:visible;margin-bottom:16px;">
+            <div class="table-wrapper table-wrapper--dropdown" style="margin-bottom:16px;">
                 <div class="table-wrapper__header">
                     <strong>Articles</strong>
                     <span x-text="items.length + ' ligne(s)'" style="font-size:13px;color:#64748B;"></span>
@@ -132,7 +132,7 @@
         </div>
 
         {{-- Colonne droite --}}
-        <div>
+        <div class="quotation-create__sidebar">
             <div class="card" style="padding:24px;margin-bottom:16px;">
                 <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Récapitulatif</h3>
                 <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;">

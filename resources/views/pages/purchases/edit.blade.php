@@ -16,7 +16,7 @@
 <div class="page-header">
     <div class="page-header__title"><h2>Modifier — {{ $purchase->reference }}</h2></div>
     <div class="page-header__actions">
-        <a href="{{ route('purchases.show', $purchase) }}" class="btn btn--ghost">Annuler</a>
+        <a href="{{ route('purchases.show', $purchase) }}" class="btn btn--light">Annuler</a>
         <button type="button" @click="submitForm('save')" class="btn btn--light" :disabled="items.length === 0">
             Brouillon
         </button>

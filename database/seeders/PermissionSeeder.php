@@ -25,6 +25,7 @@ class PermissionSeeder extends Seeder
             'manage expenses',
             'view reports',
             'manage accounts',
+            'receive notifications',
         ];
 
         foreach ($permissions as $perm) {
@@ -32,7 +33,7 @@ class PermissionSeeder extends Seeder
         }
 
         $map = [
-            'Admin'      => ['manage products', 'manage purchases', 'manage sales', 'manage pos', 'manage stock', 'manage customers', 'manage suppliers', 'manage expenses', 'view reports', 'manage accounts'],
+            'Admin'      => ['manage products', 'manage purchases', 'manage sales', 'manage pos', 'manage stock', 'manage customers', 'manage suppliers', 'manage expenses', 'view reports', 'manage accounts', 'receive notifications'],
             'Caissier'   => ['manage sales', 'manage pos', 'manage customers', 'view reports'],
             'Magasinier' => ['manage products', 'manage purchases', 'manage stock', 'manage suppliers', 'view reports'],
             'Comptable'  => ['manage purchases', 'manage expenses', 'manage accounts', 'manage suppliers', 'view reports'],

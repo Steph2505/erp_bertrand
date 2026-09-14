@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Contacts\CustomerController;
 use App\Http\Controllers\Contacts\SupplierController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Expenses\ExpenseController;
 use App\Http\Controllers\Pos\PosController;
 use App\Http\Controllers\Pos\PosSessionController;
@@ -258,11 +259,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('users')->name('users.')->middleware('permission:manage users')->group(function () {
         Route::get('/',          [UserController::class, 'index'])->name('index');
         Route::post('/',         [UserController::class, 'store'])->name('store');
+        Route::get('/{user}',    [UserController::class, 'show'])->name('show');
         Route::put('/{user}',    [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
     Route::get('/profile',   [UserController::class, 'profile'])->name('users.profile');
     Route::put('/profile',   [UserController::class, 'updateProfile'])->name('users.profile.update');
+
+    // ── Notifications ────────────────────────────────────────────────────────
+    Route::prefix('notifications')->name('notifications.')->controller(NotificationController::class)->group(function () {
+        Route::get('/',                'index')->name('index');
+        Route::post('/{id}/read',      'markRead')->name('read');
+        Route::post('/read-all',       'markAllRead')->name('read-all');
+    });
     Route::name('roles.index')->get('/roles', fn() => redirect()->route('users.index'));
 
     // ── Paramètres ───────────────────────────────────────────────────────────

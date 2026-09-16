@@ -95,7 +95,7 @@
                 </div>
             </div>
             <div class="modal-footer-inline">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>

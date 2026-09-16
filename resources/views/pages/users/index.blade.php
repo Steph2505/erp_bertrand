@@ -10,21 +10,26 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
 
 <div x-data="{
     showModal:   false,
+    submitting:  false,
     editUser:    null,
     selectedRole: '',
     checkedPerms: [],
     roleDefaults: {{ $roleDefaultPermsJs }},
+    roleNames: {{ $roles->pluck('name')->toJson() }},
 
     openCreate() {
         this.editUser     = null;
-        this.selectedRole = '';
+        this.selectedRole = this.roleNames[0] ?? '';
         this.checkedPerms = [];
+        this.submitting   = false;
+        this.onRoleChange();
         this.showModal    = true;
     },
     openEdit(user, role, perms) {
         this.editUser     = user;
         this.selectedRole = role;
         this.checkedPerms = perms;
+        this.submitting   = false;
         this.showModal    = true;
     },
     onRoleChange() {
@@ -56,7 +61,6 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
             <th>Utilisateur</th>
             <th>Email</th>
             <th>Rôle</th>
-            <th>Droits</th>
             <th>Statut</th>
             <th style="text-align:right">Actions</th>
         </tr></thead>
@@ -77,24 +81,12 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
                             <span class="badge badge--blue">{{ $role->name }}</span>
                         @endforeach
                     </td>
-                    <td>
-                        <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:300px;">
-                            @php
-                        $permFr = ['manage products'=>'Produits','manage purchases'=>'Achats','manage sales'=>'Ventes','manage pos'=>'POS','manage stock'=>'Stock','manage customers'=>'Clients','manage suppliers'=>'Fournisseurs','manage expenses'=>'Dépenses','manage accounts'=>'Comptes','view reports'=>'Rapports','manage settings'=>'Paramètres','manage users'=>'Utilisateurs'];
-                        @endphp
-                        @foreach($user->getAllPermissions() as $perm)
-                                <span style="font-size:11px;background:#f1f5f9;color:#475569;border-radius:4px;padding:1px 6px;">
-                                    {{ $permFr[$perm->name] ?? $perm->name }}
-                                </span>
-                            @endforeach
-                            @if($user->getAllPermissions()->isEmpty())
-                                <span style="font-size:12px;color:#94A3B8;">—</span>
-                            @endif
-                        </div>
-                    </td>
                     <td><span class="badge badge--{{ $user->is_active ? 'green' : 'gray' }}">{{ $user->is_active ? 'Actif' : 'Inactif' }}</span></td>
                     <td>
                         <div class="data-table__actions">
+                            <a href="{{ route('users.show', $user) }}" class="btn btn--ghost btn--sm btn--icon" title="Voir les droits">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                            </a>
                             <button @click="openEdit(
                                     {{ $user->toJson() }},
                                     '{{ $user->roles->first()?->name ?? '' }}',
@@ -114,7 +106,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" style="text-align:center;padding:40px;color:#64748B;">Aucun utilisateur</td></tr>
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:#64748B;">Aucun utilisateur</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -135,7 +127,8 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
         </div>
 
         <form :action="editUser ? '/users/'+editUser.id : '{{ route('users.store') }}'"
-              method="POST" class="modal__body" style="max-height:80vh;overflow-y:auto;">
+              method="POST" class="modal__body" style="max-height:80vh;overflow-y:auto;"
+              @submit="submitting = true">
             @csrf
             <template x-if="editUser"><input type="hidden" name="_method" value="PUT"></template>
 
@@ -196,24 +189,8 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
                         {{ $group }}
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                        @php
-                        $permLabels = [
-                            'manage products'  => 'Produits',
-                            'manage purchases' => 'Achats',
-                            'manage sales'     => 'Ventes',
-                            'manage pos'       => 'Point de vente',
-                            'manage stock'     => 'Stock',
-                            'manage customers' => 'Clients',
-                            'manage suppliers' => 'Fournisseurs',
-                            'manage expenses'  => 'Dépenses',
-                            'manage accounts'  => 'Comptes',
-                            'view reports'     => 'Rapports',
-                            'manage settings'  => 'Paramètres',
-                            'manage users'     => 'Utilisateurs',
-                        ];
-                        @endphp
                         @foreach($perms as $perm)
-                        @php $label = $permLabels[$perm] ?? ucfirst($perm); @endphp
+                        @php $label = $permissionLabels[$perm] ?? ucfirst($perm); @endphp
                         <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:13px;transition:all .15s;"
                                :style="checkedPerms.includes('{{ $perm }}') ? 'border-color:#3b82f6;background:#eff6ff;color:#3b82f6;font-weight:600;' : ''">
                             <input type="checkbox"
@@ -231,8 +208,11 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
             </div>
 
             <div class="modal__footer" style="padding:0;border:none;margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
-                <button type="submit" class="btn btn--primary">Enregistrer</button>
+                <button type="button" @click="showModal = false" class="btn btn--light" :disabled="submitting">Annuler</button>
+                <button type="submit" class="btn btn--primary" :disabled="submitting">
+                    <svg x-show="submitting" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                    <span x-text="submitting ? 'Enregistrement...' : 'Enregistrer'"></span>
+                </button>
             </div>
         </form>
     </div>

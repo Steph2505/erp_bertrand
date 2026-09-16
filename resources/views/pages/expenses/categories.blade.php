@@ -89,7 +89,7 @@
                        placeholder="Ex : Loyer, Carburant..." required autofocus>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-                <button type="button" @click="showModal=false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal=false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>

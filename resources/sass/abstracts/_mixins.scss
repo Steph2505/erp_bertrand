@@ -41,6 +41,16 @@
     @media (max-width: 768px) { @content; }
 }
 
+// ─── Empiler des boutons d'action en une colonne sur mobile ──────────────────
+@mixin stack-actions-mobile {
+    @include mobile {
+        flex-direction: column;
+        align-items: stretch;
+
+        .btn { width: 100%; justify-content: center; }
+    }
+}
+
 @mixin tablet {
     @media (max-width: 1024px) { @content; }
 }

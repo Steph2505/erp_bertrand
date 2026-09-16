@@ -13,7 +13,7 @@
 <div class="page-header">
     <div class="page-header__title"><h2>Nouvel achat</h2></div>
     <div class="page-header__actions">
-        <a href="{{ route('purchases.index') }}" class="btn btn--ghost">Annuler</a>
+        <a href="{{ route('purchases.index') }}" class="btn btn--light">Annuler</a>
         <button type="button" @click="submitForm('pending')" class="btn btn--light" :disabled="items.length === 0">
             Brouillon
         </button>
@@ -251,7 +251,7 @@
             </div>
             <p x-show="createProductError" x-text="createProductError" style="color:#ef4444;font-size:13px;margin-top:-8px;"></p>
             <div class="modal-footer-std">
-                <button type="button" @click="quickCreateRowIdx = null" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="quickCreateRowIdx = null" class="btn btn--light">Annuler</button>
                 <button type="button" @click="quickCreateProduct(quickCreateRowIdx)" class="btn btn--primary" :disabled="creatingProduct || !newProductName.trim() || !newProductCategoryId || !newProductUnitId">
                     <span x-show="!creatingProduct">Créer & ajouter</span>
                     <span x-show="creatingProduct">...</span>

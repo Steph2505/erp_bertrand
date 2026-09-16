@@ -130,6 +130,10 @@
     }
 
     // ─── Cloche notifications ────────────────────────────────────────────────
+    &__notif-wrapper {
+        position: relative;
+    }
+
     &__notification {
         position: relative;
         background: none;
@@ -144,21 +148,110 @@
         &:hover { background: $bg-app; color: $text-main; }
 
         svg { width: 22px; height: 22px; }
+    }
 
-        &-badge {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: $danger;
-            color: #fff;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 4px;
-            border-radius: 99px;
-            min-width: 16px;
-            text-align: center;
-            border: 2px solid $bg-white;
+    &__notification-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: $danger;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 4px;
+        border-radius: 99px;
+        min-width: 16px;
+        text-align: center;
+        border: 2px solid $bg-white;
+    }
+
+    &__notif-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: $bg-white;
+        border: 1px solid $border;
+        border-radius: $radius-md;
+        box-shadow: $shadow-lg;
+        width: 340px;
+        max-width: calc(100vw - #{$sp-32});
+        z-index: 300;
+        overflow: hidden;
+
+        @include mobile {
+            position: fixed;
+            top: $topbar-height + $sp-8;
+            left: $sp-16;
+            right: $sp-16;
+            width: auto;
+            max-width: none;
         }
+
+        &-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: $sp-12 $sp-16;
+            border-bottom: 1px solid $border;
+
+            p { font-weight: 600; font-size: 13px; }
+
+            button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: $primary;
+                font-size: 12px;
+                font-weight: 600;
+
+                &:hover { text-decoration: underline; }
+            }
+        }
+
+        &-body {
+            max-height: 360px;
+            overflow-y: auto;
+        }
+    }
+
+    &__notif-empty {
+        padding: $sp-24 $sp-16;
+        text-align: center;
+        color: $text-muted;
+        font-size: 13px;
+    }
+
+    &__notif-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        width: 100%;
+        padding: $sp-10 $sp-16;
+        background: none;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+        cursor: pointer;
+        transition: background $transition-fast;
+
+        &:last-child { border-bottom: none; }
+        &:hover { background: $bg-app; }
+
+        &--unread {
+            background: $primary-light;
+            &:hover { background: rgba(23,73,179,0.12); }
+        }
+    }
+
+    &__notif-item-message {
+        font-size: 13px;
+        color: $text-main;
+        line-height: 1.4;
+    }
+
+    &__notif-item-time {
+        font-size: 11px;
+        color: $text-muted;
     }
 
     // ─── Menu profil ────────────────────────────────────────────────────────

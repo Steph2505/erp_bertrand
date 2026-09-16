@@ -1,4 +1,5 @@
 @use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
 
 .modal-overlay {
     position: fixed;
@@ -49,6 +50,8 @@
         justify-content: flex-end;
         padding: $sp-16 $sp-24;
         border-top: 1px solid $border;
+
+        @include stack-actions-mobile;
     }
 
     &__close {

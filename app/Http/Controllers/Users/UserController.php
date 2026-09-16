@@ -21,6 +21,23 @@ class UserController extends Controller
         'Contacts'       => ['manage customers', 'manage suppliers'],
         'Finance'        => ['manage expenses', 'manage accounts', 'view reports'],
         'Administration' => ['manage settings', 'manage users'],
+        'Notifications'  => ['receive notifications'],
+    ];
+
+    private const PERMISSION_LABELS = [
+        'manage products'       => 'Produits',
+        'manage purchases'      => 'Achats',
+        'manage sales'          => 'Ventes',
+        'manage pos'            => 'Point de vente',
+        'manage stock'          => 'Stock',
+        'manage customers'      => 'Clients',
+        'manage suppliers'      => 'Fournisseurs',
+        'manage expenses'       => 'Dépenses',
+        'manage accounts'       => 'Comptes',
+        'view reports'          => 'Rapports',
+        'manage settings'       => 'Paramètres',
+        'manage users'          => 'Utilisateurs',
+        'receive notifications' => 'Recevoir les notifications',
     ];
 
     public function index(Request $request): View|RedirectResponse
@@ -31,16 +48,32 @@ class UserController extends Controller
                 ->latest()
                 ->paginate(20);
 
-            $roles            = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
-            $permissionGroups = self::PERMISSION_GROUPS;
-            $roleDefaultPerms = Role::with('permissions')->get()->mapWithKeys(fn($r) => [
+            $roles             = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
+            $permissionGroups  = self::PERMISSION_GROUPS;
+            $permissionLabels  = self::PERMISSION_LABELS;
+            $roleDefaultPerms  = Role::with('permissions')->get()->mapWithKeys(fn($r) => [
                 $r->name => $r->permissions->pluck('name')->values(),
             ]);
 
-            return view('pages.users.index', compact('users', 'roles', 'permissionGroups', 'roleDefaultPerms'));
+            return view('pages.users.index', compact('users', 'roles', 'permissionGroups', 'permissionLabels', 'roleDefaultPerms'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des utilisateurs');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
+    }
+
+    public function show(User $user): View|RedirectResponse
+    {
+        try {
+            $user->load(['roles', 'permissions']);
+
+            $permissionGroups = self::PERMISSION_GROUPS;
+            $permissionLabels = self::PERMISSION_LABELS;
+
+            return view('pages.users.show', compact('user', 'permissionGroups', 'permissionLabels'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la fiche utilisateur', ['user_id' => $user->id]);
+            return redirect()->route('users.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
         }
     }
 
@@ -78,6 +111,7 @@ class UserController extends Controller
             $user->notify(new UserCredentials($plainPassword));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de l\'envoi des identifiants par email', ['user_id' => $user->id]);
+            return back()->with('warning', "Utilisateur créé, mais l'email n'a pas pu être envoyé (vérifier la configuration mail). Mot de passe temporaire : {$plainPassword}");
         }
 
         return back()->with('success', 'Utilisateur créé. Les identifiants ont été envoyés par email.');
@@ -148,11 +182,22 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:30',
         ]);
 
+        if ($request->filled('password')) {
+            $request->validate([
+                'current_password' => 'required|current_password',
+                'password'         => 'min:8|confirmed',
+            ], [
+                'current_password.required'        => 'Veuillez saisir votre mot de passe actuel.',
+                'current_password.current_password' => 'Le mot de passe actuel est incorrect.',
+                'password.min'                      => 'Le nouveau mot de passe doit contenir au moins 8 caractères.',
+                'password.confirmed'                => 'La confirmation du mot de passe ne correspond pas.',
+            ]);
+        }
+
         try {
             $user->update($data);
 
             if ($request->filled('password')) {
-                $request->validate(['password' => 'min:8|confirmed']);
                 $user->update(['password' => Hash::make($request->password)]);
             }
         } catch (Throwable $e) {

@@ -227,7 +227,6 @@
                 <div class="form-group" style="grid-column:1/-1">
                     <label>Compte débité <span class="required">*</span></label>
                     <select x-model="accountId" class="form-select" :class="{'form-control--error': errors.accountId}">
-                        <option value="">-- Sélectionner --</option>
                         @foreach($accounts as $acc)
                         <option value="{{ $acc->id }}">{{ $acc->name }} ({{ \App\Helpers\FormatHelper::money($acc->current_balance) }})</option>
                         @endforeach
@@ -236,7 +235,7 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" @click="open=false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="open=false" class="btn btn--light">Annuler</button>
                 <button type="button" @click="submit()" :disabled="loading" class="btn btn--pay-filled">
                     <span x-show="!loading">Valider</span>
                     <span x-show="loading">...</span>

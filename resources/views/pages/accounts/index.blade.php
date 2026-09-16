@@ -132,7 +132,7 @@
                 Compte par défaut
             </label>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>

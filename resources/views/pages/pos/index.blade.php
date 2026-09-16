@@ -30,7 +30,7 @@
         <input type="number" name="closing_balance" step="1" min="0" class="form-control pos-close-panel__input-balance" placeholder="Montant compté" required>
         <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Note (optionnel)">
         <button type="submit" class="btn btn--danger btn--sm">Confirmer</button>
-        <button type="button" class="btn btn--ghost btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
+        <button type="button" class="btn btn--light btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
     </form>
 </div>
 @endif
@@ -162,7 +162,6 @@
             <div class="form-group">
                 <label>Entrepôt <span class="required">*</span></label>
                 <select name="warehouse_id" class="form-select" required>
-                    <option value="">-- Sélectionner --</option>
                     @foreach($warehouses as $wh)
                         <option value="{{ $wh->id }}" {{ $wh->id === $defaultWarehouseId ? 'selected' : '' }}>
                             {{ $wh->name }}{{ $wh->id === $defaultWarehouseId ? ' (défaut)' : '' }}

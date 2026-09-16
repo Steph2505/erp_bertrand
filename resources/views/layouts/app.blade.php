@@ -2,6 +2,7 @@
     $flashMessages = array_merge(
         session('success') ? [['message' => session('success'), 'type' => 'success']] : [],
         session('error')   ? [['message' => session('error'),   'type' => 'error']]   : [],
+        session('warning') ? [['message' => session('warning'), 'type' => 'warning']] : [],
         collect($errors->all())->map(fn($e) => ['message' => $e, 'type' => 'error'])->all()
     );
 @endphp
@@ -56,7 +57,7 @@
         <div class="modal__body">
             <p x-text="$store.confirmDialog.message" style="font-size:14px;color:#374151;line-height:1.5;"></p>
             <div class="modal-footer-std">
-                <button type="button" class="btn btn--ghost" @click="$store.confirmDialog.cancel()" x-text="$store.confirmDialog.cancelLabel"></button>
+                <button type="button" class="btn btn--light" @click="$store.confirmDialog.cancel()" x-text="$store.confirmDialog.cancelLabel"></button>
                 <button type="button" class="btn" :class="$store.confirmDialog.variant === 'danger' ? 'btn--danger' : 'btn--primary'" @click="$store.confirmDialog.confirm()" x-text="$store.confirmDialog.confirmLabel"></button>
             </div>
         </div>
@@ -204,14 +205,65 @@
                 @endcan
 
                 {{-- Notifications --}}
-                <div x-data="{ open: false }" class="topbar__notif-wrapper">
-                    <button class="topbar__notification" @click="open = !open">
+                <div class="topbar__notif-wrapper"
+                     x-data="{
+                        open: false,
+                        loading: false,
+                        items: [],
+                        unread: {{ auth()->user()->unreadNotifications->count() }},
+                        async load() {
+                            this.loading = true;
+                            try {
+                                const res = await fetch('{{ route('notifications.index') }}', { headers: { Accept: 'application/json' } });
+                                const data = await res.json();
+                                this.items  = data.notifications;
+                                this.unread = data.unreadCount;
+                            } catch (e) {} finally { this.loading = false; }
+                        },
+                        async open_() {
+                            this.open = !this.open;
+                            if (this.open) await this.load();
+                        },
+                        async goTo(n) {
+                            if (!n.read) {
+                                this.unread = Math.max(0, this.unread - 1);
+                                n.read = true;
+                                fetch('/notifications/' + n.id + '/read', {
+                                    method: 'POST',
+                                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, Accept: 'application/json' },
+                                }).catch(() => {});
+                            }
+                            if (n.url) window.location.href = n.url;
+                        },
+                     }"
+                     @click.outside="open = false">
+                    <button class="topbar__notification" @click="open_()">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
-                        @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
-                        @if($unreadCount > 0)
-                            <span class="topbar__notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
-                        @endif
+                        <span class="topbar__notification-badge" x-show="unread > 0" x-text="unread > 9 ? '9+' : unread" x-cloak></span>
                     </button>
+
+                    <div class="topbar__notif-dropdown" x-show="open" x-transition x-cloak>
+                        <div class="topbar__notif-dropdown-header">
+                            <p>Notifications</p>
+                            <button type="button" x-show="unread > 0" @click="unread = 0; items.forEach(i => i.read = true); fetch('{{ route('notifications.read-all') }}', {method:'POST', headers:{'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content}})">
+                                Tout marquer comme lu
+                            </button>
+                        </div>
+                        <div class="topbar__notif-dropdown-body">
+                            <template x-if="loading">
+                                <div class="topbar__notif-empty">Chargement...</div>
+                            </template>
+                            <template x-if="!loading && items.length === 0">
+                                <div class="topbar__notif-empty">Aucune notification.</div>
+                            </template>
+                            <template x-for="n in items" :key="n.id">
+                                <button type="button" class="topbar__notif-item" :class="{ 'topbar__notif-item--unread': !n.read }" @click="goTo(n)">
+                                    <span class="topbar__notif-item-message" x-text="n.message"></span>
+                                    <span class="topbar__notif-item-time" x-text="n.createdAt"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Profil dropdown --}}

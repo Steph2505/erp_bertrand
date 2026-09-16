@@ -225,7 +225,7 @@
                     </div>
                     <div style="display:flex;gap:8px;">
                         <button type="submit" class="btn btn--primary btn--sm">Sauver</button>
-                        <button type="button" @click="editOpen = false" class="btn btn--ghost btn--sm">Annuler</button>
+                        <button type="button" @click="editOpen = false" class="btn btn--light btn--sm">Annuler</button>
                     </div>
                 </form>
             </div>
@@ -259,7 +259,7 @@
             </div>
             @endif
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Créer la caisse</button>
             </div>
         </form>
@@ -299,7 +299,7 @@
             </div>
             @endif
             <div class="modal-footer-std">
-                <button type="button" @click="openModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="openModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Ouvrir et commencer</button>
             </div>
         </form>

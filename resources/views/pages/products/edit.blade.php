@@ -14,7 +14,8 @@
     <a href="{{ route('products.show', $product) }}" class="btn btn--ghost">← Détail</a>
 </div>
 
-<form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data">
+<form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data"
+      @submit.prevent="window.confirmDialog('Mettre à jour ce produit ?', {confirmLabel:'Mettre à jour'}).then(ok => ok && $el.submit())">
     @csrf @method('PUT')
     <div class="product-form__layout">
 
@@ -51,7 +52,6 @@
                             </div>
 
                             <select name="category_id" class="form-select" x-model="categoryId" x-show="!showCreateCategory">
-                                <option value="">— Sélectionner —</option>
                                 <template x-for="cat in categories" :key="cat.id">
                                     <option :value="cat.id" x-text="cat.name"></option>
                                 </template>
@@ -89,7 +89,6 @@
                             </div>
 
                             <select name="unit_id" class="form-select" x-model="unitId" x-show="!showCreateUnit">
-                                <option value="">— Sélectionner —</option>
                                 <template x-for="unit in units" :key="unit.id">
                                     <option :value="unit.id" x-text="unit.name + ' (' + unit.abbreviation + ')'"></option>
                                 </template>

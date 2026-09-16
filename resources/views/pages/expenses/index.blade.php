@@ -133,7 +133,6 @@
                 <div class="form-group">
                     <label>Catégorie <span class="required">*</span></label>
                     <select name="expense_category_id" class="form-select" required>
-                        <option value="">-- Sélectionner --</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" :selected="editExpense && editExpense.expense_category_id == {{ $cat->id }}">{{ $cat->name }}</option>
                         @endforeach
@@ -142,7 +141,6 @@
                 <div class="form-group">
                     <label>Compte de paiement <span class="required">*</span></label>
                     <select name="payment_account_id" class="form-select" required>
-                        <option value="">-- Sélectionner --</option>
                         @foreach($accounts as $acc)
                             <option value="{{ $acc->id }}" :selected="editExpense && editExpense.payment_account_id == {{ $acc->id }}">{{ $acc->name }}</option>
                         @endforeach
@@ -165,7 +163,7 @@
                           x-effect="$el.value = editExpense ? (editExpense.description || '') : ''"></textarea>
             </div>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>
@@ -188,7 +186,7 @@
                 <input type="text" name="name" class="form-control" required placeholder="Ex: Loyer, Carburant...">
             </div>
             <div class="modal-footer-std">
-                <button type="button" @click="showCatModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showCatModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Créer</button>
             </div>
         </form>

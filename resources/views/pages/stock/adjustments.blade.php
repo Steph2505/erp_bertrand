@@ -93,7 +93,6 @@
                 <div class="form-group">
                     <label>Entrepôt</label>
                     <select name="warehouse_id" class="form-select">
-                        <option value="">-- Sélectionner --</option>
                         @foreach($warehouses as $w)
                             <option value="{{ $w->id }}">{{ $w->name }}</option>
                         @endforeach
@@ -110,10 +109,9 @@
             </div>
             <h4 class="text-sm font-600" style="margin-bottom:10px;">Articles à ajuster</h4>
             <div class="form-grid form-grid--3" style="margin-bottom:10px;align-items:flex-end;">
-                <div class="form-group" style="margin-bottom:0;grid-column:span 2">
+                <div class="form-group form-group--full" style="margin-bottom:0;">
                     <label>Produit</label>
                     <select id="adj-product" x-model="newItem.product_id" class="form-select">
-                        <option value="">-- Sélectionner --</option>
                         @foreach($products as $p)
                             <option value="{{ $p->id }}" data-name="{{ $p->display_name }}">{{ $p->display_name }} (stock : {{ $p->stock_quantity }})</option>
                         @endforeach
@@ -144,7 +142,7 @@
                 </tbody>
             </table>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--ghost">Annuler</button>
+                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
             </div>
         </form>
@@ -197,15 +195,14 @@ function adjPage() {
         },
 
         // Modal
-        showModal: false, items: [], newItem: { product_id: '', quantity: 1 },
+        showModal: false, items: [], newItem: { product_id: '{{ $products->first()->id ?? '' }}', quantity: 1 },
 
         addItem() {
             const sel = document.getElementById('adj-product');
             if (!this.newItem.product_id) { window.toast('Sélectionnez un produit.', 'error'); return; }
             const opt = sel.options[sel.selectedIndex];
             this.items.push({ product_id: this.newItem.product_id, name: opt.dataset.name, quantity: this.newItem.quantity || 1 });
-            this.newItem = { product_id: '', quantity: 1 };
-            sel.value = '';
+            this.newItem = { product_id: '{{ $products->first()->id ?? '' }}', quantity: 1 };
         },
     };
 }

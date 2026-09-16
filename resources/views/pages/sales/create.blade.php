@@ -16,7 +16,7 @@
         <h2>Nouvelle vente</h2>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('sales.index') }}" class="btn btn--ghost">Annuler</a>
+        <a href="{{ route('sales.index') }}" class="btn btn--light">Annuler</a>
         <button type="button" @click="submitSale('draft')" class="btn btn--light" :disabled="items.length === 0">
             Brouillon
         </button>

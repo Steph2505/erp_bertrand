@@ -37,6 +37,8 @@
         .btn {
             flex: 1;
         }
+
+        @include stack-actions-mobile;
     }
 }
 

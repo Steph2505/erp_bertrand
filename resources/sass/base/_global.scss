@@ -1,4 +1,20 @@
 @use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+// ─── Colonnes des layouts "main + sidebar" (grid) ────────────────────────────
+// Sans min-width:0, une piste de grille 1fr ne peut pas rétrécir sous la
+// taille de son contenu (tableaux larges, inputs...), ce qui fait déborder
+// toute la page sur mobile au lieu de laisser le contenu interne scroller.
+[class$="__main"],
+[class$="__aside"],
+[class$="__sidebar"] {
+    min-width: 0;
+}
 
 body {
     background-color: $bg-app;
@@ -174,11 +190,18 @@ body {
     display: flex;
     gap: $sp-8;
     justify-content: flex-end;
+
+    @include stack-actions-mobile;
 }
 
 // ─── Padding card ─────────────────────────────────────────────────────────────
 .p-20 { padding: $sp-20; }
 .p-24 { padding: $sp-24; }
+
+// ─── Spinner (loaders "animation: spin") ─────────────────────────────────────
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 // ─── Scrollbar ───────────────────────────────────────────────────────────────
 ::-webkit-scrollbar { width: 6px; height: 6px; }

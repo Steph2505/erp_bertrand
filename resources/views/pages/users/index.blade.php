@@ -10,6 +10,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
 
 <div x-data="{
     showModal:   false,
+    submitting:  false,
     editUser:    null,
     selectedRole: '',
     checkedPerms: [],
@@ -20,6 +21,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
         this.editUser     = null;
         this.selectedRole = this.roleNames[0] ?? '';
         this.checkedPerms = [];
+        this.submitting   = false;
         this.onRoleChange();
         this.showModal    = true;
     },
@@ -27,6 +29,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
         this.editUser     = user;
         this.selectedRole = role;
         this.checkedPerms = perms;
+        this.submitting   = false;
         this.showModal    = true;
     },
     onRoleChange() {
@@ -124,7 +127,8 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
         </div>
 
         <form :action="editUser ? '/users/'+editUser.id : '{{ route('users.store') }}'"
-              method="POST" class="modal__body" style="max-height:80vh;overflow-y:auto;">
+              method="POST" class="modal__body" style="max-height:80vh;overflow-y:auto;"
+              @submit="submitting = true">
             @csrf
             <template x-if="editUser"><input type="hidden" name="_method" value="PUT"></template>
 
@@ -204,8 +208,11 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
             </div>
 
             <div class="modal__footer" style="padding:0;border:none;margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary">Enregistrer</button>
+                <button type="button" @click="showModal = false" class="btn btn--light" :disabled="submitting">Annuler</button>
+                <button type="submit" class="btn btn--primary" :disabled="submitting">
+                    <svg x-show="submitting" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                    <span x-text="submitting ? 'Enregistrement...' : 'Enregistrer'"></span>
+                </button>
             </div>
         </form>
     </div>

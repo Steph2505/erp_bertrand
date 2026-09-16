@@ -111,6 +111,7 @@ class UserController extends Controller
             $user->notify(new UserCredentials($plainPassword));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de l\'envoi des identifiants par email', ['user_id' => $user->id]);
+            return back()->with('warning', "Utilisateur créé, mais l'email n'a pas pu être envoyé (vérifier la configuration mail). Mot de passe temporaire : {$plainPassword}");
         }
 
         return back()->with('success', 'Utilisateur créé. Les identifiants ont été envoyés par email.');

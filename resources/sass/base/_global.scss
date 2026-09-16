@@ -198,6 +198,11 @@ body {
 .p-20 { padding: $sp-20; }
 .p-24 { padding: $sp-24; }
 
+// ─── Spinner (loaders "animation: spin") ─────────────────────────────────────
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 // ─── Scrollbar ───────────────────────────────────────────────────────────────
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

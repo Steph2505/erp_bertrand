@@ -2,6 +2,7 @@
     $flashMessages = array_merge(
         session('success') ? [['message' => session('success'), 'type' => 'success']] : [],
         session('error')   ? [['message' => session('error'),   'type' => 'error']]   : [],
+        session('warning') ? [['message' => session('warning'), 'type' => 'warning']] : [],
         collect($errors->all())->map(fn($e) => ['message' => $e, 'type' => 'error'])->all()
     );
 @endphp

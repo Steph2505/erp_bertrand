@@ -38,8 +38,9 @@ window.toastAfterReload = (message, type = 'success') => {
     try { sessionStorage.setItem('__pendingToast', JSON.stringify({ message, type })); } catch (e) {}
 };
 
-// Messages flash Laravel (session success/error, erreurs de validation) émis en toast au chargement
-(window.__flashMessages || []).forEach((f) => window.toast(f.message, f.type));
+// Messages flash Laravel (session success/error, erreurs de validation) émis en toast au chargement.
+// Les avertissements (ex: mot de passe temporaire à copier) restent affichés jusqu'à fermeture manuelle.
+(window.__flashMessages || []).forEach((f) => window.toast(f.message, f.type, f.type === 'warning' ? 0 : 5000));
 
 try {
     const pending = sessionStorage.getItem('__pendingToast');

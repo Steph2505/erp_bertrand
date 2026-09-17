@@ -7,8 +7,6 @@
     <div class="page-header__title"><h2>Achat par produit</h2><p>Volume d'achat par article sur la période</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.trending') }}" class="filter-tabs__btn">Tendances</a>
-            <a href="{{ route('reports.items') }}" class="filter-tabs__btn">Articles</a>
             <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn">Vente produit</a>
             <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn filter-tabs__btn--active">Achat produit</a>
         </div>

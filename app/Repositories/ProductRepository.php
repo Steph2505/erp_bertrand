@@ -100,12 +100,13 @@ class ProductRepository
         ?float  $unitCost    = null
     ): void {
         try {
+            $oldQtyGlobal = max(0, (int) $product->stock_quantity);
+
             // Stock global (Product.stock_quantity) + recalcul CMP si un coût d'achat est fourni
             if ($unitCost !== null && $delta > 0) {
-                $oldQty   = max(0, (int) $product->stock_quantity);
                 $oldPrice = (float) $product->buying_price;
-                $newPrice = $oldQty > 0
-                    ? (($oldQty * $oldPrice) + ($delta * $unitCost)) / ($oldQty + $delta)
+                $newPrice = $oldQtyGlobal > 0
+                    ? (($oldQtyGlobal * $oldPrice) + ($delta * $unitCost)) / ($oldQtyGlobal + $delta)
                     : $unitCost;
 
                 $product->increment('stock_quantity', $delta, ['buying_price' => round($newPrice, 2)]);
@@ -113,21 +114,34 @@ class ProductRepository
                 $product->increment('stock_quantity', $delta);
             }
 
-            // Stock par magasin
+            // Stock par magasin — si un entrepôt est précisé, le snapshot
+            // avant/après du mouvement porte sur ce stock local plutôt que
+            // sur le stock global, car c'est le périmètre réellement affecté.
             if ($warehouseId) {
+                $oldQtyWarehouse = ProductStock::firstOrCreate(
+                    ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
+                    ['quantity' => 0, 'min_quantity' => 0]
+                )->quantity;
                 ProductStock::adjust($product->id, $warehouseId, $delta);
+                $quantityBefore = $oldQtyWarehouse;
+                $quantityAfter  = $oldQtyWarehouse + $delta;
+            } else {
+                $quantityBefore = $oldQtyGlobal;
+                $quantityAfter  = $oldQtyGlobal + $delta;
             }
 
             // Journal
             StockMovement::create([
-                'product_id'   => $product->id,
-                'warehouse_id' => $warehouseId,
-                'quantity'     => $delta,
-                'type'         => $type,
-                'reference'    => $reference,
-                'pack_id'      => $packId,
-                'note'         => $note,
-                'created_by'   => auth()->id(),
+                'product_id'      => $product->id,
+                'warehouse_id'    => $warehouseId,
+                'quantity'        => $delta,
+                'quantity_before' => $quantityBefore,
+                'quantity_after'  => $quantityAfter,
+                'type'            => $type,
+                'reference'       => $reference,
+                'pack_id'         => $packId,
+                'note'            => $note,
+                'created_by'      => auth()->id(),
             ]);
         } catch (Throwable $e) {
             Log::error('ProductRepository::adjustStock a échoué', [

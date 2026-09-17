@@ -105,6 +105,10 @@ class ExpenseController extends Controller
             'description'         => 'nullable|string|max:500',
         ]);
 
+        if ($blocked = $this->blockIfPeriodLocked($data['expense_date'])) {
+            return $blocked;
+        }
+
         try {
             DB::transaction(function () use ($data) {
                 $reference = 'EXP-' . date('Ymd') . '-' . str_pad(Expense::withTrashed()->count() + 1, 4, '0', STR_PAD_LEFT);
@@ -132,6 +136,10 @@ class ExpenseController extends Controller
             'description'         => 'nullable|string|max:500',
         ]);
 
+        if ($blocked = $this->blockIfPeriodLocked($expense->expense_date) ?? $this->blockIfPeriodLocked($data['expense_date'])) {
+            return $blocked;
+        }
+
         try {
             DB::transaction(function () use ($data, $expense) {
                 // Inverser l'effet de l'ancienne dépense sur l'ancien compte
@@ -156,6 +164,10 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): RedirectResponse
     {
+        if ($blocked = $this->blockIfPeriodLocked($expense->expense_date)) {
+            return $blocked;
+        }
+
         try {
             DB::transaction(function () use ($expense) {
                 if ($expense->payment_account_id) {

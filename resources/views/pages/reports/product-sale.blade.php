@@ -1,14 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Vente par produit')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Vente produit</span>@endsection
+@section('title', 'Ventes par article')
+@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Ventes par article</span>@endsection
 
 @section('content')
 <div class="page-header">
-    <div class="page-header__title"><h2>Vente par produit</h2><p>CA par article sur la période</p></div>
+    <div class="page-header__title"><h2>Ventes par article</h2><p>CA par article sur la période</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.trending') }}" class="filter-tabs__btn">Tendances</a>
-            <a href="{{ route('reports.items') }}" class="filter-tabs__btn">Articles</a>
             <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn filter-tabs__btn--active">Vente produit</a>
             <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn">Achat produit</a>
         </div>
@@ -19,6 +17,14 @@
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" name="date_from" value="{{ $from }}" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" name="date_to" value="{{ $to }}" class="form-control"></div>
+        <div class="form-group" style="margin:0">
+            <label>Trier par</label>
+            <select name="sort" class="form-select" onchange="this.form.submit()">
+                <option value="revenue" {{ $sort === 'revenue' ? 'selected' : '' }}>Chiffre d'affaires</option>
+                <option value="qty"     {{ $sort === 'qty'     ? 'selected' : '' }}>Quantité vendue</option>
+                <option value="name"    {{ $sort === 'name'    ? 'selected' : '' }}>Nom (A-Z)</option>
+            </select>
+        </div>
         <button class="btn btn--primary">Filtrer</button>
         <a href="{{ route('reports.product-sale') }}" class="btn btn--ghost">Réinitialiser</a>
     </div>
@@ -26,8 +32,8 @@
 
 <div class="table-wrapper">
     <div class="table-wrapper__header">
-        <strong>Ventes par article — classement CA</strong>
-        <span style="font-size:13px;color:#64748B;">CA total : <strong>{{ \App\Helpers\FormatHelper::money($items->sum('total_revenue')) }}</strong></span>
+        <strong>Ventes par article</strong>
+        <span style="font-size:13px;color:#64748B;">{{ $items->count() }} article(s) — CA total : <strong>{{ \App\Helpers\FormatHelper::money($items->sum('total_revenue')) }}</strong></span>
     </div>
     <table class="data-table">
         <thead><tr>
@@ -63,6 +69,18 @@
             <tr><td colspan="8" style="text-align:center;padding:40px;color:#64748B;">Aucune vente sur la période</td></tr>
             @endforelse
         </tbody>
+        @if($items->count())
+        <tfoot>
+            <tr style="border-top:2px solid #E2E8F0;background:#F8FAFC;font-weight:700;">
+                <td colspan="3">TOTAL</td>
+                <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($items->sum('total_qty')) }}</td>
+                <td></td>
+                <td style="text-align:right">{{ $items->sum('nb_sales') }}</td>
+                <td style="text-align:right;color:#12864B;">{{ \App\Helpers\FormatHelper::money($totalRevenue) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+        @endif
     </table>
 </div>
 @endsection

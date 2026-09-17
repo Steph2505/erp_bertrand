@@ -239,12 +239,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/purchase-sale',      'purchaseSale')->name('purchase-sale');
         Route::get('/tax',                'tax')->name('tax');
         Route::get('/contacts',           'contacts')->name('contacts');
-        Route::get('/customer-groups',    fn() => redirect()->route('customers.index'))->name('customer-groups');
         Route::get('/stock',              'stock')->name('stock');
         Route::get('/expiry',             'expiry')->name('expiry');
         Route::get('/stock-adjustment',   'stockAdjustment')->name('stock-adjustment');
-        Route::get('/trending',           'trending')->name('trending');
-        Route::get('/items',              'items')->name('items');
         Route::get('/product-purchase',   'productPurchase')->name('product-purchase');
         Route::get('/product-sale',       'productSale')->name('product-sale');
         Route::get('/purchase-payments',  'purchasePayments')->name('purchase-payments');
@@ -278,6 +275,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->name('settings.')->middleware('permission:manage settings')->controller(SettingController::class)->group(function () {
         Route::get('/company',                  'company')->name('company');
         Route::post('/company',                 'saveCompany')->name('company.save');
+        Route::post('/close-period',             'saveClosePeriod')->name('close-period.save');
         Route::get('/warehouses',                         'warehouses')->name('warehouses');
         Route::post('/warehouses',                        'storeWarehouse')->name('warehouses.store');
         Route::put('/warehouses/{warehouse}',             'updateWarehouse')->name('warehouses.update');

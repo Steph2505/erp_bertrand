@@ -124,27 +124,39 @@ class StockTransferController extends Controller
                 ]);
 
                 // Débit du stock source
-                ProductStock::adjust($product->id, $fromId, -$qty);
+                $fromQtyBefore = ProductStock::firstOrCreate(
+                    ['product_id' => $product->id, 'warehouse_id' => $fromId],
+                    ['quantity' => 0, 'min_quantity' => 0]
+                )->quantity;
+                $fromStock = ProductStock::adjust($product->id, $fromId, -$qty);
                 StockMovement::create([
-                    'product_id'   => $product->id,
-                    'warehouse_id' => $fromId,
-                    'quantity'     => -$qty,
-                    'type'         => 'transfer',
-                    'reference'    => $reference,
-                    'note'         => "Sortie transfert → " . Warehouse::find($toId)?->name,
-                    'created_by'   => auth()->id(),
+                    'product_id'      => $product->id,
+                    'warehouse_id'    => $fromId,
+                    'quantity'        => -$qty,
+                    'quantity_before' => $fromQtyBefore,
+                    'quantity_after'  => $fromStock->quantity,
+                    'type'            => 'transfer',
+                    'reference'       => $reference,
+                    'note'            => "Sortie transfert → " . Warehouse::find($toId)?->name,
+                    'created_by'      => auth()->id(),
                 ]);
 
                 // Crédit du stock destination
-                ProductStock::adjust($product->id, $toId, $qty);
+                $toQtyBefore = ProductStock::firstOrCreate(
+                    ['product_id' => $product->id, 'warehouse_id' => $toId],
+                    ['quantity' => 0, 'min_quantity' => 0]
+                )->quantity;
+                $toStock = ProductStock::adjust($product->id, $toId, $qty);
                 StockMovement::create([
-                    'product_id'   => $product->id,
-                    'warehouse_id' => $toId,
-                    'quantity'     => $qty,
-                    'type'         => 'transfer',
-                    'reference'    => $reference,
-                    'note'         => "Entrée transfert ← " . Warehouse::find($fromId)?->name,
-                    'created_by'   => auth()->id(),
+                    'product_id'      => $product->id,
+                    'warehouse_id'    => $toId,
+                    'quantity'        => $qty,
+                    'quantity_before' => $toQtyBefore,
+                    'quantity_after'  => $toStock->quantity,
+                    'type'            => 'transfer',
+                    'reference'       => $reference,
+                    'note'            => "Entrée transfert ← " . Warehouse::find($fromId)?->name,
+                    'created_by'      => auth()->id(),
                 ]);
 
                 // Le stock global (Product.stock_quantity) ne change pas (même total, redistribué)

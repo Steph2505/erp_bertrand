@@ -80,6 +80,25 @@
     </div>
 
     <div class="card settings-company__card">
+        <h3 class="settings-company__section-title">Clôture comptable</h3>
+        <p class="text-muted text-sm mb-16">Empêche toute création/modification/suppression de vente, achat ou dépense datée avant cette date.</p>
+        <form method="POST" action="{{ route('settings.close-period.save') }}">
+            @csrf
+            <div class="form-group">
+                <label>Verrouillé jusqu'au</label>
+                <input type="date" name="accounting_locked_until" class="form-control" value="{{ $lockedUntil }}">
+            </div>
+            @if($lockedUntil)
+                <p class="text-sm mb-16"><span class="badge badge--warning">Actuellement verrouillé jusqu'au {{ \App\Helpers\FormatHelper::date($lockedUntil) }}</span></p>
+            @endif
+            <button type="submit" class="btn btn--primary">Enregistrer</button>
+            @if($lockedUntil)
+                <button type="submit" class="btn btn--light" onclick="this.form.accounting_locked_until.value=''">Retirer le verrou</button>
+            @endif
+        </form>
+    </div>
+
+    <div class="card settings-company__card">
         <h3 class="settings-company__section-title">Aperçu de l'entête</h3>
         <div class="settings-company__preview">
             <div class="settings-company__preview-name">

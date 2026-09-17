@@ -40,10 +40,10 @@
                             <div class="text-sm text-muted" x-text="s.date"></div>
                         </td>
                         <td class="text-muted text-md" x-text="s.warehouse"></td>
-                        <td class="text-md" x-text="s.opened_at"></td>
+                        <td class="text-md" style="white-space:nowrap;" x-text="s.opened_at"></td>
                         <td><strong x-text="s.opening_balance"></strong></td>
                         <td class="font-600" style="color:#16a34a;" x-text="s.total_sales"></td>
-                        <td class="text-md">
+                        <td class="text-md" style="white-space:nowrap;">
                             <span x-text="s.closed_at ?? '—'"></span>
                             <div class="text-xs text-muted" x-show="s.closing_balance" x-text="s.closing_balance"></div>
                         </td>

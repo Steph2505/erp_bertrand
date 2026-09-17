@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FormatHelper;
+use App\Helpers\ProfitHelper;
 use App\Models\Expense;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -21,10 +22,13 @@ class DashboardController extends Controller
             $period = $request->get('period', 'today');
             [$from, $to] = $this->getPeriodDates($period);
 
-            $stats       = $this->computeStats($period, $from, $to);
-            $chartData   = $this->getChartData($period, $from, $to);
-            $recentSales = $this->getRecentSales();
-            $topProducts = $this->getTopProducts($from, $to);
+            $stats            = $this->computeStats($period, $from, $to);
+            $chartData        = $this->getChartData($period, $from, $to);
+            $recentSalesData  = $this->getRecentSales($from, $to);
+            $recentSales      = $recentSalesData['sales'];
+            $recentSalesCount = $recentSalesData['count'];
+            $recentSalesTotal = $recentSalesData['total'];
+            $topProducts      = $this->getTopProducts($from, $to);
 
             $lowStockProducts = Product::where('is_active', true)
                 ->whereRaw('stock_quantity <= min_stock_quantity')
@@ -33,7 +37,7 @@ class DashboardController extends Controller
                 ->get();
 
             return view('pages.dashboard.index', array_merge(
-                compact('period', 'chartData', 'lowStockProducts', 'recentSales', 'topProducts'),
+                compact('period', 'chartData', 'lowStockProducts', 'recentSales', 'recentSalesCount', 'recentSalesTotal', 'topProducts'),
                 $stats
             ));
         } catch (Throwable $e) {
@@ -52,7 +56,7 @@ class DashboardController extends Controller
             $chartData = $this->getChartData($period, $from, $to);
 
             $topProducts = $this->getTopProducts($from, $to);
-            $recentSales = $this->getRecentSales();
+            $recentSales = $this->getRecentSales($from, $to);
 
             $chartLabel = match($period) {
                 'today' => "Aujourd'hui (par heure)",
@@ -74,7 +78,9 @@ class DashboardController extends Controller
                 'chartData'               => $chartData,
                 'chartLabel'              => $chartLabel,
                 'topProducts'             => $topProducts,
-                'recentSales'             => $recentSales,
+                'recentSales'             => $recentSales['sales'],
+                'recentSalesCount'        => $recentSales['count'],
+                'recentSalesTotalFormatted' => FormatHelper::money($recentSales['total']),
             ]);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement des statistiques du tableau de bord', ['period' => $request->get('period')]);
@@ -96,10 +102,17 @@ class DashboardController extends Controller
 
     private function computeStats(string $period, $from, $to): array
     {
-        $totalSales     = Sale::whereBetween('sale_date', [$from, $to])->sum('total');
-        $totalPurchases = Purchase::whereBetween('purchase_date', [$from, $to])->sum('total');
-        $totalExpenses  = Expense::whereBetween('expense_date', [$from, $to])->sum('amount');
-        $netProfit      = $totalSales - $totalPurchases - $totalExpenses;
+        $totalSales     = (float) Sale::whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('sale_date', [$from, $to])
+            ->sum('total');
+        $totalPurchases = (float) Purchase::whereBetween('purchase_date', [$from, $to])->sum('total');
+        $totalExpenses  = (float) Expense::whereBetween('expense_date', [$from, $to])->sum('amount');
+
+        // Bénéfice net = CA - coût réel des produits vendus (COGS) - charges,
+        // même formule que le rapport Profit/Perte (ProfitHelper::productCogs)
+        // pour ne jamais afficher deux chiffres de bénéfice différents.
+        $cogs      = ProfitHelper::productCogs($from->toDateString(), $to->toDateString());
+        $netProfit = $totalSales - $cogs - $totalExpenses;
 
         $lowStockCount  = Product::where('is_active', true)
             ->whereRaw('stock_quantity <= min_stock_quantity')
@@ -112,7 +125,9 @@ class DashboardController extends Controller
             'year'  => [now()->subYear()->startOfYear(), now()->subYear()->endOfYear()],
             default => [now()->subDay()->startOfDay(), now()->subDay()->endOfDay()],
         };
-        $prevSales  = Sale::whereBetween('sale_date', [$prevFrom, $prevTo])->sum('total');
+        $prevSales  = Sale::whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('sale_date', [$prevFrom, $prevTo])
+            ->sum('total');
         $salesTrend = $prevSales > 0 ? (($totalSales - $prevSales) / $prevSales) * 100 : 0;
 
         return compact('totalSales', 'totalPurchases', 'totalExpenses', 'netProfit', 'lowStockCount', 'salesTrend');
@@ -138,7 +153,10 @@ class DashboardController extends Controller
             ->toArray();
     }
 
-    private function getRecentSales(): array
+    // Ventes de la période sélectionnée (POS + directes confondues, distinguées
+    // par un badge) — pour qu'un admin voie en un seul endroit toutes les
+    // ventes du jour, pas seulement les 5 dernières toutes dates confondues.
+    private function getRecentSales($from, $to): array
     {
         $statusMap = [
             'paid'     => ['Payé',          'green'],
@@ -148,9 +166,20 @@ class DashboardController extends Controller
             'confirmed'=> ['Confirmé',       'green'],
         ];
 
-        return Sale::with('customer')
+        $count = (int) Sale::whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('sale_date', [$from, $to])
+            ->count();
+
+        $total = (float) Sale::whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('sale_date', [$from, $to])
+            ->sum('total');
+
+        $sales = Sale::with('customer')
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('sale_date', [$from, $to])
             ->latest('sale_date')
-            ->limit(5)
+            ->latest('created_at')
+            ->limit(50)
             ->get()
             ->map(function ($s) use ($statusMap) {
                 [$label, $color] = $statusMap[$s->payment_status] ?? [ucfirst($s->payment_status), 'gray'];
@@ -162,9 +191,13 @@ class DashboardController extends Controller
                     'total'          => FormatHelper::money($s->total),
                     'status_label'   => $label,
                     'status_color'   => $color,
+                    'is_pos'         => (bool) $s->is_pos,
+                    'origin_label'   => $s->is_pos ? 'POS' : 'Direct',
                 ];
             })
             ->toArray();
+
+        return ['sales' => $sales, 'count' => $count, 'total' => $total];
     }
 
     private function getChartData(string $period, \Carbon\Carbon $from, \Carbon\Carbon $to): array

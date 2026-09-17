@@ -113,6 +113,10 @@ class SaleController extends Controller
             'items'        => 'required|array|min:1',
         ]);
 
+        if ($blocked = $this->blockIfPeriodLocked($request->sale_date)) {
+            return $blocked;
+        }
+
         $isConfirm   = in_array($request->status, ['confirmed', 'paid']);
         $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
 
@@ -243,6 +247,10 @@ class SaleController extends Controller
             'note'         => 'nullable|string|max:1000',
             'items'        => 'required|array|min:1',
         ]);
+
+        if ($blocked = $this->blockIfPeriodLocked($sale->sale_date) ?? $this->blockIfPeriodLocked($request->sale_date)) {
+            return $blocked;
+        }
 
         try {
             DB::transaction(function () use ($request, $sale) {
@@ -408,6 +416,10 @@ class SaleController extends Controller
     {
         if ($sale->status === 'confirmed') {
             return back()->withErrors(['sale' => 'Une vente confirmée ne peut pas être supprimée.']);
+        }
+
+        if ($blocked = $this->blockIfPeriodLocked($sale->sale_date)) {
+            return $blocked;
         }
 
         try {

@@ -354,8 +354,11 @@
                         <span x-text="item.quantity"></span>
                         <button @click="incQty(idx)" style="color:#1749B3;">+</button>
                     </div>
-                    <div class="pos-cart__item-price" x-text="fmt(item.quantity * item.unit_price)"></div>
-                    <button @click="removeItem(idx)" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:16px;">×</button>
+                    <input type="number" min="0" step="1" class="pos-cart__item-price-input"
+                           x-model.number="item.unit_price"
+                           @input="if (item.unit_price < 0 || item.unit_price === '') item.unit_price = 0">
+                    <span class="pos-cart__item-total" x-text="fmtCompact(item.quantity * item.unit_price)"></span>
+                    <button @click="removeItem(idx)" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:16px;flex-shrink:0;">×</button>
                 </div>
             </template>
         </div>
@@ -636,6 +639,9 @@ function posApp() {
             finally   { this.creatingCustomerPOS = false; }
         },
         fmt(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY; },
+        // Sans devise : pour le total par ligne du panier, où l'espace est trop
+        // restreint pour répéter "XAF" sur chaque ligne.
+        fmtCompact(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v)); },
     };
 }
 

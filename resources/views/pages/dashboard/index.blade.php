@@ -9,6 +9,13 @@
         'year'  => 'Cette année (par mois)',
         default => '',
     };
+    $periodLabel = match($period) {
+        'today' => "Aujourd'hui",
+        'week'  => 'Cette semaine',
+        'month' => 'Ce mois',
+        'year'  => 'Cette année',
+        default => '',
+    };
 @endphp
 
 @section('content')
@@ -52,6 +59,22 @@
         </div>
         <div class="stat-card__icon stat-card__icon--green">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </div>
+    </div>
+
+    {{-- Bénéfice net --}}
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <div class="stat-card__label">Bénéfice net</div>
+            <div class="stat-card__value" x-text="loading ? '…' : stats.netProfitFormatted">{{ \App\Helpers\FormatHelper::money($netProfit) }}</div>
+            <div class="stat-card__trend" :class="stats.netProfitPositive ? 'stat-card__trend--up' : 'stat-card__trend--down'">
+                <span x-text="loading ? '' : (stats.netProfitPositive ? 'Ventes − coût des ventes − charges' : 'Perte sur la période')">
+                    {{ $netProfit >= 0 ? 'Ventes − coût des ventes − charges' : 'Perte sur la période' }}
+                </span>
+            </div>
+        </div>
+        <div class="stat-card__icon {{ $netProfit >= 0 ? 'stat-card__icon--green' : 'stat-card__icon--red' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/></svg>
         </div>
     </div>
 
@@ -124,16 +147,20 @@
 
 {{-- Tables --}}
 <div class="dashboard__tables">
-    {{-- Dernières ventes --}}
+    {{-- Ventes de la période (POS + directes) --}}
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong class="table-wrapper__title">Dernières ventes</strong>
-            <a href="{{ route('sales.index') }}" class="btn btn--ghost btn--sm">Voir tout</a>
+            <strong class="table-wrapper__title" x-text="'Ventes — ' + periodLabel">Ventes — {{ $periodLabel }}</strong>
+            <span style="font-size:13px;color:#64748B;">
+                <span x-text="loading ? '…' : stats.recentSalesCount">{{ $recentSalesCount }}</span> vente(s) —
+                <strong x-text="loading ? '…' : stats.recentSalesTotalFormatted">{{ \App\Helpers\FormatHelper::money($recentSalesTotal) }}</strong>
+            </span>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
                     <th>Référence</th>
+                    <th>Origine</th>
                     <th>Client</th>
                     <th>Date</th>
                     <th>Total</th>
@@ -142,14 +169,15 @@
             </thead>
             <tbody>
                 <template x-if="loading">
-                    <tr><td colspan="5" class="cell-empty">Chargement...</td></tr>
+                    <tr><td colspan="6" class="cell-empty">Chargement...</td></tr>
                 </template>
                 <template x-if="!loading && stats.recentSales.length === 0">
-                    <tr><td colspan="5" class="cell-empty">Aucune vente</td></tr>
+                    <tr><td colspan="6" class="cell-empty">Aucune vente sur cette période</td></tr>
                 </template>
                 <template x-for="sale in stats.recentSales" :key="sale.id">
                     <tr>
                         <td><a :href="'/sales/' + sale.id" class="cell-reference" x-text="sale.reference"></a></td>
+                        <td><span class="badge" :class="sale.is_pos ? 'badge--blue' : 'badge--gray'" x-text="sale.origin_label"></span></td>
                         <td x-text="sale.customer"></td>
                         <td x-text="sale.sale_date"></td>
                         <td><strong x-text="sale.total"></strong></td>
@@ -164,7 +192,7 @@
     <div class="table-wrapper">
         <div class="table-wrapper__header">
             <strong class="table-wrapper__title">Top produits vendus</strong>
-            <a href="{{ route('reports.trending') }}" class="btn btn--ghost btn--sm">Rapport</a>
+            <a href="{{ route('reports.product-sale') }}" class="btn btn--ghost btn--sm">Rapport</a>
         </div>
         <table class="data-table">
             <thead>
@@ -203,24 +231,34 @@
 <script>
 let salesChartInstance = null;
 
+const PERIOD_LABELS = { today: "Aujourd'hui", week: 'Cette semaine', month: 'Ce mois', year: 'Cette année' };
+
 function dashboard() {
     return {
         period: '{{ $period }}',
         loading: false,
 
         stats: {
-            totalSalesFormatted:     '{{ \App\Helpers\FormatHelper::money($totalSales) }}',
-            totalPurchasesFormatted: '{{ \App\Helpers\FormatHelper::money($totalPurchases) }}',
-            totalExpensesFormatted:  '{{ \App\Helpers\FormatHelper::money($totalExpenses) }}',
-            lowStockCount:           {{ $lowStockCount }},
-            salesTrend:              {{ round($salesTrend, 1) }},
-            salesTrendPositive:      {{ $salesTrend >= 0 ? 'true' : 'false' }},
-            chartLabel:              @json($chartLabel),
-            topProducts:             @json($topProducts),
-            recentSales:             @json($recentSales),
+            totalSalesFormatted:        '{{ \App\Helpers\FormatHelper::money($totalSales) }}',
+            totalPurchasesFormatted:    '{{ \App\Helpers\FormatHelper::money($totalPurchases) }}',
+            totalExpensesFormatted:     '{{ \App\Helpers\FormatHelper::money($totalExpenses) }}',
+            netProfitFormatted:         '{{ \App\Helpers\FormatHelper::money($netProfit) }}',
+            netProfitPositive:          {{ $netProfit >= 0 ? 'true' : 'false' }},
+            lowStockCount:              {{ $lowStockCount }},
+            salesTrend:                 {{ round($salesTrend, 1) }},
+            salesTrendPositive:         {{ $salesTrend >= 0 ? 'true' : 'false' }},
+            chartLabel:                 @json($chartLabel),
+            topProducts:                @json($topProducts),
+            recentSales:                @json($recentSales),
+            recentSalesCount:           {{ $recentSalesCount }},
+            recentSalesTotalFormatted:  '{{ \App\Helpers\FormatHelper::money($recentSalesTotal) }}',
         },
 
         chartData: @json($chartData),
+
+        get periodLabel() {
+            return PERIOD_LABELS[this.period] ?? '';
+        },
 
         init() {
             this.$nextTick(() => this.buildChart());

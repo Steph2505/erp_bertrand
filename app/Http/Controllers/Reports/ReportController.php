@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Helpers\ProfitHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Category;
@@ -33,28 +34,6 @@ class ReportController extends Controller
         ];
     }
 
-    /**
-     * Coût réel des produits vendus (POS + Vente confondus) sur la période,
-     * calculé ligne par ligne à partir du prix d'achat au moment de la lecture
-     * (produits : quantité × unités/pack × prix d'achat ; packs : quantité × prix d'achat du pack).
-     */
-    private function productCogs(string $from, string $to): float
-    {
-        // Coût figé sur chaque ligne de vente (unit_cost) au moment de la vente —
-        // reste exact même si le prix d'achat du produit change ensuite (CMP).
-        return (float) SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->whereIn('sales.status', ['confirmed', 'completed'])
-            ->whereBetween('sales.sale_date', [$from, $to])
-            ->whereNull('sales.deleted_at')
-            ->selectRaw("COALESCE(SUM(
-                CASE
-                    WHEN sale_items.item_type = 'pack' THEN sale_items.quantity * sale_items.unit_cost
-                    ELSE sale_items.quantity * sale_items.units_per_item * sale_items.unit_cost
-                END
-            ), 0) as total")
-            ->value('total');
-    }
-
     // ── Profit / Perte ────────────────────────────────────────────────────────
 
     public function profitLoss(Request $request): View|RedirectResponse
@@ -65,7 +44,7 @@ class ReportController extends Controller
             $to   = $request->input('date_to',   now()->toDateString());
 
             $revenue  = (float) Sale::whereIn('status', ['confirmed', 'completed'])->whereBetween('sale_date', [$from, $to])->sum('total');
-            $cogs     = $this->productCogs($from, $to);
+            $cogs     = ProfitHelper::productCogs($from, $to);
             $expenses = (float) Expense::whereBetween('expense_date', [$from, $to])->sum('amount');
 
             $grossProfit = $revenue - $cogs;
@@ -80,7 +59,7 @@ class ReportController extends Controller
                 $mStart = (string) max($cursor->copy()->startOfMonth()->toDateString(), $from);
                 $mEnd   = (string) min($cursor->copy()->endOfMonth()->toDateString(),   $to);
                 $mRevenue = (float) Sale::whereIn('status', ['confirmed', 'completed'])->whereBetween('sale_date', [$mStart, $mEnd])->sum('total');
-                $mCogs    = $this->productCogs($mStart, $mEnd);
+                $mCogs    = ProfitHelper::productCogs($mStart, $mEnd);
                 $monthly[] = [
                     'label'    => $cursor->isoFormat('MMM YYYY'),
                     'revenue'  => $mRevenue,
@@ -310,66 +289,6 @@ class ReportController extends Controller
         }
     }
 
-    // ── Produits en tendance ──────────────────────────────────────────────────
-
-    public function trending(Request $request): View|RedirectResponse
-    {
-        try {
-            [$from, $to] = $this->dates($request);
-
-            $items = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                ->whereIn('sales.status', ['confirmed', 'completed'])
-                ->whereBetween('sales.sale_date', [$from, $to])
-                ->whereNull('sales.deleted_at')
-                ->select(
-                    'sale_items.item_name',
-                    'sale_items.item_type',
-                    DB::raw('SUM(sale_items.quantity) as total_qty'),
-                    DB::raw('SUM(sale_items.subtotal) as total_revenue'),
-                    DB::raw('COUNT(DISTINCT sales.id) as nb_sales')
-                )
-                ->groupBy('sale_items.item_name', 'sale_items.item_type')
-                ->orderByDesc('total_revenue')
-                ->limit(30)
-                ->get();
-
-            return view('pages.reports.trending', compact('items', 'from', 'to'));
-        } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors du chargement du rapport des tendances', ['filters' => $request->all()]);
-            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement du rapport.');
-        }
-    }
-
-    // ── Rapport des articles ──────────────────────────────────────────────────
-
-    public function items(Request $request): View|RedirectResponse
-    {
-        try {
-            [$from, $to] = $this->dates($request);
-
-            $items = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                ->whereIn('sales.status', ['confirmed', 'completed'])
-                ->whereBetween('sales.sale_date', [$from, $to])
-                ->whereNull('sales.deleted_at')
-                ->select(
-                    'sale_items.item_name',
-                    'sale_items.item_type',
-                    DB::raw('SUM(sale_items.quantity) as total_qty'),
-                    DB::raw('SUM(sale_items.subtotal) as total_revenue'),
-                    DB::raw('AVG(sale_items.unit_price) as avg_price'),
-                    DB::raw('COUNT(DISTINCT sales.id) as nb_sales')
-                )
-                ->groupBy('sale_items.item_name', 'sale_items.item_type')
-                ->orderBy('sale_items.item_name')
-                ->get();
-
-            return view('pages.reports.items', compact('items', 'from', 'to'));
-        } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors du chargement du rapport des articles', ['filters' => $request->all()]);
-            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement du rapport.');
-        }
-    }
-
     // ── Achat par produit ─────────────────────────────────────────────────────
 
     public function productPurchase(Request $request): View|RedirectResponse
@@ -406,6 +325,7 @@ class ReportController extends Controller
     {
         try {
             [$from, $to] = $this->dates($request);
+            $sort = $request->input('sort', 'revenue'); // revenue|name|qty
 
             $items = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
                 ->whereIn('sales.status', ['confirmed', 'completed'])
@@ -420,10 +340,15 @@ class ReportController extends Controller
                     DB::raw('COUNT(DISTINCT sales.id) as nb_sales')
                 )
                 ->groupBy('sale_items.item_name', 'sale_items.item_type')
-                ->orderByDesc('total_revenue')
                 ->get();
 
-            return view('pages.reports.product-sale', compact('items', 'from', 'to'));
+            $items = match ($sort) {
+                'name' => $items->sortBy('item_name')->values(),
+                'qty'  => $items->sortByDesc('total_qty')->values(),
+                default => $items->sortByDesc('total_revenue')->values(),
+            };
+
+            return view('pages.reports.product-sale', compact('items', 'from', 'to', 'sort'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du rapport vente par produit', ['filters' => $request->all()]);
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement du rapport.');
@@ -632,7 +557,7 @@ class ReportController extends Controller
             $logs = ActivityLog::with('user')
                 ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
                 ->latest()
-                ->paginate(50)
+                ->paginate(10)
                 ->withQueryString();
 
             return view('pages.reports.activity', compact('logs', 'from', 'to'));

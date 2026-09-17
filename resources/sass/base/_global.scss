@@ -6,6 +6,14 @@ html, body {
     max-width: 100%;
 }
 
+// ─── Alpine x-cloak ──────────────────────────────────────────────────────────
+// Sans cette règle, les éléments x-cloak (modal de confirmation, dropdowns...)
+// restent visibles pendant l'intervalle entre le parsing du HTML et
+// l'initialisation d'Alpine.js, ce qui les fait flasher à chaque navigation.
+[x-cloak] {
+    display: none !important;
+}
+
 // ─── Colonnes des layouts "main + sidebar" (grid) ────────────────────────────
 // Sans min-width:0, une piste de grille 1fr ne peut pas rétrécir sous la
 // taille de son contenu (tableaux larges, inputs...), ce qui fait déborder

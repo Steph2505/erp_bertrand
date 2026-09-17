@@ -18,7 +18,8 @@ class SettingController extends Controller
     {
         try {
             $settings = Setting::where('group', 'company')->pluck('value', 'key');
-            return view('pages.settings.company', compact('settings'));
+            $lockedUntil = \App\Helpers\PeriodLock::lockedUntil();
+            return view('pages.settings.company', compact('settings', 'lockedUntil'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement des paramètres entreprise');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -48,6 +49,26 @@ class SettingController extends Controller
         }
 
         return back()->with('success', 'Paramètres entreprise sauvegardés.');
+    }
+
+    // ── Clôture comptable ────────────────────────────────────────────────────
+
+    public function saveClosePeriod(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'accounting_locked_until' => 'nullable|date',
+        ]);
+
+        try {
+            Setting::set('accounting_locked_until', $data['accounting_locked_until'] ?? '', 'accounting');
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la sauvegarde de la clôture comptable', ['data' => $data]);
+            return back()->with('error', 'Une erreur est survenue lors de la sauvegarde.');
+        }
+
+        return back()->with('success', ($data['accounting_locked_until'] ?? null)
+            ? 'Période comptable verrouillée jusqu\'au ' . \App\Helpers\FormatHelper::date($data['accounting_locked_until']) . '.'
+            : 'Verrou de clôture comptable retiré.');
     }
 
     // ── Entrepôts ─────────────────────────────────────────────────────────────

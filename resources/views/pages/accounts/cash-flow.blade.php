@@ -62,6 +62,20 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/></svg>
         </div>
     </div>
+    <div class="stat-card">
+        <div class="stat-card__info">
+            <div class="stat-card__label">Solde de clôture {{ $year }}</div>
+            <div class="stat-card__value" style="color:{{ $totals->closing_balance >= 0 ? '#12864B' : '#C4231A' }}">
+                {{ \App\Helpers\FormatHelper::money($totals->closing_balance) }}
+            </div>
+            <div class="stat-card__trend stat-card__trend--flat">
+                Ouverture {{ \App\Helpers\FormatHelper::money($totals->opening_balance) }} + flux net
+            </div>
+        </div>
+        <div class="stat-card__icon stat-card__icon--{{ $totals->closing_balance >= 0 ? 'green' : 'red' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75v3.75l2.25 2.25"/></svg>
+        </div>
+    </div>
 </div>
 
 {{-- Graphique --}}
@@ -82,8 +96,13 @@
             <th class="th-warning">dont Dépenses</th>
             <th class="th-danger">Total Décaissements</th>
             <th class="text-right">Flux net</th>
+            <th class="text-right">Solde cumulé</th>
         </tr></thead>
         <tbody>
+            <tr class="account-table__amount-muted">
+                <td colspan="5">Solde d'ouverture {{ $year }}</td>
+                <td class="text-right" colspan="2">{{ \App\Helpers\FormatHelper::money($totals->opening_balance) }}</td>
+            </tr>
             @foreach($months as $m)
             <tr>
                 <td><strong>{{ $m->label }}</strong></td>
@@ -96,6 +115,9 @@
                     <strong style="color:{{ $m->net >= 0 ? '#12864B' : '#C4231A' }}">
                         {{ $m->net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($m->net) }}
                     </strong>
+                </td>
+                <td class="text-right font-600" style="color:{{ $m->cum_balance >= 0 ? '#12864B' : '#C4231A' }}">
+                    {{ \App\Helpers\FormatHelper::money($m->cum_balance) }}
                 </td>
             </tr>
             @endforeach
@@ -110,6 +132,9 @@
                 {{-- Couleur dynamique selon positif/négatif --}}
                 <td class="text-right font-700" style="color:{{ $totals->net >= 0 ? '#12864B' : '#C4231A' }};">
                     {{ $totals->net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($totals->net) }}
+                </td>
+                <td class="text-right font-700" style="color:{{ $totals->closing_balance >= 0 ? '#12864B' : '#C4231A' }};">
+                    {{ \App\Helpers\FormatHelper::money($totals->closing_balance) }}
                 </td>
             </tr>
         </tfoot>

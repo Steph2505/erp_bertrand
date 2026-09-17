@@ -67,23 +67,10 @@ class PackStockService
 
             foreach ($pack->items as $item) {
                 $unitsToDeduct = $item->quantity * $quantity;
-
-                $item->product->decrement('stock_quantity', $unitsToDeduct);
-
-                if ($warehouseId) {
-                    ProductStock::adjust($item->product_id, $warehouseId, -$unitsToDeduct);
-                }
-
-                StockMovement::create([
-                    'product_id'   => $item->product_id,
-                    'warehouse_id' => $warehouseId,
-                    'quantity'     => -$unitsToDeduct,
-                    'type'         => 'sale',
-                    'reference'    => $reference,
-                    'pack_id'      => $packId,
-                    'note'         => "Vente de {$quantity} pack(s) « {$pack->name} »",
-                    'created_by'   => auth()->id(),
-                ]);
+                $this->applyMovement(
+                    $item->product, -$unitsToDeduct, 'sale', $reference, $packId,
+                    "Vente de {$quantity} pack(s) « {$pack->name} »", $warehouseId
+                );
             }
         });
     }
@@ -95,23 +82,10 @@ class PackStockService
 
             foreach ($pack->items as $item) {
                 $unitsToRestore = $item->quantity * $quantity;
-
-                $item->product->increment('stock_quantity', $unitsToRestore);
-
-                if ($warehouseId) {
-                    ProductStock::adjust($item->product_id, $warehouseId, $unitsToRestore);
-                }
-
-                StockMovement::create([
-                    'product_id'   => $item->product_id,
-                    'warehouse_id' => $warehouseId,
-                    'quantity'     => $unitsToRestore,
-                    'type'         => 'return_sale',
-                    'reference'    => $reference,
-                    'pack_id'      => $packId,
-                    'note'         => "Retour de {$quantity} pack(s) « {$pack->name} »",
-                    'created_by'   => auth()->id(),
-                ]);
+                $this->applyMovement(
+                    $item->product, $unitsToRestore, 'return_sale', $reference, $packId,
+                    "Retour de {$quantity} pack(s) « {$pack->name} »", $warehouseId
+                );
             }
         });
     }
@@ -123,24 +97,53 @@ class PackStockService
 
             foreach ($pack->items as $item) {
                 $unitsToAdd = $item->quantity * $quantity;
-
-                $item->product->increment('stock_quantity', $unitsToAdd);
-
-                if ($warehouseId) {
-                    ProductStock::adjust($item->product_id, $warehouseId, $unitsToAdd);
-                }
-
-                StockMovement::create([
-                    'product_id'   => $item->product_id,
-                    'warehouse_id' => $warehouseId,
-                    'quantity'     => $unitsToAdd,
-                    'type'         => 'purchase',
-                    'reference'    => $reference,
-                    'pack_id'      => $packId,
-                    'note'         => "Achat de {$quantity} pack(s) « {$pack->name} »",
-                    'created_by'   => auth()->id(),
-                ]);
+                $this->applyMovement(
+                    $item->product, $unitsToAdd, 'purchase', $reference, $packId,
+                    "Achat de {$quantity} pack(s) « {$pack->name} »", $warehouseId
+                );
             }
         });
+    }
+
+    /**
+     * Applique un delta de stock (global + magasin) et journalise le
+     * mouvement avec un snapshot avant/après du périmètre concerné (stock du
+     * magasin si $warehouseId est fourni, sinon stock global du produit).
+     */
+    private function applyMovement(
+        \App\Models\Product $product,
+        int $delta,
+        string $type,
+        ?string $reference,
+        int $packId,
+        string $note,
+        ?int $warehouseId
+    ): void {
+        if ($warehouseId) {
+            $quantityBefore = ProductStock::firstOrCreate(
+                ['product_id' => $product->id, 'warehouse_id' => $warehouseId],
+                ['quantity' => 0, 'min_quantity' => 0]
+            )->quantity;
+            $stock         = ProductStock::adjust($product->id, $warehouseId, $delta);
+            $quantityAfter = $stock->quantity;
+            $product->increment('stock_quantity', $delta);
+        } else {
+            $quantityBefore = max(0, (int) $product->stock_quantity);
+            $product->increment('stock_quantity', $delta);
+            $quantityAfter = $quantityBefore + $delta;
+        }
+
+        StockMovement::create([
+            'product_id'      => $product->id,
+            'warehouse_id'    => $warehouseId,
+            'quantity'        => $delta,
+            'quantity_before' => $quantityBefore,
+            'quantity_after'  => $quantityAfter,
+            'type'            => $type,
+            'reference'       => $reference,
+            'pack_id'         => $packId,
+            'note'            => $note,
+            'created_by'      => auth()->id(),
+        ]);
     }
 }

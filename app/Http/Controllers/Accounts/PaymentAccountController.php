@@ -260,6 +260,22 @@ class PaymentAccountController extends Controller
             $year  = (int) $request->input('year', now()->year);
             $years = range(now()->year, max(now()->year - 4, 2024));
 
+            // Solde d'ouverture au 1er janvier de l'année sélectionnée : solde
+            // d'ouverture de tous les comptes + net de tous les flux antérieurs
+            // à cette année — pour que le solde cumulé reste juste peu importe
+            // l'année choisie dans le sélecteur.
+            $yearStart = sprintf('%d-01-01', $year);
+
+            $openingBalance    = (float) PaymentAccount::sum('opening_balance');
+            $priorEncaissements = (float) Payment::where('payable_type', Sale::class)
+                ->where('payment_date', '<', $yearStart)->sum('amount');
+            $priorDecaissements = (float) Payment::where('payable_type', Purchase::class)
+                ->where('payment_date', '<', $yearStart)->sum('amount')
+                + (float) Expense::where('expense_date', '<', $yearStart)->sum('amount');
+
+            $cumBalance = $openingBalance + $priorEncaissements - $priorDecaissements;
+            $openingCumBalance = $cumBalance;
+
             $months = [];
             for ($m = 1; $m <= 12; $m++) {
                 $start = sprintf('%d-%02d-01', $year, $m);
@@ -276,6 +292,8 @@ class PaymentAccountController extends Controller
                 $decDepenses = Expense::whereBetween('expense_date', [$start, $end])->sum('amount');
 
                 $decaissements = $decAchats + $decDepenses;
+                $net           = (float) $encaissements - $decaissements;
+                $cumBalance   += $net;
 
                 $months[] = (object) [
                     'label'         => \Carbon\Carbon::create($year, $m)->isoFormat('MMM'),
@@ -283,16 +301,19 @@ class PaymentAccountController extends Controller
                     'dec_achats'    => (float) $decAchats,
                     'dec_depenses'  => (float) $decDepenses,
                     'decaissements' => (float) $decaissements,
-                    'net'           => (float) $encaissements - $decaissements,
+                    'net'           => $net,
+                    'cum_balance'   => $cumBalance,
                 ];
             }
 
             $totals = (object) [
-                'encaissements' => collect($months)->sum('encaissements'),
-                'dec_achats'    => collect($months)->sum('dec_achats'),
-                'dec_depenses'  => collect($months)->sum('dec_depenses'),
-                'decaissements' => collect($months)->sum('decaissements'),
-                'net'           => collect($months)->sum('net'),
+                'encaissements'      => collect($months)->sum('encaissements'),
+                'dec_achats'         => collect($months)->sum('dec_achats'),
+                'dec_depenses'       => collect($months)->sum('dec_depenses'),
+                'decaissements'      => collect($months)->sum('decaissements'),
+                'net'                => collect($months)->sum('net'),
+                'opening_balance'    => $openingCumBalance,
+                'closing_balance'    => $cumBalance,
             ];
 
             return view('pages.accounts.cash-flow', compact('months', 'totals', 'year', 'years'));

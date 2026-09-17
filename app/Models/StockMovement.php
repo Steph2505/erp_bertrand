@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StockMovement extends Model
 {
     protected $fillable = [
-        'product_id', 'warehouse_id', 'quantity', 'type',
+        'product_id', 'warehouse_id', 'quantity', 'quantity_before', 'quantity_after', 'type',
         'reference', 'pack_id', 'note', 'created_by',
     ];
 

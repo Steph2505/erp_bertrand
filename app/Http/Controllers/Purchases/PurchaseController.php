@@ -117,6 +117,10 @@ class PurchaseController extends Controller
             'items'          => 'required|array|min:1',
         ]);
 
+        if ($blocked = $this->blockIfPeriodLocked($request->purchase_date)) {
+            return $blocked;
+        }
+
         try {
             DB::transaction(function () use ($request) {
                 $type      = $request->payment_type ?? 'pending'; // pending | confirmed | paid
@@ -296,6 +300,10 @@ class PurchaseController extends Controller
             'items'         => 'required|array|min:1',
         ]);
 
+        if ($blocked = $this->blockIfPeriodLocked($purchase->purchase_date) ?? $this->blockIfPeriodLocked($request->purchase_date)) {
+            return $blocked;
+        }
+
         $action = $request->input('action', 'save');
 
         try {
@@ -383,6 +391,10 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase): RedirectResponse
     {
+        if ($blocked = $this->blockIfPeriodLocked($purchase->purchase_date)) {
+            return $blocked;
+        }
+
         try {
             $purchase->delete();
         } catch (Throwable $e) {

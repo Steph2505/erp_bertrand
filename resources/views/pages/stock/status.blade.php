@@ -64,9 +64,9 @@
                 </template>
                 <template x-for="p in rows" :key="p.id">
                     <tr>
-                        <td><a :href="p.show_url" class="product-cell__name" x-text="p.name"></a></td>
-                        <td x-text="p.category"></td>
-                        <td>
+                        <td style="vertical-align:top;"><a :href="p.show_url" class="product-cell__name" x-text="p.name"></a></td>
+                        <td style="vertical-align:top;" x-text="p.category"></td>
+                        <td style="vertical-align:top;">
                             <template x-if="extra.warehouse_filter">
                                 <span :class="p.is_out ? 'field-stock--low' : (p.is_low ? 'field-stock--low' : 'field-stock--ok')"
                                       x-text="p.qty + ' ' + p.unit"></span>
@@ -85,8 +85,8 @@
                                 </div>
                             </template>
                         </td>
-                        <td class="th-right" x-text="p.min_qty + ' ' + p.unit"></td>
-                        <td>
+                        <td class="th-right" style="vertical-align:top;" x-text="p.min_qty + ' ' + p.unit"></td>
+                        <td style="vertical-align:top;">
                             <template x-if="p.is_out"><span class="badge badge--red">Rupture</span></template>
                             <template x-if="p.is_low && !p.is_out"><span class="badge badge--yellow">Stock faible</span></template>
                             <template x-if="!p.is_low && !p.is_out"><span class="badge badge--green">OK</span></template>

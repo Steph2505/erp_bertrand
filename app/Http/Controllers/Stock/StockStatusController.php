@@ -40,7 +40,7 @@ class StockStatusController extends Controller
                     : $q->with('warehouse');
             }])
             ->where('is_active', true)
-            ->when($search,      fn($q, $s)  => $q->where('name', 'like', "%$s%"))
+            ->when($search,      fn($q, $s)  => $q->where(fn($q2) => $q2->where('name', 'like', "%$s%")->orWhere('variation', 'like', "%$s%")))
             ->when($categoryId,  fn($q, $id) => $q->where('category_id', $id))
             ->when($warehouseId, fn($q)      => $q->whereHas('stocks', fn($s) => $s->where('warehouse_id', $warehouseId)));
 
@@ -80,7 +80,7 @@ class StockStatusController extends Controller
 
                 return [
                     'id'               => $p->id,
-                    'name'             => $p->name,
+                    'name'             => $p->display_name,
                     'category'         => $p->category?->name ?? '—',
                     'unit'             => $unit,
                     'qty'              => $qty,

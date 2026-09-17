@@ -51,7 +51,7 @@
                     <th>Article</th>
                     <th>Catégorie</th>
                     <th x-text="extra.warehouse_filter ? 'Magasin' : 'Magasins / Stock'"></th>
-                    <th class="th-right">Stock min.</th>
+                    <th class="th-right" style="text-align:right;">Stock min.</th>
                     <th>Statut</th>
                 </tr>
             </thead>
@@ -85,7 +85,7 @@
                                 </div>
                             </template>
                         </td>
-                        <td class="th-right" style="vertical-align:top;" x-text="p.min_qty + ' ' + p.unit"></td>
+                        <td class="th-right" style="vertical-align:top;text-align:right;" x-text="p.min_qty + ' ' + p.unit"></td>
                         <td style="vertical-align:top;">
                             <template x-if="p.is_out"><span class="badge badge--red">Rupture</span></template>
                             <template x-if="p.is_low && !p.is_out"><span class="badge badge--yellow">Stock faible</span></template>

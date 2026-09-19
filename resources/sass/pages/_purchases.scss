@@ -29,6 +29,36 @@
             position: static;
         }
     }
+
+    // Variante "création" : carte fournisseur + récapitulatif sur la même
+    // ligne (responsive), articles de l'achat en pleine largeur en dessous.
+    &--split {
+        grid-template-areas:
+            "form recap"
+            "items items";
+
+        @include tablet {
+            grid-template-areas:
+                "form"
+                "recap"
+                "items";
+        }
+    }
+
+    &__form {
+        grid-area: form;
+    }
+
+    &__recap {
+        grid-area: recap;
+        display: flex;
+        flex-direction: column;
+        gap: $sp-12;
+    }
+
+    &__items {
+        grid-area: items;
+    }
 }
 
 // ─── Show layout (left + right 300px) ────────────────────────────────────────
@@ -176,55 +206,119 @@
         color: $text-muted;
     }
 
-    // Colonne produit
+    // Table à largeurs fixes : la somme des colonnes ne dépasse jamais 100%,
+    // donc la ligne ne peut jamais déborder du tableau (contrairement à
+    // table-layout: auto où le contenu peut forcer les colonnes à s'élargir).
+    table.data-table {
+        table-layout: fixed;
+        width: 100%;
+
+        // Par défaut une cellule de tableau est en content-box : le padding
+        // s'ajoute à la largeur définie (%) au lieu d'en faire partie, donc
+        // la somme réelle des colonnes dépasse 100% et la ligne déborde du
+        // tableau. border-box force le padding à être inclus dans la largeur.
+        th, td {
+            box-sizing: border-box;
+            padding-left: $sp-8;
+            padding-right: $sp-8;
+        }
+
+        td {
+            padding-top: $sp-8;
+            padding-bottom: $sp-8;
+        }
+
+        // Les en-têtes doivent pouvoir passer à la ligne : sinon (nowrap
+        // hérité de .data-table th, plus spécifique que les classes BEM
+        // ci-dessous) le texte déborde visuellement sur la colonne voisine
+        // au lieu de rester dans sa largeur fixe.
+        th {
+            white-space: normal;
+            line-height: 1.25;
+
+            // .data-table th { text-align: left } a une spécificité plus
+            // élevée (classe + élément) que les classes BEM `&__col-*` en
+            // dessous (classe seule) : sans ce niveau de nesting, l'alignement
+            // demandé sur ces colonnes est silencieusement ignoré, et l'en-tête
+            // ne s'aligne plus avec la valeur de la cellule sous elle.
+            &.purchase-items__col-qty   { text-align: center; }
+            &.purchase-items__col-total { text-align: right; }
+        }
+    }
+
+    // Largeurs de colonnes en %, somme = 100% pile : avec table-layout: fixed,
+    // ça garantit que la ligne ne peut jamais dépasser la largeur du tableau
+    // (mélanger % et px peut faire déborder de quelques px selon le navigateur).
     &__col-product {
-        min-width: 220px;
+        width: 30%;
     }
 
     // Colonne quantité
     &__col-qty {
-        width: 100px;
-        text-align: center;
+        width: 8%;
     }
 
     // Colonne prix unit.
     &__col-price {
-        width: 160px;
+        width: 14%;
+    }
+
+    // Colonnes prix de vente détail / gros
+    &__col-sale-price {
+        width: 14%;
     }
 
     // Colonne total
     &__col-total {
-        width: 130px;
-        text-align: right;
+        width: 12%;
     }
 
     // Colonne action (supprimer)
     &__col-action {
-        width: 36px;
+        width: 8%;
     }
 
     // Cellule quantité
     &__qty-input {
-        width: 70px;
+        width: 100%;
+        min-width: 0;
         text-align: center;
-        padding: 5px 6px;
+        padding: 6px 4px;
         border: 1.5px solid $border;
         border-radius: $radius-sm;
-        font-size: 13px;
+        font-size: 12px;
+        box-sizing: border-box;
     }
 
     // Cellule prix
     &__price-input {
-        width: 140px;
-        padding: 5px $sp-8;
+        width: 100%;
+        min-width: 0;
+        padding: 6px 5px;
         border: 1.5px solid $border;
         border-radius: $radius-sm;
-        font-size: 13px;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    // Ligne produit + bouton "créer" (doit pouvoir rétrécir sans forcer la colonne à s'élargir)
+    &__product-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    &__product-search {
+        flex: 1;
+        min-width: 0;
     }
 
     // Champ produit dans ligne
     &__product-input {
-        font-size: 13px;
+        font-size: 12px;
+        min-width: 0;
+        padding: 6px 8px;
     }
 
     // Cellule total (texte)
@@ -808,9 +902,10 @@
     }
 
     .purchase-items {
-        &__col-qty   { width: auto; }
-        &__col-price { width: auto; }
-        &__col-total { width: auto; }
+        &__col-qty        { width: auto; }
+        &__col-price      { width: auto; }
+        &__col-sale-price { width: auto; }
+        &__col-total      { width: auto; }
     }
 }
 

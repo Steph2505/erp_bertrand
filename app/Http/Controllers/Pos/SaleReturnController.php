@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Sales;
+namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
@@ -26,7 +26,7 @@ class SaleReturnController extends Controller
                 ->orderByDesc('return_date')
                 ->paginate(20);
 
-            return view('pages.sales.returns', compact('returns'));
+            return view('pages.pos.returns', compact('returns'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des retours de vente');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -46,10 +46,10 @@ class SaleReturnController extends Controller
                 ->orderByDesc('sale_date')
                 ->get(['id', 'reference', 'customer_id', 'total', 'sale_date']);
 
-            return view('pages.sales.return-create', compact('sale', 'sales'));
+            return view('pages.pos.return-create', compact('sale', 'sales'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du formulaire de retour de vente', ['sale_id' => $request->sale_id]);
-            return redirect()->route('sale-returns.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+            return redirect()->route('pos.returns.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
         }
     }
 
@@ -105,6 +105,6 @@ class SaleReturnController extends Controller
             return back()->withInput()->with('error', 'Une erreur est survenue lors de l\'enregistrement du retour.');
         }
 
-        return redirect()->route('sale-returns.index')->with('success', 'Retour enregistré avec succès.');
+        return redirect()->route('pos.returns.index')->with('success', 'Retour enregistré avec succès.');
     }
 }

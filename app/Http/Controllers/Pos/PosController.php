@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerGroup;
 use App\Models\PosSession;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -29,10 +30,11 @@ class PosController extends Controller
     public function index(): View|RedirectResponse
     {
         try {
-        $customers          = Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
+        $customers          = Customer::with('group')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone', 'customer_group_id']);
         $warehouses         = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $caisses            = \App\Models\Caisse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $categories         = \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $customerGroups     = CustomerGroup::orderBy('name')->get(['id', 'name', 'is_wholesale']);
         $defaultWarehouseId = (int) \App\Models\Setting::get('default_warehouse_id');
         $activeSession      = PosSession::where('user_id', auth()->id())
             ->whereNull('closed_at')
@@ -40,10 +42,60 @@ class PosController extends Controller
             ->latest()
             ->first();
 
-        return view('pages.pos.index', compact('customers', 'warehouses', 'caisses', 'categories', 'defaultWarehouseId', 'activeSession'));
+        return view('pages.pos.index', compact('customers', 'warehouses', 'caisses', 'categories', 'customerGroups', 'defaultWarehouseId', 'activeSession'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page POS');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
+    }
+
+    public function searchItems(Request $request): JsonResponse
+    {
+        try {
+            $q           = $request->get('q', '');
+            $warehouseId = $request->get('warehouse_id') ? (int) $request->get('warehouse_id') : null;
+            $customer    = $request->get('customer_id') ? \App\Models\Customer::with('group')->find($request->get('customer_id')) : null;
+
+            $products = \App\Models\Product::where('is_active', true)
+                ->where('name', 'like', "%$q%")
+                ->when($warehouseId, fn($query) => $query->whereHas('stocks', fn($s) =>
+                    $s->where('warehouse_id', $warehouseId)->where('quantity', '>', 0)
+                ))
+                ->limit(500)
+                ->get(['id', 'name', 'variation', 'selling_price', 'wholesale_price', 'pack_price', 'stock_quantity', 'can_be_packed', 'pack_quantity', 'category_id'])
+                ->map(fn($p) => [
+                    'id'              => $p->id,
+                    'name'            => $p->display_name,
+                    'price'           => $p->priceFor($customer),
+                    'wholesale_price' => $p->wholesale_price !== null ? (float) $p->wholesale_price : null,
+                    'stock'         => $warehouseId ? $p->stockInWarehouse($warehouseId) : $p->stock_quantity,
+                    'can_be_packed' => (bool) $p->can_be_packed,
+                    'pack_quantity' => (int) ($p->pack_quantity ?? 1),
+                    'pack_price'    => (float) ($p->pack_price ?? ($p->selling_price * ($p->pack_quantity ?? 1))),
+                    'image_url'     => $p->getFirstMediaUrl('images') ?: null,
+                    'type'          => 'product',
+                    'category_id'   => $p->category_id,
+                ]);
+
+            $packs = \App\Models\Pack::where('is_active', true)
+                ->where('name', 'like', "%$q%")
+                ->with(['items.product', 'defaultPrice'])
+                ->limit(5)
+                ->get()
+                ->map(fn($p) => [
+                    'id'          => $p->id,
+                    'name'        => $p->name,
+                    'price'       => $p->default_selling_price,
+                    'stock'       => app(PackStockService::class)->availablePackCount($p->id, $warehouseId),
+                    'type'        => 'pack',
+                    'composition' => $p->items->map(fn($i) => "{$i->quantity}× {$i->product->display_name}")->implode(', '),
+                    'image_url'   => $p->getFirstMediaUrl('images') ?: null,
+                ]);
+
+            return response()->json($products->concat($packs)->values());
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la recherche d\'articles pour la vente', ['query' => $request->get('q')]);
+            return response()->json(['message' => 'Une erreur est survenue lors de la recherche.'], 500);
         }
     }
 

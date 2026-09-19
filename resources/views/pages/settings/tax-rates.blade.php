@@ -11,7 +11,7 @@
 <div class="page-header">
     <div class="page-header__title">
         <h2>Taux de TVA</h2>
-        <p>Taux disponibles lors de la création de produits et factures</p>
+        <p>Taux disponibles lors de la création de articles et factures</p>
     </div>
     <div class="page-header__actions">
         <button type="button" @click="addRate()" class="btn btn--primary">
@@ -87,7 +87,7 @@
             <div class="settings-tax__info-list">
                 <div class="settings-tax__info-item">
                     <span class="badge badge--green settings-tax__info-badge">0%</span>
-                    <span>Produits exonérés : pain, farine, médicaments…</span>
+                    <span>Articles exonérés : pain, farine, médicaments…</span>
                 </div>
                 <div class="settings-tax__info-item">
                     <span class="badge badge--yellow settings-tax__info-badge">10%</span>
@@ -95,7 +95,7 @@
                 </div>
                 <div class="settings-tax__info-item">
                     <span class="badge badge--blue settings-tax__info-badge">18%</span>
-                    <span>Taux normal UEMOA : produits et services standard</span>
+                    <span>Taux normal UEMOA : articles et services standard</span>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@
         <div class="card settings-tax__default-card">
             <h3 class="settings-tax__default-title">Taux par défaut</h3>
             <p class="settings-tax__default-text">
-                Le taux marqué <strong>Par défaut</strong> sera pré-sélectionné lors de la création de nouveaux produits et appliqué au rapport fiscal.
+                Le taux marqué <strong>Par défaut</strong> sera pré-sélectionné lors de la création de nouveaux articles et appliqué au rapport fiscal.
             </p>
         </div>
     </div>

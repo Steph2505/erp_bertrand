@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Créer un pack')
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <a href="{{ route('packs.index') }}">Packs</a>
     <span class="sep">/</span>
@@ -12,7 +12,7 @@
 <div class="page-header">
     <div class="page-header__title">
         <h2>Créer un pack</h2>
-        <p>Regroupez des produits — le stock sera déduit en unités à chaque vente.</p>
+        <p>Regroupez des articles — le stock sera déduit en unités à chaque vente.</p>
     </div>
     <a href="{{ route('packs.index') }}" class="btn btn--ghost">← Retour</a>
 </div>
@@ -48,7 +48,7 @@
             <div class="card">
                 <div class="card__header">
                     <h3>Composition du pack</h3>
-                    <span class="composition-hint">Ajoutez les produits et leurs quantités en unités</span>
+                    <span class="composition-hint">Ajoutez les articles et leurs quantités en unités</span>
                 </div>
 
                 @error('items') <div class="alert alert--error"><div class="alert__content">{{ $message }}</div></div> @enderror
@@ -58,7 +58,7 @@
                         <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
                         <input type="text"
                                class="form-control"
-                               placeholder="Rechercher un produit packable..."
+                               placeholder="Rechercher un article packable..."
                                x-model="query"
                                @input.debounce.300ms="search()"
                                @keydown.escape="results = []"
@@ -79,13 +79,13 @@
 
                 <div class="pack-composer">
                     <div class="pack-composer__header">
-                        <span>Produit</span>
+                        <span>Article</span>
                         <span>Qté (unités)</span>
                         <span>Coût unitaire</span>
                         <span></span>
                     </div>
                     <template x-if="items.length === 0">
-                        <div class="pack-composer__empty">Aucun produit ajouté. Recherchez un produit ci-dessus.</div>
+                        <div class="pack-composer__empty">Aucun article ajouté. Recherchez un article ci-dessus.</div>
                     </template>
                     <template x-for="(item, index) in items" :key="index">
                         <div class="pack-composer__row">
@@ -109,7 +109,7 @@
                         </div>
                     </template>
                     <div class="pack-composer__footer">
-                        <span><strong x-text="items.length"></strong> produit(s) — <strong x-text="totalUnits()"></strong> unités au total</span>
+                        <span><strong x-text="items.length"></strong> article(s) — <strong x-text="totalUnits()"></strong> unités au total</span>
                         <span class="total-cost">Coût total pack : <span x-text="calculatedBuyingPrice.toFixed(0) + ' ' + window.CURRENCY"></span></span>
                     </div>
                 </div>
@@ -185,7 +185,7 @@
                 <div class="card__header"><h3>📦 Résumé</h3></div>
                 <div class="pack-summary">
                     <div class="pack-summary__row">
-                        <span class="pack-summary__label">Produits différents</span>
+                        <span class="pack-summary__label">Articles différents</span>
                         <strong x-text="items.length"></strong>
                     </div>
                     <div class="pack-summary__row">

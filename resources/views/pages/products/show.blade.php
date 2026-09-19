@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $product->display_name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">{{ $product->display_name }}</span>
 @endsection
@@ -10,7 +10,7 @@
 <div class="page-header">
     <div class="page-header__title">
         <h2>{{ $product->display_name }}</h2>
-        <p>Fiche produit détaillée</p>
+        <p>Fiche article détaillée</p>
     </div>
     <div class="page-header__actions">
         <a href="{{ route('products.edit', $product) }}" class="btn btn--outline">Modifier</a>
@@ -53,10 +53,6 @@
                         {{ $product->stock_quantity }} {{ $product->unit?->abbreviation ?? 'u.' }}
                         @if($product->isLowStock()) <span class="badge badge--red">Stock faible</span> @endif
                     </p>
-                </div>
-                <div>
-                    <p class="field-label">Péremption</p>
-                    <p>{{ $product->expiry_date ? \App\Helpers\FormatHelper::date($product->expiry_date) : '—' }}</p>
                 </div>
             </div>
 

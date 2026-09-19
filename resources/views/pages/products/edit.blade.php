@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Modifier : ' . $product->display_name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">Modifier</span>
 @endsection
@@ -15,7 +15,7 @@
 </div>
 
 <form method="POST" action="{{ route('products.update', $product) }}" enctype="multipart/form-data"
-      @submit.prevent="window.confirmDialog('Mettre à jour ce produit ?', {confirmLabel:'Mettre à jour'}).then(ok => ok && $el.submit())">
+      @submit.prevent="window.confirmDialog('Mettre à jour ce article ?', {confirmLabel:'Mettre à jour'}).then(ok => ok && $el.submit())">
     @csrf @method('PUT')
     <div class="product-form__layout">
 
@@ -24,13 +24,13 @@
                 <div class="card__header"><h3>Informations générales</h3></div>
                 <div class="form-grid form-grid--2">
                     <div class="form-group form-group--full">
-                        <label>Nom du produit <span class="required">*</span></label>
+                        <label>Nom du article <span class="required">*</span></label>
                         <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}" required>
                     </div>
                     <div class="form-group form-group--full">
                         <label>Variation</label>
                         <input type="text" name="variation" class="form-control @error('variation') form-control--error @enderror" value="{{ old('variation', $product->variation) }}" placeholder="ex: Rouge - XL">
-                        <p class="form-hint">Optionnel — laisser vide si le produit n'a pas de variation. Sera affiché sous la forme « Nom - Variation ».</p>
+                        <p class="form-hint">Optionnel — laisser vide si le article n'a pas de variation. Sera affiché sous la forme « Nom - Variation ».</p>
                         @error('variation') <span class="form-error">{{ $message }}</span> @enderror
                     </div>
                     <div style="display:contents"
@@ -130,14 +130,19 @@
 
             <div class="card">
                 <div class="card__header"><h3>Prix & Taxes</h3></div>
-                <div class="form-grid form-grid--3">
+                <div class="form-grid form-grid--2">
                     <div class="form-group">
                         <label>Prix d'achat <span class="required">*</span></label>
                         <input type="number" name="buying_price" class="form-control" value="{{ old('buying_price', $product->buying_price) }}" step="0.01" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label>Prix de vente <span class="required">*</span></label>
+                        <label>Prix de vente détaillant <span class="required">*</span></label>
                         <input type="number" name="selling_price" class="form-control" value="{{ old('selling_price', $product->selling_price) }}" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prix de vente grossiste</label>
+                        <input type="number" name="wholesale_price" class="form-control" value="{{ old('wholesale_price', $product->wholesale_price) }}" step="0.01" min="0" placeholder="Optionnel">
+                        <p class="form-hint">Appliqué automatiquement aux clients du groupe "Grossiste". Laissé vide : prix détaillant pour tous.</p>
                     </div>
                     <div class="form-group">
                         <label>Taux TVA (%)</label>
@@ -157,10 +162,6 @@
                         <label>Stock minimum</label>
                         <input type="number" name="min_stock_quantity" class="form-control" value="{{ old('min_stock_quantity', $product->min_stock_quantity) }}" min="0">
                     </div>
-                    <div class="form-group">
-                        <label>Date de péremption</label>
-                        <input type="date" name="expiry_date" class="form-control" value="{{ old('expiry_date', $product->expiry_date?->format('Y-m-d')) }}">
-                    </div>
                 </div>
             </div>
         </div>
@@ -171,14 +172,14 @@
                 <div class="product-options">
                     <label class="form-checkbox">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
-                        Produit actif
+                        Article actif
                     </label>
                     <div x-data="{ packable: {{ old('can_be_packed', $product->can_be_packed) ? 'true' : 'false' }} }">
                         <label class="form-checkbox">
                             <input type="checkbox" name="can_be_packed" value="1" x-model="packable" {{ old('can_be_packed', $product->can_be_packed) ? 'checked' : '' }}>
                             <div>
                                 <strong>Vendu en pack / lot</strong>
-                                <p class="pack-option-hint">Activer si ce produit se vend aussi par pack.</p>
+                                <p class="pack-option-hint">Activer si ce article se vend aussi par pack.</p>
                             </div>
                         </label>
                         <div x-show="packable" x-cloak class="pack-option-box">
@@ -208,10 +209,6 @@
                             </div>
                         </div>
                     </div>
-                    <label class="form-checkbox">
-                        <input type="checkbox" name="has_variations" value="1" {{ old('has_variations', $product->has_variations) ? 'checked' : '' }}>
-                        A des variations
-                    </label>
                 </div>
             </div>
 

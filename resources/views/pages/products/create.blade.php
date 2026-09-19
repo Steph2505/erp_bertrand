@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Ajouter un produit')
+@section('title', 'Ajouter un article')
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">Ajouter</span>
 @endsection
@@ -9,13 +9,13 @@
 @section('content')
 <div class="page-header">
     <div class="page-header__title">
-        <h2>Ajouter un produit</h2>
+        <h2>Ajouter un article</h2>
     </div>
     <a href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
 </div>
 
 <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data"
-      @submit.prevent="window.confirmDialog('Enregistrer ce produit ?', {confirmLabel:'Enregistrer'}).then(ok => ok && $el.submit())">
+      @submit.prevent="window.confirmDialog('Enregistrer ce article ?', {confirmLabel:'Enregistrer'}).then(ok => ok && $el.submit())">
     @csrf
     <div class="product-form__layout">
 
@@ -24,14 +24,14 @@
                 <div class="card__header"><h3>Informations générales</h3></div>
                 <div class="form-grid form-grid--2">
                     <div class="form-group form-group--full">
-                        <label>Nom du produit <span class="required">*</span></label>
+                        <label>Nom du article <span class="required">*</span></label>
                         <input type="text" name="name" class="form-control @error('name') form-control--error @enderror" value="{{ old('name') }}" required>
                         @error('name') <span class="form-error">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group form-group--full">
                         <label>Variation</label>
                         <input type="text" name="variation" class="form-control @error('variation') form-control--error @enderror" value="{{ old('variation') }}" placeholder="ex: Rouge - XL">
-                        <p class="form-hint">Optionnel — laisser vide si le produit n'a pas de variation. Sera affiché sous la forme « Nom - Variation ».</p>
+                        <p class="form-hint">Optionnel — laisser vide si le article n'a pas de variation. Sera affiché sous la forme « Nom - Variation ».</p>
                         @error('variation') <span class="form-error">{{ $message }}</span> @enderror
                     </div>
                     <div style="display:contents"
@@ -131,14 +131,19 @@
 
             <div class="card">
                 <div class="card__header"><h3>Prix & Taxes</h3></div>
-                <div class="form-grid form-grid--3">
+                <div class="form-grid form-grid--2">
                     <div class="form-group">
                         <label>Prix d'achat <span class="required">*</span></label>
                         <input type="number" name="buying_price" class="form-control @error('buying_price') form-control--error @enderror" value="{{ old('buying_price', 0) }}" step="0.01" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label>Prix de vente <span class="required">*</span></label>
+                        <label>Prix de vente détaillant <span class="required">*</span></label>
                         <input type="number" name="selling_price" class="form-control @error('selling_price') form-control--error @enderror" value="{{ old('selling_price', 0) }}" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prix de vente grossiste</label>
+                        <input type="number" name="wholesale_price" class="form-control @error('wholesale_price') form-control--error @enderror" value="{{ old('wholesale_price') }}" step="0.01" min="0" placeholder="Optionnel">
+                        <p class="form-hint">Appliqué automatiquement aux clients du groupe "Grossiste". Laissé vide : prix détaillant pour tous.</p>
                     </div>
                     <div class="form-group">
                         <label>Taux TVA (%)</label>
@@ -158,10 +163,6 @@
                         <label>Stock minimum (alerte)</label>
                         <input type="number" name="min_stock_quantity" class="form-control" value="{{ old('min_stock_quantity', 0) }}" min="0">
                     </div>
-                    <div class="form-group">
-                        <label>Date de péremption</label>
-                        <input type="date" name="expiry_date" class="form-control" value="{{ old('expiry_date') }}">
-                    </div>
                 </div>
             </div>
         </div>
@@ -172,14 +173,14 @@
                 <div class="product-options">
                     <label class="form-checkbox">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
-                        Produit actif
+                        Article actif
                     </label>
                     <div x-data="{ packable: {{ old('can_be_packed') ? 'true' : 'false' }} }">
                         <label class="form-checkbox">
                             <input type="checkbox" name="can_be_packed" value="1" x-model="packable" {{ old('can_be_packed') ? 'checked' : '' }}>
                             <div>
                                 <strong>Vendu en pack / lot</strong>
-                                <p class="pack-option-hint">Activer si ce produit se vend aussi par pack (boîte, carton, lot...).</p>
+                                <p class="pack-option-hint">Activer si ce article se vend aussi par pack (boîte, carton, lot...).</p>
                             </div>
                         </label>
                         <div x-show="packable" x-cloak class="pack-option-box">
@@ -209,10 +210,6 @@
                             </div>
                         </div>
                     </div>
-                    <label class="form-checkbox">
-                        <input type="checkbox" name="has_variations" value="1" {{ old('has_variations') ? 'checked' : '' }}>
-                        A des variations (taille, couleur...)
-                    </label>
                 </div>
             </div>
 
@@ -224,7 +221,7 @@
                     </template>
                 </div>
                 <div class="form-group">
-                    <label>Photos du produit</label>
+                    <label>Photos du article</label>
                     <input type="file" name="images[]" class="form-control" accept="image/*" multiple @change="onChange($event)">
                     <p class="form-hint">JPEG, PNG, WebP — Max 2 Mo par image</p>
                 </div>

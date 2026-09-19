@@ -8,7 +8,6 @@
     <div class="page-header__actions">
         <div class="filter-tabs">
             <a href="{{ route('reports.stock') }}" class="filter-tabs__btn">Stock</a>
-            <a href="{{ route('reports.expiry') }}" class="filter-tabs__btn">Péremption</a>
             <a href="{{ route('reports.stock-adjustment') }}" class="filter-tabs__btn filter-tabs__btn--active">Ajustements</a>
         </div>
     </div>
@@ -31,7 +30,7 @@
 <div class="table-wrapper">
     <div class="table-wrapper__header"><strong>Mouvements d'ajustement</strong><span style="font-size:13px;color:#64748B;">{{ $movements->total() }} mouvement(s)</span></div>
     <table class="data-table">
-        <thead><tr><th>Date</th><th>Produit</th><th>Entrepôt</th><th>Type</th><th style="text-align:right">Quantité</th><th>Note</th><th>Par</th></tr></thead>
+        <thead><tr><th>Date</th><th>Article</th><th>Entrepôt</th><th>Type</th><th style="text-align:right">Quantité</th><th>Note</th><th>Par</th></tr></thead>
         <tbody>
             @forelse($movements as $m)
             <tr>

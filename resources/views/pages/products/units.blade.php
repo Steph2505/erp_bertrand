@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Unités de mesure')
 @section('breadcrumb')
-<a href="{{ route('products.index') }}">Produits</a>
+<a href="{{ route('products.index') }}">Articles</a>
 <span class="current">Unités</span>
 @endsection
 
@@ -33,7 +33,7 @@
         <thead><tr>
             <th>Nom</th>
             <th>Abréviation</th>
-            <th>Nb produits</th>
+            <th>Nb articles</th>
             <th class="th-right">Actions</th>
         </tr></thead>
         <tbody>

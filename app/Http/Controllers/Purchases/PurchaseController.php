@@ -91,16 +91,19 @@ class PurchaseController extends Controller
             $warehouses      = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $categories      = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $units           = Unit::orderBy('name')->get(['id', 'name', 'abbreviation']);
+            $accounts        = PaymentAccount::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_default']);
             $products        = Product::where('is_active', true)->orderBy('name')
                 ->with('stocks')
-                ->get(['id', 'name', 'variation', 'buying_price'])
+                ->get(['id', 'name', 'variation', 'buying_price', 'selling_price', 'wholesale_price'])
                 ->map(fn($p) => [
-                    'id'           => $p->id,
-                    'name'         => $p->display_name,
-                    'buying_price' => (float) $p->buying_price,
-                    'stocks'       => $p->stocks->pluck('quantity', 'warehouse_id'),
+                    'id'              => $p->id,
+                    'name'            => $p->display_name,
+                    'buying_price'    => (float) $p->buying_price,
+                    'selling_price'   => (float) $p->selling_price,
+                    'wholesale_price' => $p->wholesale_price !== null ? (float) $p->wholesale_price : null,
+                    'stocks'          => $p->stocks->pluck('quantity', 'warehouse_id'),
                 ]);
-            return view('pages.purchases.create', compact('suppliers', 'warehouses', 'categories', 'units', 'products', 'firstSupplierId'));
+            return view('pages.purchases.create', compact('suppliers', 'warehouses', 'categories', 'units', 'products', 'firstSupplierId', 'accounts'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du formulaire d\'achat');
             return redirect()->route('purchases.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -110,11 +113,14 @@ class PurchaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'supplier_id'    => 'required|exists:suppliers,id',
-            'warehouse_id'   => 'nullable|exists:warehouses,id',
-            'purchase_date'  => 'required|date',
-            'payment_type'   => 'nullable|in:pending,confirmed,paid',
-            'items'          => 'required|array|min:1',
+            'supplier_id'              => 'required|exists:suppliers,id',
+            'warehouse_id'             => 'nullable|exists:warehouses,id',
+            'purchase_date'            => 'required|date',
+            'payment_type'             => 'nullable|in:pending,confirmed,paid',
+            'payment_account_id'       => 'required_if:payment_type,paid|nullable|exists:payment_accounts,id',
+            'items'                    => 'required|array|min:1',
+            'items.*.selling_price'    => 'nullable|numeric|min:0',
+            'items.*.wholesale_price'  => 'nullable|numeric|min:0',
         ]);
 
         if ($blocked = $this->blockIfPeriodLocked($request->purchase_date)) {
@@ -143,6 +149,7 @@ class PurchaseController extends Controller
                 $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
 
                 foreach ($request->items as $item) {
+                    $product      = null;
                     $ispack       = ($item['item_type'] ?? 'product') === 'pack';
                     $unitsPerItem = $ispack ? ($item['units_per_item'] ?? 1) : 1;
                     $lineTotal    = $item['quantity'] * $item['unit_price'];
@@ -162,11 +169,29 @@ class PurchaseController extends Controller
                         'subtotal'       => $lineTotal,
                     ]);
 
+                    if (!$ispack && !empty($item['product_id'])) {
+                        $product = Product::find($item['product_id']);
+                        if ($product) {
+                            $priceUpdates = [];
+                            if (array_key_exists('selling_price', $item) && $item['selling_price'] !== null && $item['selling_price'] !== ''
+                                && (float) $item['selling_price'] !== (float) $product->selling_price) {
+                                $priceUpdates['selling_price'] = (float) $item['selling_price'];
+                            }
+                            if (array_key_exists('wholesale_price', $item) && $item['wholesale_price'] !== null && $item['wholesale_price'] !== ''
+                                && (float) $item['wholesale_price'] !== (float) $product->wholesale_price) {
+                                $priceUpdates['wholesale_price'] = (float) $item['wholesale_price'];
+                            }
+                            if (!empty($priceUpdates)) {
+                                $product->update($priceUpdates);
+                            }
+                        }
+                    }
+
                     if ($isConfirm) {
                         if ($ispack) {
                             $this->stockService->addStockForPurchase($item['pack_id'], $item['quantity'], $reference, $warehouseId);
                         } else {
-                            $product = \App\Models\Product::find($item['product_id']);
+                            $product = $product ?? Product::find($item['product_id']);
                             if ($product) {
                                 $this->productRepo->adjustStock($product, $item['quantity'], 'purchase', $reference, null, null, $warehouseId, (float) $item['unit_price']);
                             }
@@ -181,7 +206,8 @@ class PurchaseController extends Controller
                 ]);
 
                 if ($isPaid) {
-                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', null, $request->purchase_date);
+                    $accountId = $request->payment_account_id ? (int) $request->payment_account_id : null;
+                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', $accountId, $request->purchase_date);
                 }
             });
         } catch (Throwable $e) {

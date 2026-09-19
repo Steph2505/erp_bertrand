@@ -47,7 +47,7 @@ class PaymentAccountController extends Controller
                     'method'    => $p->payment_method,
                     'debit'     => 0,
                     'credit'    => (float) $p->amount,
-                    'link'      => $p->payable ? route('sales.show', $p->payable_id) : null,
+                    'link'      => $p->payable ? route('pos.receipt', $p->payable_id) : null,
                 ]);
 
             // Paiements liés à des achats (décaissements)

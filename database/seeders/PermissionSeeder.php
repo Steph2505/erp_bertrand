@@ -17,7 +17,6 @@ class PermissionSeeder extends Seeder
             'manage settings',
             'manage products',
             'manage purchases',
-            'manage sales',
             'manage pos',
             'manage stock',
             'manage customers',
@@ -33,11 +32,11 @@ class PermissionSeeder extends Seeder
         }
 
         $map = [
-            'Admin'      => ['manage products', 'manage purchases', 'manage sales', 'manage pos', 'manage stock', 'manage customers', 'manage suppliers', 'manage expenses', 'view reports', 'manage accounts', 'receive notifications'],
-            'Caissier'   => ['manage sales', 'manage pos', 'manage customers', 'view reports'],
+            'Admin'      => ['manage products', 'manage purchases', 'manage pos', 'manage stock', 'manage customers', 'manage suppliers', 'manage expenses', 'view reports', 'manage accounts', 'receive notifications'],
+            'Caissier'   => ['manage pos', 'manage customers', 'view reports'],
             'Magasinier' => ['manage products', 'manage purchases', 'manage stock', 'manage suppliers', 'view reports'],
             'Comptable'  => ['manage purchases', 'manage expenses', 'manage accounts', 'manage suppliers', 'view reports'],
-            'Commercial' => ['manage sales', 'manage pos', 'manage products', 'manage customers', 'view reports'],
+            'Commercial' => ['manage pos', 'manage products', 'manage customers', 'view reports'],
         ];
 
         foreach ($map as $roleName => $perms) {

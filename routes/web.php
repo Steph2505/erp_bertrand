@@ -14,13 +14,11 @@ use App\Http\Controllers\Pos\PosSessionController;
 use App\Http\Controllers\Products\CategoryController;
 use App\Http\Controllers\Products\PackController;
 use App\Http\Controllers\Products\UnitController;
-use App\Http\Controllers\Sales\QuotationController;
-use App\Http\Controllers\Sales\SaleReturnController;
+use App\Http\Controllers\Pos\SaleReturnController;
 use App\Http\Controllers\Products\ProductController;
 use App\Http\Controllers\Pos\CaisseController;
 use App\Http\Controllers\Purchases\PurchaseController;
 use App\Http\Controllers\Purchases\PurchaseReturnController;
-use App\Http\Controllers\Sales\SaleController;
 use App\Http\Controllers\Settings\SettingController;
 use App\Http\Controllers\Stock\StockAdjustmentController;
 use App\Http\Controllers\Stock\StockStatusController;
@@ -114,49 +112,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/',      [PurchaseReturnController::class, 'store'])->name('store');
     });
 
-    // ── Ventes ────────────────────────────────────────────────────────────────
-    // L'endpoint de recherche est aussi utilisé par le POS
-    Route::get('/sales/api/search', [SaleController::class, 'searchItems'])->name('sales.search-items');
-    Route::prefix('sales')->name('sales.')->middleware('permission:manage sales')->group(function () {
-        Route::get('/',                  [SaleController::class, 'index'])->name('index');
-        Route::get('/api/list',          [SaleController::class, 'apiIndex'])->name('api.list');
-        Route::get('/create',            [SaleController::class, 'create'])->name('create');
-        Route::post('/',                 [SaleController::class, 'store'])->name('store');
-        Route::get('/{sale}/edit',       [SaleController::class, 'edit'])->name('edit');
-        Route::put('/{sale}',            [SaleController::class, 'update'])->name('update');
-        Route::get('/{sale}',            [SaleController::class, 'show'])->name('show');
-        Route::patch('/{sale}/confirm',  [SaleController::class, 'confirm'])->name('confirm');
-        Route::post('/{sale}/pay',       [SaleController::class, 'pay'])->name('pay');
-        Route::delete('/{sale}',         [SaleController::class, 'destroy'])->name('destroy');
-    });
-    // ── Retours ventes ────────────────────────────────────────────────────────
-    Route::prefix('sale-returns')->name('sale-returns.')->middleware('permission:manage sales')->group(function () {
-        Route::get('/',        [SaleReturnController::class, 'index'])->name('index');
-        Route::get('/create',  [SaleReturnController::class, 'create'])->name('create');
-        Route::post('/',       [SaleReturnController::class, 'store'])->name('store');
-    });
-
-    // ── Devis ─────────────────────────────────────────────────────────────────
-    Route::prefix('quotations')->name('quotations.')->middleware('permission:manage sales')->group(function () {
-        Route::get('/',                         [QuotationController::class, 'index'])->name('index');
-        Route::get('/api/list',                 [QuotationController::class, 'apiIndex'])->name('api.list');
-        Route::get('/create',                   [QuotationController::class, 'create'])->name('create');
-        Route::post('/',                        [QuotationController::class, 'store'])->name('store');
-        Route::get('/{quotation}',              [QuotationController::class, 'show'])->name('show');
-        Route::patch('/{quotation}/status',     [QuotationController::class, 'updateStatus'])->name('status');
-        Route::post('/{quotation}/convert',     [QuotationController::class, 'convertToSale'])->name('convert');
-        Route::delete('/{quotation}',           [QuotationController::class, 'destroy'])->name('destroy');
-    });
-
     // ── POS ───────────────────────────────────────────────────────────────────
     Route::prefix('pos')->name('pos.')->middleware('permission:manage pos')->group(function () {
         Route::get('/',                    [PosController::class, 'index'])->name('index');
+        Route::get('/api/search',          [PosController::class, 'searchItems'])->name('search-items');
         Route::post('/store',              [PosController::class, 'store'])->name('store');
         Route::get('/list',                [PosController::class, 'list'])->name('list');
         Route::get('/api/list',            [PosController::class, 'apiList'])->name('api.list');
         Route::get('/ref/{reference}',     [PosController::class, 'showByReference'])->name('show-ref');
         Route::get('/{sale}/receipt',      [PosController::class, 'receipt'])->name('receipt');
         Route::post('/{sale}/pay',         [PosController::class, 'pay'])->name('pay');
+        // Retours de vente
+        Route::get('/returns',             [SaleReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/create',      [SaleReturnController::class, 'create'])->name('returns.create');
+        Route::post('/returns',            [SaleReturnController::class, 'store'])->name('returns.store');
         // Sessions caisse
         Route::get('/sessions',            [PosSessionController::class, 'index'])->name('sessions.index');
         Route::get('/sessions/api/list',   [PosSessionController::class, 'apiIndex'])->name('sessions.api.list');
@@ -240,7 +209,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/tax',                'tax')->name('tax');
         Route::get('/contacts',           'contacts')->name('contacts');
         Route::get('/stock',              'stock')->name('stock');
-        Route::get('/expiry',             'expiry')->name('expiry');
         Route::get('/stock-adjustment',   'stockAdjustment')->name('stock-adjustment');
         Route::get('/product-purchase',   'productPurchase')->name('product-purchase');
         Route::get('/product-sale',       'productSale')->name('product-sale');
@@ -288,10 +256,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // ── Impression ───────────────────────────────────────────────────────────
-    Route::get('/print/sale/{sale}', function (\App\Models\Sale $sale) {
-        return view('print.sale', ['sale' => $sale->load(['customer', 'warehouse', 'items', 'createdBy'])]);
-    })->name('print.sale');
-
     Route::get('/print/purchase/{purchase}', function (\App\Models\Purchase $purchase) {
         return view('print.purchase', ['purchase' => $purchase->load(['supplier', 'warehouse', 'items', 'createdBy'])]);
     })->name('print.purchase');

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Retours ventes')
-@section('breadcrumb')<a href="{{ route('sales.index') }}">Ventes</a> <span class="current">Retours</span>@endsection
+@section('breadcrumb')<a href="{{ route('pos.list') }}">Historique POS</a> <span class="current">Retours</span>@endsection
 
 @section('content')
 <div class="page-header">
@@ -9,7 +9,7 @@
         <p>{{ $returns->total() }} retour(s) enregistré(s)</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('sale-returns.create') }}" class="btn btn--primary">
+        <a href="{{ route('pos.returns.create') }}" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouveau retour
         </a>
@@ -31,7 +31,7 @@
             <tr>
                 <td class="sale-returns__ref">{{ $ret->reference }}</td>
                 <td>
-                    <a href="{{ route('sales.show', $ret->sale) }}" class="sale-returns__sale-link">
+                    <a href="{{ route('pos.receipt', $ret->sale) }}" class="sale-returns__sale-link">
                         {{ $ret->sale->reference }}
                     </a>
                 </td>

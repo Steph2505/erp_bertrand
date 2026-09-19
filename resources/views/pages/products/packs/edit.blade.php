@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Modifier : ' . $pack->name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <a href="{{ route('packs.index') }}">Packs</a>
     <span class="sep">/</span>
@@ -60,7 +60,7 @@
                 <div class="product-autocomplete product-autocomplete--mb" x-data="productSearch()">
                     <div class="input-group">
                         <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
-                        <input type="text" class="form-control" placeholder="Ajouter un produit packable..." x-model="query" @input.debounce.300ms="search()" @keydown.escape="results = []" autocomplete="off">
+                        <input type="text" class="form-control" placeholder="Ajouter un article packable..." x-model="query" @input.debounce.300ms="search()" @keydown.escape="results = []" autocomplete="off">
                     </div>
                     <div class="product-autocomplete__results" x-show="results.length > 0">
                         <template x-for="p in results" :key="p.id">
@@ -74,10 +74,10 @@
 
                 <div class="pack-composer">
                     <div class="pack-composer__header">
-                        <span>Produit</span><span>Qté (unités)</span><span>Coût unitaire</span><span></span>
+                        <span>Article</span><span>Qté (unités)</span><span>Coût unitaire</span><span></span>
                     </div>
                     <template x-if="items.length === 0">
-                        <div class="pack-composer__empty">Ajoutez des produits ci-dessus.</div>
+                        <div class="pack-composer__empty">Ajoutez des articles ci-dessus.</div>
                     </template>
                     <template x-for="(item, index) in items" :key="index">
                         <div class="pack-composer__row">
@@ -95,7 +95,7 @@
                         </div>
                     </template>
                     <div class="pack-composer__footer">
-                        <span><strong x-text="items.length"></strong> produit(s)</span>
+                        <span><strong x-text="items.length"></strong> article(s)</span>
                         <span class="total-cost">Coût : <span x-text="calculatedBuyingPrice.toFixed(0) + ' ' + window.CURRENCY"></span></span>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                 <div class="card__header"><h3>📦 Résumé</h3></div>
                 <div class="pack-summary">
                     <div class="pack-summary__row">
-                        <span class="pack-summary__label">Produits différents</span>
+                        <span class="pack-summary__label">Articles différents</span>
                         <strong x-text="items.length"></strong>
                     </div>
                     <div class="pack-summary__row">

@@ -30,7 +30,7 @@
             <div class="table-wrapper__header"><strong>Articles reçus</strong></div>
             <table class="data-table">
                 <thead><tr>
-                    <th>Produit</th>
+                    <th>Article</th>
                     <th class="purchase-show__th-qty">Qté</th>
                     <th>Prix unit.</th>
                     <th class="purchase-show__th-subtotal">Sous-total</th>

@@ -51,7 +51,7 @@
     </div>
     <div class="stat-card">
         <div class="stat-card__info">
-            <div class="stat-card__label">Coût des produits vendus</div>
+            <div class="stat-card__label">Coût des articles vendus</div>
             <div class="stat-card__value" style="color:#1749B3;">{{ \App\Helpers\FormatHelper::money($cogs) }}</div>
             <div class="stat-card__trend stat-card__trend--flat">Prix d'achat des articles vendus (POS + Vente)</div>
         </div>
@@ -63,7 +63,7 @@
         <div class="stat-card__info">
             <div class="stat-card__label">Bénéfice brut</div>
             <div class="stat-card__value" style="color:{{ $grossProfit >= 0 ? '#12864B' : '#C4231A' }}">{{ \App\Helpers\FormatHelper::money($grossProfit) }}</div>
-            <div class="stat-card__trend stat-card__trend--flat">CA – Coût des produits vendus</div>
+            <div class="stat-card__trend stat-card__trend--flat">CA – Coût des articles vendus</div>
         </div>
         <div class="stat-card__icon stat-card__icon--{{ $grossProfit >= 0 ? 'green' : 'red' }}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/></svg>
@@ -85,7 +85,7 @@
 
     {{-- Graphique évolution --}}
     <div class="table-wrapper" style="padding:20px;">
-        <strong style="display:block;margin-bottom:16px;">Ventes et bénéfice par produits vendus (POS + Vente) — évolution sur 12 mois</strong>
+        <strong style="display:block;margin-bottom:16px;">Ventes et bénéfice par articles vendus (POS + Vente) — évolution sur 12 mois</strong>
         <canvas id="plChart" height="100"></canvas>
     </div>
 
@@ -121,7 +121,7 @@
         <thead><tr>
             <th>Mois</th>
             <th style="text-align:right;color:#12864B;">CA</th>
-            <th style="text-align:right;color:#1749B3;">Coût produits vendus</th>
+            <th style="text-align:right;color:#1749B3;">Coût articles vendus</th>
             <th style="text-align:right;color:#C99A05;">Bénéfice</th>
             <th style="text-align:right;color:#B45309;">Dépenses</th>
             <th style="text-align:right">Résultat net</th>
@@ -155,7 +155,7 @@ new Chart(document.getElementById('plChart'), {
         labels: @json(collect($monthly)->pluck('label')),
         datasets: [
             { type: 'bar', label: 'Ventes (CA)', data: @json(collect($monthly)->pluck('revenue')), backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 4 },
-            { type: 'bar', label: 'Coût produits vendus', data: @json(collect($monthly)->pluck('cogs')), backgroundColor: 'rgba(59,130,246,.65)', borderRadius: 4 },
+            { type: 'bar', label: 'Coût articles vendus', data: @json(collect($monthly)->pluck('cogs')), backgroundColor: 'rgba(59,130,246,.65)', borderRadius: 4 },
             { type: 'bar', label: 'Dépenses', data: @json(collect($monthly)->pluck('expenses')), backgroundColor: 'rgba(245,158,11,.65)', borderRadius: 4 },
             { type: 'line', label: 'Bénéfice', data: @json(collect($monthly)->pluck('profit')), borderColor: '#C99A05', backgroundColor: 'rgba(201,154,5,.1)', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#C99A05', tension: .3, fill: false },
         ]

@@ -7,8 +7,8 @@
     <div class="page-header__title"><h2>Ventes par article</h2><p>CA par article sur la période</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn filter-tabs__btn--active">Vente produit</a>
-            <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn">Achat produit</a>
+            <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn filter-tabs__btn--active">Vente article</a>
+            <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn">Achat article</a>
         </div>
     </div>
 </div>
@@ -51,7 +51,7 @@
             <tr>
                 <td style="color:#64748B;font-weight:600;">#{{ $i+1 }}</td>
                 <td><strong>{{ $item->item_name }}</strong></td>
-                <td><span class="badge badge--{{ $item->item_type==='pack'?'pack':'gray' }}">{{ $item->item_type==='pack'?'Pack':'Produit' }}</span></td>
+                <td><span class="badge badge--{{ $item->item_type==='pack'?'pack':'gray' }}">{{ $item->item_type==='pack'?'Pack':'Article' }}</span></td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($item->total_qty) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ \App\Helpers\FormatHelper::money($item->avg_price) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ $item->nb_sales }}</td>

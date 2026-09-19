@@ -106,7 +106,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Produit</th>
+                        <th>Article</th>
                         <th class="purchase-items__col-qty">Qté</th>
                         <th class="purchase-items__col-price">Prix unit. ({{ $currency }})</th>
                         <th class="purchase-items__col-total">Total</th>
@@ -125,7 +125,7 @@
                                            x-model="item._search"
                                            @focus="item._open=true"
                                            @input="item._open=true"
-                                           :placeholder="item.item_name || 'Rechercher un produit...'"
+                                           :placeholder="item.item_name || 'Rechercher un article...'"
                                            class="form-control purchase-items__product-input" autocomplete="off">
                                     <input type="hidden" :name="'items['+idx+'][item_type]'" value="product">
                                     <input type="hidden" :name="'items['+idx+'][pack_id]'" value="">
@@ -134,7 +134,7 @@
                                     <div x-show="item._open" x-transition class="autocomplete-dropdown autocomplete-dropdown--wide">
                                         <template x-if="availableForRow(idx).length === 0">
                                             <div class="autocomplete-dropdown__empty"
-                                                 x-text="selectedWarehouse ? 'Aucun produit disponible.' : 'Sélectionnez d\'abord un entrepôt.'">
+                                                 x-text="selectedWarehouse ? 'Aucun article disponible.' : 'Sélectionnez d\'abord un entrepôt.'">
                                             </div>
                                         </template>
                                         <template x-for="p in availableForRow(idx)" :key="p.id">
@@ -315,7 +315,7 @@ function purchaseEditForm() {
             if (!this.selectedSupplier) { window.toast('Le fournisseur est obligatoire.', 'error'); return; }
             if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
             const incomplete = this.items.filter(i => !i.product_id);
-            if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de produit sélectionné.', 'error'); return; }
+            if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de article sélectionné.', 'error'); return; }
             document.getElementById('action-input').value = action;
             document.getElementById('purchase-form').submit();
         }

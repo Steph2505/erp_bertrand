@@ -17,7 +17,7 @@ class CustomerController extends Controller
     {
         try {
             $customers = Customer::with('group')
-                ->withSum(['sales' => fn($q) => $q->where('is_pos', false)], 'total')
+                ->withSum(['sales' => fn($q) => $q->where('is_pos', true)], 'total')
                 ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
                 ->when($request->group_id, fn($q, $id) => $q->where('customer_group_id', $id))
                 ->latest()
@@ -35,13 +35,13 @@ class CustomerController extends Controller
     {
         try {
             $sales = $customer->sales()
-                ->where('is_pos', false)
+                ->where('is_pos', true)
                 ->withCount('items')
                 ->orderByDesc('sale_date')
                 ->orderByDesc('id')
                 ->paginate(20);
 
-            $stats = $customer->sales()->where('is_pos', false)->selectRaw('
+            $stats = $customer->sales()->where('is_pos', true)->selectRaw('
                 COUNT(*) as total_count,
                 COALESCE(SUM(total), 0) as total_ca,
                 COALESCE(SUM(CASE WHEN payment_status = \'paid\' THEN total ELSE 0 END), 0) as total_paid,
@@ -82,9 +82,15 @@ class CustomerController extends Controller
         }
 
         if ($request->wantsJson()) {
+            $customer->load('group');
             return response()->json([
                 'success'  => true,
-                'customer' => ['id' => $customer->id, 'name' => $customer->name, 'phone' => $customer->phone],
+                'customer' => [
+                    'id'           => $customer->id,
+                    'name'         => $customer->name,
+                    'phone'        => $customer->phone,
+                    'is_wholesale' => (bool) $customer->group?->is_wholesale,
+                ],
             ]);
         }
 

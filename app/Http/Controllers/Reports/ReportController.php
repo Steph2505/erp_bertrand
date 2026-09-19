@@ -232,39 +232,6 @@ class ReportController extends Controller
         }
     }
 
-    // ── Péremption ────────────────────────────────────────────────────────────
-
-    public function expiry(Request $request): View|RedirectResponse
-    {
-        try {
-            $products = Product::whereNotNull('expiry_date')
-                ->with(['category', 'unit'])
-                ->orderBy('expiry_date')
-                ->get()
-                ->map(function ($p) {
-                    $days = (int) now()->startOfDay()->diffInDays($p->expiry_date, false);
-                    return (object) [
-                        'name'        => $p->display_name,
-                        'category'    => $p->category?->name,
-                        'unit'        => $p->unit?->abbreviation,
-                        'stock'       => $p->stock_quantity,
-                        'expiry_date' => $p->expiry_date,
-                        'days_left'   => $days,
-                        'status'      => $days < 0 ? 'expired' : ($days <= 30 ? 'warning' : 'ok'),
-                    ];
-                });
-
-            $expired = $products->where('status', 'expired')->count();
-            $warning = $products->where('status', 'warning')->count();
-            $ok      = $products->where('status', 'ok')->count();
-
-            return view('pages.reports.expiry', compact('products', 'expired', 'warning', 'ok'));
-        } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors du chargement du rapport de péremption');
-            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement du rapport.');
-        }
-    }
-
     // ── Ajustements de stock ──────────────────────────────────────────────────
 
     public function stockAdjustment(Request $request): View|RedirectResponse

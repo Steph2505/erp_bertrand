@@ -40,7 +40,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // ─── Application (auth requise) ───────────────────────────────────────────────
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
 
     Route::get('/',              [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'apiStats'])->name('dashboard.stats');
@@ -226,7 +226,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/',         [UserController::class, 'store'])->name('store');
         Route::get('/{user}',    [UserController::class, 'show'])->name('show');
         Route::put('/{user}',    [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        Route::patch('/{user}/toggle', [UserController::class, 'toggleActive'])->name('toggle');
     });
     Route::get('/profile',   [UserController::class, 'profile'])->name('users.profile');
     Route::put('/profile',   [UserController::class, 'updateProfile'])->name('users.profile.update');

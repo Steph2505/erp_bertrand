@@ -21,7 +21,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Confirmer
         </button>
-        <button type="button" @click="submitForm('paid')" class="btn btn--primary" :disabled="items.length === 0">
+        <button type="button" @click="window.confirmDialog('Confirmer le paiement de cet achat ?', {confirmLabel:'Payer'}).then(ok => ok && submitForm('paid'))" class="btn btn--primary" :disabled="items.length === 0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Payé
         </button>
@@ -236,6 +236,10 @@
                 <label>Nom <span class="required">*</span></label>
                 <input type="text" x-model="newProductName" @keydown.enter.prevent="quickCreateProduct(quickCreateRowIdx)" class="form-control" placeholder="Nom du article">
             </div>
+            <div class="form-group">
+                <label>Variation</label>
+                <input type="text" x-model="newProductVariation" @keydown.enter.prevent="quickCreateProduct(quickCreateRowIdx)" class="form-control" placeholder="ex: Rouge - XL (optionnel)">
+            </div>
             <div class="form-grid form-grid--2">
                 <div class="form-group">
                     <label>Prix d'achat ({{ $currency }}) <span class="required">*</span></label>
@@ -297,7 +301,7 @@ function purchaseForm() {
         paymentAccountId: (accounts.find(a => a.is_default) ?? accounts[0])?.id ?? '',
 
         quickCreateRowIdx: null,
-        newProductName: '', newProductBuying: 0, newProductSelling: 0, newProductWholesale: null,
+        newProductName: '', newProductVariation: '', newProductBuying: 0, newProductSelling: 0, newProductWholesale: null,
         newProductCategoryId: {{ $categories->first()->id ?? 'null' }},
         newProductUnitId: {{ $units->first()->id ?? 'null' }},
         creatingProduct: false, createProductError: '',
@@ -382,6 +386,7 @@ function purchaseForm() {
         openQuickCreate(idx) {
             this.quickCreateRowIdx   = idx;
             this.newProductName      = this.items[idx]._search;
+            this.newProductVariation = '';
             this.newProductBuying    = 0;
             this.newProductSelling   = 0;
             this.newProductWholesale = null;
@@ -404,6 +409,7 @@ function purchaseForm() {
                     },
                     body: JSON.stringify({
                         name: this.newProductName,
+                        variation: this.newProductVariation.trim() || null,
                         buying_price: this.newProductBuying || 0,
                         selling_price: this.newProductSelling || 0,
                         wholesale_price: this.newProductWholesale || null,

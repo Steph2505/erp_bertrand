@@ -51,7 +51,7 @@
                         :max="selectedSale?.total ?? ''"
                         x-model.number="returnAmount" required placeholder="Montant à rembourser">
                     <template x-if="selectedSale && returnAmount > selectedSale.total">
-                        <span class="form-error">Ne peut pas dépasser {{ '{{ fmt(selectedSale.total) }}' }}</span>
+                        <span class="form-error" x-text="'Ne peut pas dépasser ' + fmt(selectedSale.total)"></span>
                     </template>
                 </div>
             </div>

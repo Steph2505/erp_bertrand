@@ -32,7 +32,7 @@ class LoginController extends Controller
         ]);
 
         try {
-            if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            if (Auth::attempt([...$credentials, 'is_active' => true], $request->boolean('remember'))) {
                 $request->session()->regenerate();
                 Auth::user()->update(['last_login_at' => now()]);
                 return redirect()->intended(route('dashboard'));

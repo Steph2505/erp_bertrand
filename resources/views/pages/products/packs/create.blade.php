@@ -51,7 +51,7 @@
                     <span class="composition-hint">Ajoutez les articles et leurs quantités en unités</span>
                 </div>
 
-                @error('items') <div class="alert alert--error"><div class="alert__content">{{ $message }}</div></div> @enderror
+                @error('items') <div class="alert alert--danger"><div class="alert__content">{{ $message }}</div></div> @enderror
 
                 <div class="product-autocomplete product-autocomplete--mb" x-data="productSearch()">
                     <div class="input-group">

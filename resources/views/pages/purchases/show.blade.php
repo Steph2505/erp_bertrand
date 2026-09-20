@@ -215,16 +215,6 @@
                     <span class="form-error" x-show="errors.amount" x-text="errors.amount"></span>
                 </div>
                 <div class="form-group">
-                    <label>Mode de paiement <span class="required">*</span></label>
-                    <select x-model="mode" class="form-select" :class="{'form-control--error': errors.mode}">
-                        <option value="cash">Espèces</option>
-                        <option value="bank_transfer">Virement</option>
-                        <option value="mobile_money">Mobile Money</option>
-                        <option value="check">Chèque</option>
-                    </select>
-                    <span class="form-error" x-show="errors.mode" x-text="errors.mode"></span>
-                </div>
-                <div class="form-group" style="grid-column:1/-1">
                     <label>Compte débité <span class="required">*</span></label>
                     <select x-model="accountId" class="form-select" :class="{'form-control--error': errors.accountId}">
                         @foreach($accounts as $acc)
@@ -253,15 +243,14 @@
 function payForm(url) {
     return {
         open: false, loading: false, success: '', error: '',
-        amount: '{{ number_format($purchase->amount_due, 0, '.', '') }}', mode: 'cash', accountId: '{{ $accounts->first()->id ?? '' }}',
-        errors: { amount: '', mode: '', accountId: '' },
+        amount: '{{ number_format($purchase->amount_due, 0, '.', '') }}', accountId: '{{ $accounts->first()->id ?? '' }}',
+        errors: { amount: '', accountId: '' },
         async submit() {
             this.error = ''; this.success = '';
-            this.errors = { amount: '', mode: '', accountId: '' };
+            this.errors = { amount: '', accountId: '' };
             if (!this.amount)    this.errors.amount    = 'Le montant est obligatoire.';
-            if (!this.mode)      this.errors.mode      = 'Le mode de paiement est obligatoire.';
             if (!this.accountId) this.errors.accountId = 'Le compte de paiement est obligatoire.';
-            if (this.errors.amount || this.errors.mode || this.errors.accountId) return;
+            if (this.errors.amount || this.errors.accountId) return;
             const ok = await window.confirmDialog('Enregistrer ce paiement de ' + this.amount + ' ' + window.CURRENCY + ' ?', { confirmLabel: 'Enregistrer' });
             if (!ok) return;
             this.loading = true;
@@ -274,7 +263,6 @@ function payForm(url) {
                 },
                 body: JSON.stringify({
                     amount: this.amount,
-                    payment_mode: this.mode,
                     payment_account_id: this.accountId || null,
                 }),
             })
@@ -287,7 +275,6 @@ function payForm(url) {
                     setTimeout(() => window.location.reload(), 900);
                 } else if (data.errors) {
                     this.errors.amount    = data.errors.amount?.[0]    ?? '';
-                    this.errors.mode      = data.errors.payment_mode?.[0] ?? '';
                     this.errors.accountId = data.errors.payment_account_id?.[0] ?? '';
                     this.error = data.message ?? 'Veuillez corriger les erreurs.';
                     window.toast(this.error, 'error');

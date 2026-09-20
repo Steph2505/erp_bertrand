@@ -49,7 +49,10 @@
 </div>
 
 {{-- ──────────── MODAL DE CONFIRMATION GLOBAL ──────────── --}}
-<div class="modal-overlay" x-data x-show="$store.confirmDialog.visible" x-cloak x-transition>
+{{-- z-index rehaussé : ce modal doit toujours s'afficher au-dessus d'un
+     autre modal déjà ouvert (ex: confirmation de paiement dans la modale
+     "Régler cet achat"), sinon il reste invisible derrière lui. --}}
+<div class="modal-overlay modal-overlay--confirm" x-data x-show="$store.confirmDialog.visible" x-cloak x-transition>
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3 x-text="$store.confirmDialog.title"></h3>

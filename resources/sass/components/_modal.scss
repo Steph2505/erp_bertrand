@@ -13,6 +13,13 @@
     backdrop-filter: blur(2px);
 }
 
+// Le modal de confirmation global doit toujours s'afficher au-dessus d'un
+// autre modal déjà ouvert (même z-index sinon, donc masqué par le modal
+// ouvert avant lui puisque plus tôt dans le DOM).
+.modal-overlay--confirm {
+    z-index: 1100;
+}
+
 .modal {
     background: $bg-white;
     border-radius: $radius-lg;

@@ -49,7 +49,10 @@
 </div>
 
 {{-- ──────────── MODAL DE CONFIRMATION GLOBAL ──────────── --}}
-<div class="modal-overlay" x-data x-show="$store.confirmDialog.visible" x-cloak x-transition>
+{{-- z-index rehaussé : ce modal doit toujours s'afficher au-dessus d'un
+     autre modal déjà ouvert (ex: confirmation de paiement dans la modale
+     "Régler cet achat"), sinon il reste invisible derrière lui. --}}
+<div class="modal-overlay modal-overlay--confirm" x-data x-show="$store.confirmDialog.visible" x-cloak x-transition>
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3 x-text="$store.confirmDialog.title"></h3>
@@ -189,7 +192,7 @@
             {{-- Recherche --}}
             <div class="topbar__search">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
-                <input type="text" placeholder="Rechercher produit, client, facture..." id="global-search">
+                <input type="text" placeholder="Rechercher article, client, facture..." id="global-search">
             </div>
 
             <div class="topbar__right">

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $pack->name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Produits</a>
+    <a href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <a href="{{ route('packs.index') }}">Packs</a>
     <span class="sep">/</span>
@@ -26,12 +26,12 @@
         <div class="card">
             <div class="card__header">
                 <h3>Composition du pack</h3>
-                <span class="badge badge--pack">{{ $pack->items->count() }} produit(s)</span>
+                <span class="badge badge--pack">{{ $pack->items->count() }} article(s)</span>
             </div>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Produit</th>
+                        <th>Article</th>
                         <th>Unités incluses</th>
                         <th>Stock actuel</th>
                         <th>Packs faisables</th>
@@ -76,7 +76,7 @@
             <div class="card__header"><h3>Historique des ventes de ce pack</h3></div>
             <table class="data-table">
                 <thead>
-                    <tr><th>Produit impacté</th><th>Mouvement</th><th>Référence</th><th>Date</th></tr>
+                    <tr><th>Article impacté</th><th>Mouvement</th><th>Référence</th><th>Date</th></tr>
                 </thead>
                 <tbody>
                     @php

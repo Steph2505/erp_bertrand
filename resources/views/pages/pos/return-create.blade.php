@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Nouveau retour')
 @section('breadcrumb')
-<a href="{{ route('sales.index') }}">Ventes</a>
-<a href="{{ route('sale-returns.index') }}">Retours</a>
+<a href="{{ route('pos.list') }}">Historique POS</a>
+<a href="{{ route('pos.returns.index') }}">Retours</a>
 <span class="current">Nouveau retour</span>
 @endsection
 
@@ -15,7 +15,7 @@
 
 <div class="sale-layout" x-data="returnForm()">
     <div class="card card--padded-lg">
-        <form method="POST" action="{{ route('sale-returns.store') }}">
+        <form method="POST" action="{{ route('pos.returns.store') }}">
             @csrf
 
             <div class="form-group">
@@ -51,7 +51,7 @@
                         :max="selectedSale?.total ?? ''"
                         x-model.number="returnAmount" required placeholder="Montant à rembourser">
                     <template x-if="selectedSale && returnAmount > selectedSale.total">
-                        <span class="form-error">Ne peut pas dépasser {{ '{{ fmt(selectedSale.total) }}' }}</span>
+                        <span class="form-error" x-text="'Ne peut pas dépasser ' + fmt(selectedSale.total)"></span>
                     </template>
                 </div>
             </div>
@@ -78,7 +78,7 @@
             @endif
 
             <div class="return-create__actions">
-                <a href="{{ route('sale-returns.index') }}" class="btn btn--light">Annuler</a>
+                <a href="{{ route('pos.returns.index') }}" class="btn btn--light">Annuler</a>
                 <button type="submit" class="btn btn--danger" :disabled="!selectedSale || returnAmount <= 0">
                     Enregistrer le retour
                 </button>

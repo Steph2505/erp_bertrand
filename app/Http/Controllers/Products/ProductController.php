@@ -130,6 +130,7 @@ class ProductController extends Controller
                     'name'          => $product->display_name,
                     'buying_price'  => (float) $product->buying_price,
                     'selling_price' => (float) $product->selling_price,
+                    'wholesale_price' => $product->wholesale_price !== null ? (float) $product->wholesale_price : null,
                     'stock_quantity'=> (int) $product->stock_quantity,
                     'can_be_packed' => (bool) $product->can_be_packed,
                     'pack_quantity' => (int) ($product->pack_quantity ?? 1),

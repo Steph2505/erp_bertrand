@@ -96,8 +96,8 @@
             <div class="stat-card__label">Alertes stock</div>
             <div class="stat-card__value" x-text="loading ? '…' : stats.lowStockCount">{{ $lowStockCount }}</div>
             <div class="stat-card__trend" :class="stats.lowStockCount > 0 ? 'stat-card__trend--down' : 'stat-card__trend--up'">
-                <span x-text="stats.lowStockCount > 0 ? 'Produits en stock faible' : 'Stocks OK'">
-                    {{ $lowStockCount > 0 ? 'Produits en stock faible' : 'Stocks OK' }}
+                <span x-text="stats.lowStockCount > 0 ? 'Articles en stock faible' : 'Stocks OK'">
+                    {{ $lowStockCount > 0 ? 'Articles en stock faible' : 'Stocks OK' }}
                 </span>
             </div>
         </div>
@@ -188,17 +188,17 @@
         </table>
     </div>
 
-    {{-- Top produits --}}
+    {{-- Top articles --}}
     <div class="table-wrapper">
         <div class="table-wrapper__header">
-            <strong class="table-wrapper__title">Top produits vendus</strong>
+            <strong class="table-wrapper__title">Top articles vendus</strong>
             <a href="{{ route('reports.product-sale') }}" class="btn btn--ghost btn--sm">Rapport</a>
         </div>
         <table class="data-table">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Produit / Pack</th>
+                    <th>Article / Pack</th>
                     <th>Unités vendues</th>
                     <th>Chiffre d'affaires</th>
                 </tr>

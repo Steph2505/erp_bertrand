@@ -1,21 +1,21 @@
 @extends('layouts.app')
-@section('title', 'Produits')
-@section('breadcrumb')<span class="current">Produits</span>@endsection
+@section('title', 'Articles')
+@section('breadcrumb')<span class="current">Articles</span>@endsection
 
 @section('content')
 <div x-data="productList()" x-init="fetch()">
 
 <div class="page-header">
     <div class="page-header__title">
-        <h2>Produits</h2>
-        <p x-text="total + ' produit(s) au total'">— produit(s) au total</p>
+        <h2>Articles</h2>
+        <p x-text="total + ' article(s) au total'">— article(s) au total</p>
     </div>
     <div class="page-header__actions">
         <a href="{{ route('units.index') }}" class="btn btn--ghost">Unités</a>
         <a href="{{ route('categories.index') }}" class="btn btn--ghost">Catégories</a>
         <a href="{{ route('products.create') }}" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            Ajouter un produit
+            Ajouter un article
         </a>
     </div>
 </div>
@@ -85,7 +85,7 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Produit</th>
+                    <th>Article</th>
                     <th>Catégorie</th>
                     <th>Prix achat</th>
                     <th>Prix vente</th>
@@ -103,7 +103,7 @@
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/>
                                 <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                             </svg>
-                            <div>Chargement des produits...</div>
+                            <div>Chargement des articles...</div>
                         </td>
                     </tr>
                 </template>
@@ -112,13 +112,13 @@
                 <template x-if="!loading && products.length === 0">
                     <tr>
                         <td colspan="7" class="table-empty-cell">
-                            Aucun produit trouvé.
+                            Aucun article trouvé.
                             <a href="{{ route('products.create') }}" style="color:#1749B3;">Ajouter le premier</a>
                         </td>
                     </tr>
                 </template>
 
-                {{-- Lignes produits --}}
+                {{-- Lignes articles --}}
                 <template x-for="product in products" :key="product.id">
                     <tr>
                         <td>
@@ -277,14 +277,14 @@ function productList() {
                 this.currentPage = data.current_page;
                 this.lastPage    = data.last_page;
             } catch(e) {
-                console.error('Erreur chargement produits:', e);
+                console.error('Erreur chargement articles:', e);
             } finally {
                 this.loading = false;
             }
         },
 
         async deleteProduct(product) {
-            const ok = await window.confirmDialog('Supprimer le produit « ' + product.name + ' » ?', { variant: 'danger', confirmLabel: 'Supprimer' });
+            const ok = await window.confirmDialog('Supprimer le article « ' + product.name + ' » ?', { variant: 'danger', confirmLabel: 'Supprimer' });
             if (!ok) return;
             try {
                 await fetch(product.delete_url, {
@@ -296,7 +296,7 @@ function productList() {
                 if (this.products.length === 0 && this.currentPage > 1) {
                     this.goTo(this.currentPage - 1);
                 }
-                window.toast('Produit supprimé avec succès.', 'success');
+                window.toast('Article supprimé avec succès.', 'success');
             } catch(e) {
                 window.toast('Erreur lors de la suppression.', 'error');
             }

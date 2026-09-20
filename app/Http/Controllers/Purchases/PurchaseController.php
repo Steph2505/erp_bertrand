@@ -35,7 +35,8 @@ class PurchaseController extends Controller
     {
         try {
             $suppliers = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-            return view('pages.purchases.index', compact('suppliers'));
+            $accounts  = PaymentAccount::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_default']);
+            return view('pages.purchases.index', compact('suppliers', 'accounts'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des achats');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -62,12 +63,14 @@ class PurchaseController extends Controller
                     'total'          => \App\Helpers\FormatHelper::money($p->total),
                     'status'         => $p->status,
                     'payment_status' => $p->payment_status,
+                    'amount_due'     => (float) $p->amount_due,
                     'status_badge'   => \App\Helpers\FormatHelper::statusBadge($p->status),
                     'pay_badge'      => \App\Helpers\FormatHelper::statusBadge($p->payment_status),
                     'show_url'       => route('purchases.show', $p->id),
                     'edit_url'       => route('purchases.edit', $p->id),
                     'print_url'      => route('print.purchase', $p->id),
                     'confirm_url'    => route('purchases.confirm', $p->id),
+                    'pay_url'        => route('purchases.pay', $p->id),
                     'destroy_url'    => route('purchases.destroy', $p->id),
                 ]),
                 'total'        => $paginator->total(),
@@ -91,16 +94,19 @@ class PurchaseController extends Controller
             $warehouses      = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $categories      = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $units           = Unit::orderBy('name')->get(['id', 'name', 'abbreviation']);
+            $accounts        = PaymentAccount::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_default']);
             $products        = Product::where('is_active', true)->orderBy('name')
                 ->with('stocks')
-                ->get(['id', 'name', 'variation', 'buying_price'])
+                ->get(['id', 'name', 'variation', 'buying_price', 'selling_price', 'wholesale_price'])
                 ->map(fn($p) => [
-                    'id'           => $p->id,
-                    'name'         => $p->display_name,
-                    'buying_price' => (float) $p->buying_price,
-                    'stocks'       => $p->stocks->pluck('quantity', 'warehouse_id'),
+                    'id'              => $p->id,
+                    'name'            => $p->display_name,
+                    'buying_price'    => (float) $p->buying_price,
+                    'selling_price'   => (float) $p->selling_price,
+                    'wholesale_price' => $p->wholesale_price !== null ? (float) $p->wholesale_price : null,
+                    'stocks'          => $p->stocks->pluck('quantity', 'warehouse_id'),
                 ]);
-            return view('pages.purchases.create', compact('suppliers', 'warehouses', 'categories', 'units', 'products', 'firstSupplierId'));
+            return view('pages.purchases.create', compact('suppliers', 'warehouses', 'categories', 'units', 'products', 'firstSupplierId', 'accounts'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du formulaire d\'achat');
             return redirect()->route('purchases.index')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -110,11 +116,14 @@ class PurchaseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'supplier_id'    => 'required|exists:suppliers,id',
-            'warehouse_id'   => 'nullable|exists:warehouses,id',
-            'purchase_date'  => 'required|date',
-            'payment_type'   => 'nullable|in:pending,confirmed,paid',
-            'items'          => 'required|array|min:1',
+            'supplier_id'              => 'required|exists:suppliers,id',
+            'warehouse_id'             => 'nullable|exists:warehouses,id',
+            'purchase_date'            => 'required|date',
+            'payment_type'             => 'nullable|in:pending,confirmed,paid',
+            'payment_account_id'       => 'required_if:payment_type,paid|nullable|exists:payment_accounts,id',
+            'items'                    => 'required|array|min:1',
+            'items.*.selling_price'    => 'nullable|numeric|min:0',
+            'items.*.wholesale_price'  => 'nullable|numeric|min:0',
         ]);
 
         if ($blocked = $this->blockIfPeriodLocked($request->purchase_date)) {
@@ -143,6 +152,7 @@ class PurchaseController extends Controller
                 $warehouseId = $request->warehouse_id ? (int) $request->warehouse_id : null;
 
                 foreach ($request->items as $item) {
+                    $product      = null;
                     $ispack       = ($item['item_type'] ?? 'product') === 'pack';
                     $unitsPerItem = $ispack ? ($item['units_per_item'] ?? 1) : 1;
                     $lineTotal    = $item['quantity'] * $item['unit_price'];
@@ -162,11 +172,29 @@ class PurchaseController extends Controller
                         'subtotal'       => $lineTotal,
                     ]);
 
+                    if (!$ispack && !empty($item['product_id'])) {
+                        $product = Product::find($item['product_id']);
+                        if ($product) {
+                            $priceUpdates = [];
+                            if (array_key_exists('selling_price', $item) && $item['selling_price'] !== null && $item['selling_price'] !== ''
+                                && (float) $item['selling_price'] !== (float) $product->selling_price) {
+                                $priceUpdates['selling_price'] = (float) $item['selling_price'];
+                            }
+                            if (array_key_exists('wholesale_price', $item) && $item['wholesale_price'] !== null && $item['wholesale_price'] !== ''
+                                && (float) $item['wholesale_price'] !== (float) $product->wholesale_price) {
+                                $priceUpdates['wholesale_price'] = (float) $item['wholesale_price'];
+                            }
+                            if (!empty($priceUpdates)) {
+                                $product->update($priceUpdates);
+                            }
+                        }
+                    }
+
                     if ($isConfirm) {
                         if ($ispack) {
                             $this->stockService->addStockForPurchase($item['pack_id'], $item['quantity'], $reference, $warehouseId);
                         } else {
-                            $product = \App\Models\Product::find($item['product_id']);
+                            $product = $product ?? Product::find($item['product_id']);
                             if ($product) {
                                 $this->productRepo->adjustStock($product, $item['quantity'], 'purchase', $reference, null, null, $warehouseId, (float) $item['unit_price']);
                             }
@@ -181,7 +209,8 @@ class PurchaseController extends Controller
                 ]);
 
                 if ($isPaid) {
-                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', null, $request->purchase_date);
+                    $accountId = $request->payment_account_id ? (int) $request->payment_account_id : null;
+                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', $accountId, $request->purchase_date);
                 }
             });
         } catch (Throwable $e) {
@@ -212,12 +241,13 @@ class PurchaseController extends Controller
 
         $request->validate([
             'amount'             => 'required|numeric|min:0.01|max:' . $due,
-            'payment_mode'       => 'required|string',
             'payment_account_id' => 'required|exists:payment_accounts,id',
         ]);
 
+        $account = PaymentAccount::find($request->payment_account_id);
+
         try {
-            DB::transaction(function () use ($request, $purchase) {
+            DB::transaction(function () use ($request, $purchase, $account) {
                 $wasDraft      = $purchase->status === 'draft';
                 $newPaid       = round((float) $purchase->amount_paid + (float) $request->amount, 2);
                 $paymentStatus = $newPaid >= (float) $purchase->total ? 'paid' : 'partial';
@@ -247,7 +277,7 @@ class PurchaseController extends Controller
                 $this->paymentService->recordOutflow(
                     $purchase,
                     (float) $request->amount,
-                    $request->payment_mode,
+                    $account?->type ?? 'cash',
                     $request->payment_account_id ? (int) $request->payment_account_id : null
                 );
             });
@@ -273,16 +303,21 @@ class PurchaseController extends Controller
             $purchase->load('items', 'supplier', 'warehouse');
             $suppliers  = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $categories = Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $units      = Unit::orderBy('name')->get(['id', 'name', 'abbreviation']);
+            $accounts   = PaymentAccount::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_default']);
             $products   = Product::where('is_active', true)->orderBy('name')
                 ->with('stocks')
-                ->get(['id', 'name', 'variation', 'buying_price'])
+                ->get(['id', 'name', 'variation', 'buying_price', 'selling_price', 'wholesale_price'])
                 ->map(fn($p) => [
-                    'id'           => $p->id,
-                    'name'         => $p->display_name,
-                    'buying_price' => (float) $p->buying_price,
-                    'stocks'       => $p->stocks->pluck('quantity', 'warehouse_id'),
+                    'id'              => $p->id,
+                    'name'            => $p->display_name,
+                    'buying_price'    => (float) $p->buying_price,
+                    'selling_price'   => (float) $p->selling_price,
+                    'wholesale_price' => $p->wholesale_price !== null ? (float) $p->wholesale_price : null,
+                    'stocks'          => $p->stocks->pluck('quantity', 'warehouse_id'),
                 ]);
-            return view('pages.purchases.edit', compact('purchase', 'suppliers', 'warehouses', 'products'));
+            return view('pages.purchases.edit', compact('purchase', 'suppliers', 'warehouses', 'categories', 'units', 'accounts', 'products'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du formulaire de modification d\'achat', ['purchase_id' => $purchase->id]);
             return redirect()->route('purchases.show', $purchase)->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -294,20 +329,26 @@ class PurchaseController extends Controller
         abort_unless($purchase->status === 'draft', 403);
 
         $request->validate([
-            'supplier_id'   => 'required|exists:suppliers,id',
-            'warehouse_id'  => 'nullable|exists:warehouses,id',
-            'purchase_date' => 'required|date',
-            'items'         => 'required|array|min:1',
+            'supplier_id'              => 'required|exists:suppliers,id',
+            'warehouse_id'             => 'nullable|exists:warehouses,id',
+            'purchase_date'            => 'required|date',
+            'payment_type'             => 'nullable|in:pending,confirmed,paid',
+            'payment_account_id'       => 'required_if:payment_type,paid|nullable|exists:payment_accounts,id',
+            'items'                    => 'required|array|min:1',
+            'items.*.selling_price'    => 'nullable|numeric|min:0',
+            'items.*.wholesale_price'  => 'nullable|numeric|min:0',
         ]);
 
         if ($blocked = $this->blockIfPeriodLocked($purchase->purchase_date) ?? $this->blockIfPeriodLocked($request->purchase_date)) {
             return $blocked;
         }
 
-        $action = $request->input('action', 'save');
+        $type      = $request->payment_type ?? 'pending';
+        $isPaid    = $type === 'paid';
+        $isConfirm = $type === 'confirmed' || $isPaid;
 
         try {
-            DB::transaction(function () use ($request, $purchase, $action) {
+            DB::transaction(function () use ($request, $purchase, $isPaid, $isConfirm) {
                 $purchase->items()->delete();
 
                 $subtotal    = 0;
@@ -329,28 +370,46 @@ class PurchaseController extends Controller
                         'tax_rate'       => 0,
                         'subtotal'       => $lineTotal,
                     ]);
-                }
 
-                $purchase->update([
-                    'supplier_id'   => $request->supplier_id,
-                    'warehouse_id'  => $request->warehouse_id,
-                    'purchase_date' => $request->purchase_date,
-                    'note'          => $request->note,
-                    'subtotal'      => $subtotal,
-                    'total'         => $subtotal,
-                ]);
-
-                if ($action === 'confirm') {
-                    $purchase->refresh();
-                    foreach ($purchase->items as $item) {
-                        if ($item->product_id) {
-                            $product = Product::find($item->product_id);
-                            if ($product) {
-                                $this->productRepo->adjustStock($product, $item->quantity, 'purchase', $purchase->reference, null, null, $warehouseId, (float) $item->unit_price);
+                    $product = null;
+                    if (!empty($item['product_id'])) {
+                        $product = Product::find($item['product_id']);
+                        if ($product) {
+                            $priceUpdates = [];
+                            if (array_key_exists('selling_price', $item) && $item['selling_price'] !== null && $item['selling_price'] !== ''
+                                && (float) $item['selling_price'] !== (float) $product->selling_price) {
+                                $priceUpdates['selling_price'] = (float) $item['selling_price'];
+                            }
+                            if (array_key_exists('wholesale_price', $item) && $item['wholesale_price'] !== null && $item['wholesale_price'] !== ''
+                                && (float) $item['wholesale_price'] !== (float) $product->wholesale_price) {
+                                $priceUpdates['wholesale_price'] = (float) $item['wholesale_price'];
+                            }
+                            if (!empty($priceUpdates)) {
+                                $product->update($priceUpdates);
                             }
                         }
                     }
-                    $purchase->update(['status' => 'confirmed']);
+
+                    if ($isConfirm && $product) {
+                        $this->productRepo->adjustStock($product, $item['quantity'], 'purchase', $purchase->reference, null, null, $warehouseId, (float) $item['unit_price']);
+                    }
+                }
+
+                $purchase->update([
+                    'supplier_id'    => $request->supplier_id,
+                    'warehouse_id'   => $request->warehouse_id,
+                    'purchase_date'  => $request->purchase_date,
+                    'status'         => $isConfirm ? 'confirmed' : 'draft',
+                    'payment_status' => $isPaid ? 'paid' : 'pending',
+                    'note'           => $request->note,
+                    'subtotal'       => $subtotal,
+                    'total'          => $subtotal,
+                    'amount_paid'    => $isPaid ? $subtotal : 0,
+                ]);
+
+                if ($isPaid) {
+                    $accountId = $request->payment_account_id ? (int) $request->payment_account_id : null;
+                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', $accountId, $request->purchase_date);
                 }
             });
         } catch (Throwable $e) {
@@ -358,7 +417,7 @@ class PurchaseController extends Controller
             return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'achat.');
         }
 
-        $msg = $action === 'confirm' ? 'Achat confirmé. Stock mis à jour.' : 'Achat mis à jour.';
+        $msg = $isPaid ? 'Achat payé. Stock mis à jour.' : ($isConfirm ? 'Achat confirmé. Stock mis à jour.' : 'Achat mis à jour.');
         return redirect()->route('purchases.show', $purchase)->with('success', $msg);
     }
 

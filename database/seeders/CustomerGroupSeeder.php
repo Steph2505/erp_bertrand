@@ -11,12 +11,15 @@ class CustomerGroupSeeder extends Seeder
     public function run(): void
     {
         $groups = [
-            ['name' => 'Détaillant',   'discount' => 0],
-            ['name' => 'Grossiste', 'discount' => 0],
+            ['name' => 'Détaillant', 'discount' => 0, 'is_wholesale' => false],
+            ['name' => 'Grossiste',  'discount' => 0, 'is_wholesale' => true],
         ];
 
         foreach ($groups as $g) {
-            CustomerGroup::firstOrCreate(['name' => $g['name']], ['discount' => $g['discount']]);
+            CustomerGroup::firstOrCreate(['name' => $g['name']], [
+                'discount'     => $g['discount'],
+                'is_wholesale' => $g['is_wholesale'],
+            ]);
         }
 
         $priceGroups = [

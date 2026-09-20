@@ -192,7 +192,7 @@
         <div class="pos-catalog__header">
             <div class="pos-catalog__search">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
-                <input type="text" x-model="search" placeholder="Rechercher un produit ou pack...">
+                <input type="text" x-model="search" placeholder="Rechercher un article ou pack...">
             </div>
             {{-- Client + raccourci création --}}
             <div style="min-width:200px;position:relative;" @click.outside="customerOpen=false; showCreateCustomerPOS=false; customerSearch=customers.find(c=>c.id===customerSelect)?.name??''">
@@ -238,23 +238,14 @@
                 <div x-show="showCreateCustomerPOS" x-collapse
                      style="position:absolute;top:calc(100% + 6px);right:0;z-index:9999;width:280px;padding:12px;background:white;border:1.5px solid #bbf7d0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);">
                     <p style="font-size:12px;font-weight:600;color:#15803d;margin-bottom:10px;">Nouveau client</p>
-                    <div class="form-group" style="margin-bottom:8px;">
-                        <label style="font-size:12px;">Nom <span class="required">*</span></label>
-                        <input type="text" x-model="newCustomerNamePOS" @keydown.enter.prevent="quickCreateCustomerPOS()" class="form-control" placeholder="Nom du client" style="font-size:13px;">
-                    </div>
-                    <div class="form-group" style="margin-bottom:10px;">
-                        <label style="font-size:12px;">Téléphone</label>
-                        <input type="text" x-model="newCustomerPhonePOS" @keydown.enter.prevent="quickCreateCustomerPOS()" class="form-control" placeholder="Optionnel" style="font-size:13px;">
-                    </div>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <button type="button" @click="quickCreateCustomerPOS()"
-                                class="btn btn--primary btn--sm" style="flex:1;justify-content:center;"
-                                :disabled="creatingCustomerPOS||!newCustomerNamePOS.trim()">
-                            <span x-show="!creatingCustomerPOS">Créer & sélectionner</span>
-                            <span x-show="creatingCustomerPOS">...</span>
-                        </button>
-                    </div>
-                    <p x-show="createCustomerErrorPOS" x-text="createCustomerErrorPOS" style="color:#ef4444;font-size:12px;margin-top:6px;margin-bottom:0;"></p>
+                    <x-quick-create-customer-form
+                        :customer-groups="$customerGroups"
+                        name-model="newCustomerNamePOS"
+                        group-model="newCustomerGroupIdPOS"
+                        creating="creatingCustomerPOS"
+                        error="createCustomerErrorPOS"
+                        on-submit="quickCreateCustomerPOS()"
+                    />
                 </div>
             </div>
         </div>
@@ -301,7 +292,7 @@
                     </div>
                     <div class="pos-item__name" x-text="item.name"></div>
                     <div class="pos-item__price"
-                         x-text="fmt(packMode[item.type+'_'+item.id] && item.can_be_packed ? item.pack_price : item.price)"></div>
+                         x-text="fmt(packMode[item.type+'_'+item.id] && item.can_be_packed ? item.pack_price : itemPrice(item))"></div>
                     <div class="pos-item__stock"
                          :style="(stockMap[item.type+'_'+item.id] ?? item.stock) <= 0 ? 'color:#ef4444;font-weight:600;' : ''"
                          x-text="'Stock : ' + (stockMap[item.type+'_'+item.id] ?? item.stock)"></div>
@@ -441,8 +432,10 @@ function posApp() {
         customerSelect: {{ $customers->first()?->id ?? 'null' }},
         customerSearch: '{{ addslashes($customers->first()?->name ?? '') }}',
         customerOpen: false,
-        customers: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
-        showCreateCustomerPOS: false, newCustomerNamePOS: '', newCustomerPhonePOS: '', creatingCustomerPOS: false, createCustomerErrorPOS: '',
+        customers: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'is_wholesale' => (bool) $c->group?->is_wholesale])) }},
+        showCreateCustomerPOS: false, newCustomerNamePOS: '',
+        newCustomerGroupIdPOS: {{ Js::from($customerGroups->firstWhere('is_wholesale', false)?->id ?? $customerGroups->first()?->id) }},
+        creatingCustomerPOS: false, createCustomerErrorPOS: '',
         showPayment: false,
         paymentMode: 'cash',
         amountReceived: 0,
@@ -485,7 +478,7 @@ function posApp() {
         async loadProducts() {
             const params = new URLSearchParams({ q: '' });
             if (this.sessionWarehouseId) params.set('warehouse_id', this.sessionWarehouseId);
-            const res = await fetch('/sales/api/search?' + params.toString());
+            const res = await fetch('/pos/api/search?' + params.toString());
             this.products = await res.json();
             const map = {};
             this.products.forEach(p => { map[p.type + '_' + p.id] = p.stock; });
@@ -501,8 +494,24 @@ function posApp() {
             if (isPack) {
                 this.addToCart(item, item.pack_quantity, item.pack_price);
             } else {
-                this.addToCart(item, 1, item.price);
+                this.addToCart(item, 1, this.itemPrice(item));
             }
+        },
+
+        // Client du groupe "Grossiste" sélectionné ?
+        get isWholesaleCustomer() {
+            const c = this.customers.find(c => c.id === this.customerSelect);
+            return !!(c && c.is_wholesale);
+        },
+
+        // Prix appliqué à ce article selon le client sélectionné (grossiste
+        // si le client l'est et qu'un prix grossiste est renseigné, sinon
+        // le prix détaillant habituel). Les packs ne sont pas concernés.
+        itemPrice(item) {
+            if (item.type === 'product' && this.isWholesaleCustomer && item.wholesale_price != null) {
+                return item.wholesale_price;
+            }
+            return item.price;
         },
 
         addToCart(item, unitsPerItem, unitPrice) {
@@ -623,14 +632,14 @@ function posApp() {
                 const res  = await fetch('{{ route('customers.store') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                    body: JSON.stringify({ name: this.newCustomerNamePOS, phone: this.newCustomerPhonePOS || null }),
+                    body: JSON.stringify({ name: this.newCustomerNamePOS, customer_group_id: this.newCustomerGroupIdPOS || null }),
                 });
                 const data = await res.json();
                 if (data.success) {
                     this.customers.push(data.customer);
                     this.customerSelect = data.customer.id;
                     this.customerSearch = data.customer.name;
-                    this.showCreateCustomerPOS = false; this.newCustomerNamePOS = ''; this.newCustomerPhonePOS = '';
+                    this.showCreateCustomerPOS = false; this.newCustomerNamePOS = '';
                     window.toast('Client créé avec succès.', 'success');
                 } else {
                     this.createCustomerErrorPOS = data.message || 'Erreur.';

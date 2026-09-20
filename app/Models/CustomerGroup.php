@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomerGroup extends Model
 {
-    protected $fillable = ['name', 'discount'];
+    protected $fillable = ['name', 'discount', 'is_wholesale'];
 
-    protected $casts = ['discount' => 'decimal:2'];
+    protected $casts = ['discount' => 'decimal:2', 'is_wholesale' => 'boolean'];
 
     public function customers(): HasMany
     {

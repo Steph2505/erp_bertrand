@@ -86,8 +86,8 @@ class ProductRepository
      * Le mouvement de stock est toujours enregistré.
      *
      * Si $unitCost est fourni pour une entrée de stock (delta > 0), le prix d'achat
-     * du produit est recalculé au coût moyen pondéré (CMP) :
-     *   nouveau_prix = (stock_actuel × ancien_prix + delta × unitCost) / (stock_actuel + delta)
+     * du produit est remplacé par ce dernier coût saisi (pas de moyenne pondérée) :
+     * c'est ce prix qui est ensuite considéré partout.
      */
     public function adjustStock(
         Product $product,
@@ -102,14 +102,10 @@ class ProductRepository
         try {
             $oldQtyGlobal = max(0, (int) $product->stock_quantity);
 
-            // Stock global (Product.stock_quantity) + recalcul CMP si un coût d'achat est fourni
+            // Stock global (Product.stock_quantity) + mise à jour du prix d'achat
+            // au dernier coût saisi si un coût d'achat est fourni
             if ($unitCost !== null && $delta > 0) {
-                $oldPrice = (float) $product->buying_price;
-                $newPrice = $oldQtyGlobal > 0
-                    ? (($oldQtyGlobal * $oldPrice) + ($delta * $unitCost)) / ($oldQtyGlobal + $delta)
-                    : $unitCost;
-
-                $product->increment('stock_quantity', $delta, ['buying_price' => round($newPrice, 2)]);
+                $product->increment('stock_quantity', $delta, ['buying_price' => round($unitCost, 2)]);
             } else {
                 $product->increment('stock_quantity', $delta);
             }

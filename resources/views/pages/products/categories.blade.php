@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Catégories produits')
+@section('title', 'Catégories articles')
 @section('breadcrumb')
-<a href="{{ route('products.index') }}">Produits</a>
+<a href="{{ route('products.index') }}">Articles</a>
 <span class="current">Catégories</span>
 @endsection
 
@@ -10,7 +10,7 @@
 
 <div class="page-header">
     <div class="page-header__title">
-        <h2>Catégories de produits</h2>
+        <h2>Catégories de articles</h2>
         <p>{{ $categories->total() }} catégorie(s)</p>
     </div>
     <div class="page-header__actions">
@@ -33,7 +33,7 @@
         <thead><tr>
             <th>Nom</th>
             <th>Catégorie parent</th>
-            <th>Nb produits</th>
+            <th>Nb articles</th>
             <th>Statut</th>
             <th class="th-right">Actions</th>
         </tr></thead>

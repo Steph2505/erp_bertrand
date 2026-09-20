@@ -110,7 +110,7 @@
             <h4 class="text-sm font-600" style="margin-bottom:10px;">Articles à ajuster</h4>
             <div class="form-grid form-grid--3" style="margin-bottom:10px;align-items:flex-end;">
                 <div class="form-group form-group--full" style="margin-bottom:0;">
-                    <label>Produit</label>
+                    <label>Article</label>
                     <select id="adj-product" x-model="newItem.product_id" class="form-select">
                         @foreach($products as $p)
                             <option value="{{ $p->id }}" data-name="{{ $p->display_name }}">{{ $p->display_name }} (stock : {{ $p->stock_quantity }})</option>
@@ -126,7 +126,7 @@
                 </div>
             </div>
             <table class="data-table" style="margin-bottom:16px;">
-                <thead><tr><th>Produit</th><th class="th-center" style="width:100px">Quantité</th><th style="width:36px"></th></tr></thead>
+                <thead><tr><th>Article</th><th class="th-center" style="width:100px">Quantité</th><th style="width:36px"></th></tr></thead>
                 <tbody>
                     <template x-if="items.length === 0"><tr><td colspan="3" class="table-empty-cell--sm">Aucun article</td></tr></template>
                     <template x-for="(item, idx) in items" :key="idx">
@@ -199,7 +199,7 @@ function adjPage() {
 
         addItem() {
             const sel = document.getElementById('adj-product');
-            if (!this.newItem.product_id) { window.toast('Sélectionnez un produit.', 'error'); return; }
+            if (!this.newItem.product_id) { window.toast('Sélectionnez un article.', 'error'); return; }
             const opt = sel.options[sel.selectedIndex];
             this.items.push({ product_id: this.newItem.product_id, name: opt.dataset.name, quantity: this.newItem.quantity || 1 });
             this.newItem = { product_id: '{{ $products->first()->id ?? '' }}', quantity: 1 };

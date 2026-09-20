@@ -17,9 +17,9 @@ class Product extends Model implements HasMedia
     protected $fillable = [
         'name', 'variation', 'slug', 'description', 'barcode',
         'category_id', 'brand_id', 'unit_id',
-        'buying_price', 'selling_price', 'tax_rate',
+        'buying_price', 'selling_price', 'wholesale_price', 'tax_rate',
         'stock_quantity', 'min_stock_quantity',
-        'expiry_date', 'can_be_packed', 'pack_quantity', 'pack_price', 'is_active', 'has_variations',
+        'can_be_packed', 'pack_quantity', 'pack_price', 'is_active', 'has_variations',
     ];
 
     protected $casts = [
@@ -28,9 +28,9 @@ class Product extends Model implements HasMedia
         'has_variations'   => 'boolean',
         'buying_price'     => 'decimal:2',
         'selling_price'    => 'decimal:2',
+        'wholesale_price'  => 'decimal:2',
         'pack_price'       => 'decimal:2',
         'tax_rate'         => 'decimal:2',
-        'expiry_date'      => 'date',
     ];
 
     protected static function boot(): void
@@ -62,9 +62,18 @@ class Product extends Model implements HasMedia
         return $this->stock_quantity <= $this->min_stock_quantity;
     }
 
-    public function isExpiringSoon(int $days = 7): bool
+    /**
+     * Prix de vente applicable à ce client : prix grossiste si le client
+     * appartient à un groupe marqué "grossiste" et qu'un prix grossiste est
+     * renseigné, sinon le prix détaillant habituel.
+     */
+    public function priceFor(?Customer $customer): float
     {
-        return $this->expiry_date && $this->expiry_date->diffInDays(now()) <= $days;
+        if ($customer?->group?->is_wholesale && $this->wholesale_price !== null) {
+            return (float) $this->wholesale_price;
+        }
+
+        return (float) $this->selling_price;
     }
 
     public function registerMediaCollections(): void

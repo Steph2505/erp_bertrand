@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Achat par produit')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat produit</span>@endsection
+@section('title', 'Achat par article')
+@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat article</span>@endsection
 
 @section('content')
 <div class="page-header">
-    <div class="page-header__title"><h2>Achat par produit</h2><p>Volume d'achat par article sur la période</p></div>
+    <div class="page-header__title"><h2>Achat par article</h2><p>Volume d'achat par article sur la période</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn">Vente produit</a>
-            <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn filter-tabs__btn--active">Achat produit</a>
+            <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn">Vente article</a>
+            <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn filter-tabs__btn--active">Achat article</a>
         </div>
     </div>
 </div>
@@ -40,7 +40,7 @@
             <tr>
                 <td style="color:#64748B;font-weight:600;">#{{ $i+1 }}</td>
                 <td><strong>{{ $item->item_name }}</strong></td>
-                <td><span class="badge badge--{{ $item->item_type==='pack'?'pack':'gray' }}">{{ $item->item_type==='pack'?'Pack':'Produit' }}</span></td>
+                <td><span class="badge badge--{{ $item->item_type==='pack'?'pack':'gray' }}">{{ $item->item_type==='pack'?'Pack':'Article' }}</span></td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::number($item->total_qty) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ \App\Helpers\FormatHelper::money($item->avg_price) }}</td>
                 <td style="text-align:right;color:#64748B;">{{ $item->nb_purchases }}</td>

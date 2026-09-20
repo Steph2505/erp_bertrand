@@ -16,7 +16,7 @@ use Throwable;
 class UserController extends Controller
 {
     private const PERMISSION_GROUPS = [
-        'Commerce'       => ['manage products', 'manage purchases', 'manage sales', 'manage pos'],
+        'Commerce'       => ['manage products', 'manage purchases', 'manage pos'],
         'Stock'          => ['manage stock'],
         'Contacts'       => ['manage customers', 'manage suppliers'],
         'Finance'        => ['manage expenses', 'manage accounts', 'view reports'],
@@ -25,9 +25,8 @@ class UserController extends Controller
     ];
 
     private const PERMISSION_LABELS = [
-        'manage products'       => 'Produits',
+        'manage products'       => 'Articles',
         'manage purchases'      => 'Achats',
-        'manage sales'          => 'Ventes',
         'manage pos'            => 'Point de vente',
         'manage stock'          => 'Stock',
         'manage customers'      => 'Clients',
@@ -82,7 +81,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:191',
             'email'         => 'required|email|unique:users,email',
-            'role'          => 'nullable|exists:roles,name',
+            'role'          => 'required|exists:roles,name',
             'permissions'   => 'nullable|array',
             'permissions.*' => 'exists:permissions,name',
         ]);
@@ -97,9 +96,7 @@ class UserController extends Controller
                 'is_active' => true,
             ]);
 
-            if (!empty($data['role'])) {
-                $user->assignRole($data['role']);
-            }
+            $user->assignRole($data['role']);
 
             $user->syncPermissions($data['permissions'] ?? []);
         } catch (Throwable $e) {
@@ -145,20 +142,21 @@ class UserController extends Controller
         return back()->with('success', 'Utilisateur mis à jour.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function toggleActive(User $user): RedirectResponse
     {
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
+            return back()->with('error', 'Vous ne pouvez pas désactiver votre propre compte.');
         }
 
         try {
-            $user->delete();
+            $user->update(['is_active' => !$user->is_active]);
         } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors de la suppression de l\'utilisateur', ['user_id' => $user->id]);
-            return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'utilisateur.');
+            $this->logError($e, 'Erreur lors du changement de statut de l\'utilisateur', ['user_id' => $user->id]);
+            return back()->with('error', 'Une erreur est survenue lors du changement de statut.');
         }
 
-        return back()->with('success', 'Utilisateur supprimé.');
+        $msg = $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé. Il n\'a plus accès au système.';
+        return back()->with('success', $msg);
     }
 
     public function profile(): View|RedirectResponse

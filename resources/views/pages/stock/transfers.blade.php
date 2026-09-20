@@ -128,7 +128,7 @@
                 </div>
                 <template x-if="!fromId"><p class="text-muted text-sm" style="padding:12px 16px;">Sélectionnez d'abord un entrepôt source.</p></template>
                 <table class="data-table">
-                    <thead><tr><th>Produit</th><th class="th-center" style="width:110px">Quantité</th><th style="width:36px"></th></tr></thead>
+                    <thead><tr><th>Article</th><th class="th-center" style="width:110px">Quantité</th><th style="width:36px"></th></tr></thead>
                     <tbody>
                         <template x-if="items.length === 0"><tr><td colspan="3" class="table-empty-cell--sm">Aucun article</td></tr></template>
                         <template x-for="(item, idx) in items" :key="item._key">
@@ -139,7 +139,7 @@
                                                :placeholder="item.name || 'Rechercher...'" class="form-control" style="font-size:13px;" autocomplete="off">
                                         <input type="hidden" :name="'items['+idx+'][product_id]'" :value="item.product_id">
                                         <div x-show="item._open" x-transition class="ac-dropdown ac-dropdown--wide">
-                                            <template x-if="availableForRow(idx).length === 0"><div class="ac-option__empty">Aucun produit disponible</div></template>
+                                            <template x-if="availableForRow(idx).length === 0"><div class="ac-option__empty">Aucun article disponible</div></template>
                                             <template x-for="p in availableForRow(idx)" :key="p.id">
                                                 <div @mousedown.prevent="selectInRow(idx, p)" class="ac-option ac-option--separator"
                                                      @mouseover="$el.style.background='#f8fafc'" @mouseout="$el.style.background='white'">
@@ -248,7 +248,7 @@ function tfrPage() {
 
         submitTransfer(form) {
             if (!this.items.length) { window.toast('Ajoutez au moins un article.', 'error'); return; }
-            if (this.items.some(i => !i.product_id)) { window.toast('Certaines lignes n\'ont pas de produit.', 'error'); return; }
+            if (this.items.some(i => !i.product_id)) { window.toast('Certaines lignes n\'ont pas de article.', 'error'); return; }
             const bad = this.items.filter(i => i.quantity > i.available);
             if (bad.length) { window.toast('Stock insuffisant :\n' + bad.map(i => `• ${i.name} : demandé ${i.quantity}, dispo ${i.available}`).join('\n'), 'error'); return; }
             form.submit();

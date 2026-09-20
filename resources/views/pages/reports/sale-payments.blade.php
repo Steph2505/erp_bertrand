@@ -39,7 +39,7 @@
                 <td style="font-size:12px;color:#64748B;font-weight:600;">{{ $pmt->reference }}</td>
                 <td>
                     @if($sale)
-                        <a href="{{ route('sales.show', $sale->id) }}" style="color:#1749B3;font-weight:500;">{{ $sale->reference }}</a>
+                        <a href="{{ route('pos.receipt', $sale->id) }}" style="color:#1749B3;font-weight:500;">{{ $sale->reference }}</a>
                     @else —
                     @endif
                 </td>

@@ -7,9 +7,9 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\PaymentAccount;
 use App\Models\Purchase;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Throwable;
@@ -19,68 +19,94 @@ class ExpenseController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         try {
-        // ── Dépenses
-        $expenseRows = Expense::with(['category', 'paymentAccount'])
-            ->when($request->search, fn($q, $s) => $q->where('description', 'like', "%$s%")->orWhere('reference', 'like', "%$s%"))
-            ->when($request->category_id, fn($q, $id) => $q->where('expense_category_id', $id))
-            ->when($request->date_from, fn($q, $d) => $q->whereDate('expense_date', '>=', $d))
-            ->when($request->date_to, fn($q, $d) => $q->whereDate('expense_date', '<=', $d))
-            ->get()
-            ->map(fn($e) => (object)[
-                'type'        => 'expense',
-                'id'          => $e->id,
-                'reference'   => $e->reference,
-                'category'    => $e->category?->name,
-                'description' => $e->description,
-                'account'     => $e->paymentAccount?->name,
-                'date'        => $e->expense_date,
-                'amount'      => (float) $e->amount,
-                'model'       => $e,
-            ]);
+            $categories = ExpenseCategory::orderBy('name')->get();
+            $accounts   = PaymentAccount::where('is_active', true)->orderBy('name')->get();
 
-        // ── Achats fournisseurs payés (exclus si filtre catégorie actif)
-        $purchaseRows = collect();
-        if (! $request->category_id) {
-            $purchaseRows = Purchase::with('supplier')
-                ->where('payment_status', 'paid')
-                ->when($request->search, fn($q, $s) => $q->where('reference', 'like', "%$s%")
-                    ->orWhereHas('supplier', fn($q2) => $q2->where('name', 'like', "%$s%")))
-                ->when($request->date_from, fn($q, $d) => $q->whereDate('purchase_date', '>=', $d))
-                ->when($request->date_to, fn($q, $d) => $q->whereDate('purchase_date', '<=', $d))
-                ->get()
-                ->map(fn($p) => (object)[
-                    'type'        => 'purchase',
-                    'id'          => $p->id,
-                    'reference'   => $p->reference,
-                    'category'    => null,
-                    'description' => $p->supplier?->name ?? '—',
-                    'account'     => null,
-                    'date'        => $p->purchase_date,
-                    'amount'      => (float) $p->amount_paid,
-                    'model'       => $p,
-                ]);
-        }
-
-        $merged      = $expenseRows->concat($purchaseRows)->sortByDesc('date')->values();
-        $totalPeriod = $merged->sum('amount');
-
-        $perPage  = 20;
-        $page     = (int) $request->input('page', 1);
-        $expenses = new LengthAwarePaginator(
-            $merged->forPage($page, $perPage),
-            $merged->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        $categories = ExpenseCategory::orderBy('name')->get();
-        $accounts   = PaymentAccount::where('is_active', true)->orderBy('name')->get();
-
-        return view('pages.expenses.index', compact('expenses', 'categories', 'accounts', 'totalPeriod'));
+            return view('pages.expenses.index', compact('categories', 'accounts'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des dépenses', ['filters' => $request->all()]);
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
+    }
+
+    public function apiIndex(Request $request): JsonResponse
+    {
+        try {
+            // ── Dépenses
+            $expenseRows = Expense::with(['category', 'paymentAccount'])
+                ->when($request->search, fn($q, $s) => $q->where('description', 'like', "%$s%")->orWhere('reference', 'like', "%$s%"))
+                ->when($request->category_id, fn($q, $id) => $q->where('expense_category_id', $id))
+                ->when($request->date_from, fn($q, $d) => $q->whereDate('expense_date', '>=', $d))
+                ->when($request->date_to, fn($q, $d) => $q->whereDate('expense_date', '<=', $d))
+                ->get()
+                ->map(fn($e) => [
+                    'type'        => 'expense',
+                    'id'          => $e->id,
+                    'reference'   => $e->reference,
+                    'category'    => $e->category?->name,
+                    'description' => $e->description,
+                    'account'     => $e->paymentAccount?->name,
+                    'date'        => $e->expense_date,
+                    'date_display'=> \App\Helpers\FormatHelper::date($e->expense_date),
+                    'amount'      => (float) $e->amount,
+                    'amount_display' => \App\Helpers\FormatHelper::money((float) $e->amount),
+                    'destroy_url' => route('expenses.destroy', $e->id),
+                    'raw' => [
+                        'id'                   => $e->id,
+                        'expense_category_id'  => $e->expense_category_id,
+                        'payment_account_id'   => $e->payment_account_id,
+                        'expense_date'         => optional($e->expense_date)->format('Y-m-d') ?? $e->expense_date,
+                        'amount'               => (float) $e->amount,
+                        'description'          => $e->description,
+                    ],
+                ]);
+
+            // ── Achats fournisseurs payés (exclus si filtre catégorie actif)
+            $purchaseRows = collect();
+            if (! $request->category_id) {
+                $purchaseRows = Purchase::with('supplier')
+                    ->where('payment_status', 'paid')
+                    ->when($request->search, fn($q, $s) => $q->where('reference', 'like', "%$s%")
+                        ->orWhereHas('supplier', fn($q2) => $q2->where('name', 'like', "%$s%")))
+                    ->when($request->date_from, fn($q, $d) => $q->whereDate('purchase_date', '>=', $d))
+                    ->when($request->date_to, fn($q, $d) => $q->whereDate('purchase_date', '<=', $d))
+                    ->get()
+                    ->map(fn($p) => [
+                        'type'        => 'purchase',
+                        'id'          => $p->id,
+                        'reference'   => $p->reference,
+                        'category'    => null,
+                        'description' => $p->supplier?->name ?? '—',
+                        'account'     => null,
+                        'date'        => $p->purchase_date,
+                        'date_display'=> \App\Helpers\FormatHelper::date($p->purchase_date),
+                        'amount'      => (float) $p->amount_paid,
+                        'amount_display' => \App\Helpers\FormatHelper::money((float) $p->amount_paid),
+                        'show_url'    => route('purchases.show', $p->id),
+                        'raw'         => null,
+                    ]);
+            }
+
+            $merged      = $expenseRows->concat($purchaseRows)->sortByDesc('date')->values();
+            $totalPeriod = $merged->sum('amount');
+
+            $perPage = 20;
+            $page    = $request->integer('page', 1);
+            $slice   = $merged->forPage($page, $perPage)->values();
+
+            return response()->json([
+                'data'         => $slice,
+                'total'        => $merged->count(),
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => max(1, (int) ceil($merged->count() / $perPage)),
+                'from'         => $merged->count() ? (($page - 1) * $perPage) + 1 : 0,
+                'to'           => (($page - 1) * $perPage) + $slice->count(),
+                'total_period' => \App\Helpers\FormatHelper::money($totalPeriod),
+            ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des dépenses', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger les dépenses.'], 500);
         }
     }
 

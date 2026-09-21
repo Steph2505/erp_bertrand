@@ -14,18 +14,21 @@ class Purchase extends Model
 
     protected $fillable = [
         'reference', 'supplier_id', 'warehouse_id', 'purchase_date',
-        'status', 'payment_status', 'subtotal', 'discount', 'tax_amount',
+        'status', 'payment_status', 'expected_payment_date', 'overdue_notified_at',
+        'subtotal', 'discount', 'tax_amount',
         'shipping', 'total', 'amount_paid', 'note', 'attachment', 'created_by',
     ];
 
     protected $casts = [
-        'purchase_date' => 'date',
-        'subtotal'      => 'decimal:2',
-        'discount'      => 'decimal:2',
-        'tax_amount'    => 'decimal:2',
-        'shipping'      => 'decimal:2',
-        'total'         => 'decimal:2',
-        'amount_paid'   => 'decimal:2',
+        'purchase_date'         => 'date',
+        'expected_payment_date' => 'date',
+        'overdue_notified_at'   => 'datetime',
+        'subtotal'              => 'decimal:2',
+        'discount'              => 'decimal:2',
+        'tax_amount'            => 'decimal:2',
+        'shipping'              => 'decimal:2',
+        'total'                 => 'decimal:2',
+        'amount_paid'           => 'decimal:2',
     ];
 
     public function supplier(): BelongsTo   { return $this->belongsTo(Supplier::class); }
@@ -38,5 +41,12 @@ class Purchase extends Model
     public function getAmountDueAttribute(): float
     {
         return (float) ($this->total - $this->amount_paid);
+    }
+
+    public function getIsOverdueAttribute(): bool
+    {
+        return $this->payment_status === 'partial'
+            && $this->expected_payment_date !== null
+            && $this->expected_payment_date->isPast();
     }
 }

@@ -23,4 +23,19 @@ class PaymentAccount extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+    public function transfersFrom(): HasMany
+    {
+        return $this->hasMany(AccountTransfer::class, 'from_account_id');
+    }
+
+    public function transfersTo(): HasMany
+    {
+        return $this->hasMany(AccountTransfer::class, 'to_account_id');
+    }
 }

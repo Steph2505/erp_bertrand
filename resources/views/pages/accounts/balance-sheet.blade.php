@@ -10,9 +10,12 @@
 <div class="page-header">
     <div class="page-header__title">
         <h2>Bilan</h2>
-        <p>Situation financière au {{ \App\Helpers\FormatHelper::date(now()) }}</p>
+        <p>Situation financière au {{ \App\Helpers\FormatHelper::date($asOfDate) }}</p>
     </div>
     <div class="page-header__actions">
+        <form method="GET" style="display:flex;gap:8px;align-items:center;">
+            <input type="date" name="date" value="{{ $asOfDate }}" class="form-control" style="width:auto;" onchange="this.form.submit()">
+        </form>
         <a href="{{ route('accounts.trial-balance') }}" class="btn btn--ghost">Balance de vérification</a>
         <a href="{{ route('accounts.cash-flow') }}" class="btn btn--ghost">Flux de trésorerie</a>
     </div>
@@ -84,14 +87,14 @@
                             {{ match($acc->type) { 'cash' => 'Caisse', 'bank' => 'Banque', 'mobile_money' => 'Mobile Money', default => $acc->type } }}
                         </span>
                     </td>
-                    <td style="text-align:right;font-weight:600;">{{ \App\Helpers\FormatHelper::money($acc->current_balance) }}</td>
+                    <td style="text-align:right;font-weight:600;">{{ \App\Helpers\FormatHelper::money($acc->balance_as_of) }}</td>
                 </tr>
                 @endforeach
 
                 {{-- Stock --}}
                 <tr style="background:#F8FAFC;">
                     <td colspan="2" style="font-weight:700;font-size:12px;color:#64748B;text-transform:uppercase;padding:8px 16px;">
-                        Valeur du stock (coût d'achat)
+                        Valeur du stock (coût d'achat actuel)
                     </td>
                 </tr>
                 <tr>
@@ -173,5 +176,10 @@
         </div>
     </div>
 
+</div>
+
+<div style="margin-top:16px;padding:16px 20px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:13px;color:#64748B;">
+    <strong>Lecture :</strong>
+    La trésorerie et les créances/dettes sont recalculées à partir de l'historique des paiements jusqu'à la date choisie — le solde de trésorerie peut donc légèrement différer du solde affiché sur la page « Comptes de paiement » (voir la Balance de vérification pour l'écart). La valeur du stock utilise le prix d'achat actuel des articles, l'historique des prix n'étant pas conservé.
 </div>
 @endsection

@@ -16,18 +16,50 @@ class CustomerController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         try {
-            $customers = Customer::with('group')
+            $groups = CustomerGroup::orderBy('name')->get();
+            return view('pages.contacts.customers', compact('groups'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement de la page des clients');
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
+    }
+
+    public function apiIndex(Request $request): JsonResponse
+    {
+        try {
+            $paginator = Customer::with('group')
                 ->withSum(['sales' => fn($q) => $q->where('is_pos', true)], 'total')
                 ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
                 ->when($request->group_id, fn($q, $id) => $q->where('customer_group_id', $id))
                 ->latest()
-                ->paginate(20);
+                ->paginate(20, ['*'], 'page', $request->integer('page', 1));
 
-            $groups = CustomerGroup::orderBy('name')->get();
-            return view('pages.contacts.customers', compact('customers', 'groups'));
+            return response()->json([
+                'data' => $paginator->getCollection()->map(fn($c) => [
+                    'id'                => $c->id,
+                    'name'              => $c->name,
+                    'phone'             => $c->phone,
+                    'email'             => $c->email,
+                    'address'           => $c->address,
+                    'group_name'        => $c->group?->name,
+                    'customer_group_id' => $c->customer_group_id,
+                    'opening_balance'   => (float) $c->opening_balance,
+                    'ristourne_percent' => (float) $c->ristourne_percent,
+                    'is_active'         => (bool) $c->is_active,
+                    'revenue'           => \App\Helpers\FormatHelper::money((float) (($c->sales_sum_total ?? 0) + $c->opening_balance)),
+                    'show_url'          => route('customers.show', $c->id),
+                    'destroy_url'       => route('customers.destroy', $c->id),
+                ]),
+                'total'        => $paginator->total(),
+                'per_page'     => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'from'         => $paginator->firstItem() ?? 0,
+                'to'           => $paginator->lastItem() ?? 0,
+            ]);
         } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors du chargement de la page des clients');
-            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+            $this->logError($e, 'Erreur lors du chargement des clients', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger les clients.'], 500);
         }
     }
 
@@ -122,6 +154,10 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer): RedirectResponse
     {
+        if ($customer->sales()->exists()) {
+            return back()->with('error', 'Impossible de supprimer ce client : il est déjà associé à des ventes POS.');
+        }
+
         try {
             $customer->delete();
         } catch (Throwable $e) {

@@ -3,7 +3,7 @@
 @section('breadcrumb')<span class="current">Comptes</span>@endsection
 
 @section('content')
-<div x-data="{ showModal: false, editAccount: null }">
+<div x-data="{ showModal: false, editAccount: null, showTransferModal: false }">
 
 <div class="page-header">
     <div class="page-header__title">
@@ -11,6 +11,12 @@
         <p>Gestion des caisses et comptes bancaires</p>
     </div>
     <div class="page-header__actions">
+        @if($accounts->count() > 1)
+        <button @click="showTransferModal = true" class="btn btn--ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+            Transférer
+        </button>
+        @endif
         <button @click="showModal = true; editAccount = null" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouveau compte
@@ -134,6 +140,69 @@
             <div class="modal-footer-std">
                 <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
                 <button type="submit" class="btn btn--primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal transfert entre comptes --}}
+<div class="modal-overlay" x-show="showTransferModal" x-cloak @click.self="showTransferModal = false" x-transition>
+    <div class="modal modal--md">
+        <div class="modal__header">
+            <h3>Transférer des fonds</h3>
+            <button class="modal__close" @click="showTransferModal = false">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form method="POST" action="{{ route('payment-accounts.transfer') }}" class="modal__body"
+              x-data="{
+                  fromId: '{{ $accounts->first()->id ?? '' }}',
+                  toId: '{{ $accounts->skip(1)->first()->id ?? $accounts->first()->id ?? '' }}',
+                  amount: '',
+                  balances: @js($accounts->pluck('current_balance', 'id')),
+                  get maxAmount() { return Math.max(0, parseFloat(this.balances[this.fromId] ?? 0)); },
+                  get amountTooHigh() { return parseFloat(this.amount || 0) > this.maxAmount; },
+                  formatMoney(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v || 0)) + ' ' + window.CURRENCY; },
+              }"
+              @submit="if (fromId === toId) { window.toast('Le compte source et le compte destination doivent être différents.', 'error'); $event.preventDefault(); }
+                       else if (amountTooHigh) { window.toast('Le montant dépasse le solde disponible du compte source.', 'error'); $event.preventDefault(); }">
+            @csrf
+            <div class="form-grid form-grid--2">
+                <div class="form-group">
+                    <label>Compte source <span class="required">*</span></label>
+                    <select name="from_account_id" x-model="fromId" class="form-select" required>
+                        @foreach($accounts as $acc)
+                            <option value="{{ $acc->id }}">{{ $acc->name }} ({{ \App\Helpers\FormatHelper::money($acc->current_balance) }})</option>
+                        @endforeach
+                    </select>
+                    <p class="form-hint">Solde disponible : <strong x-text="formatMoney(maxAmount)"></strong></p>
+                </div>
+                <div class="form-group">
+                    <label>Compte destination <span class="required">*</span></label>
+                    <select name="to_account_id" x-model="toId" class="form-select" required>
+                        @foreach($accounts as $acc)
+                            <option value="{{ $acc->id }}">{{ $acc->name }} ({{ \App\Helpers\FormatHelper::money($acc->current_balance) }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Montant ({{ $currency }}) <span class="required">*</span></label>
+                    <input type="number" name="amount" x-model="amount" min="1" :max="maxAmount" step="1" class="form-control" :class="{'form-control--error': amountTooHigh}" required>
+                    <span class="form-error" x-show="amountTooHigh">Le montant ne peut pas dépasser <span x-text="formatMoney(maxAmount)"></span>.</span>
+                </div>
+                <div class="form-group">
+                    <label>Date <span class="required">*</span></label>
+                    <input type="date" name="transfer_date" class="form-control" value="{{ now()->toDateString() }}" required>
+                </div>
+                <div class="form-group form-group--full">
+                    <label>Note</label>
+                    <input type="text" name="note" class="form-control" placeholder="Optionnel">
+                </div>
+            </div>
+            <p x-show="fromId === toId" style="color:#C4231A;font-size:13px;margin-top:-8px;">Le compte source et le compte destination doivent être différents.</p>
+            <div class="modal-footer-std">
+                <button type="button" @click="showTransferModal = false" class="btn btn--light">Annuler</button>
+                <button type="submit" class="btn btn--primary" :disabled="fromId === toId || amountTooHigh">Transférer</button>
             </div>
         </form>
     </div>

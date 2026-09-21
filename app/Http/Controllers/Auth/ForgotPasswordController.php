@@ -32,8 +32,17 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => 'Une erreur est survenue lors de l\'envoi du lien.']);
         }
 
-        return $status === Password::ResetLinkSent
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        // L'app n'a pas de fichiers de traduction (lang/), donc __($status) renverrait
+        // la clé brute ("passwords.sent"...) au lieu d'un message lisible.
+        $messages = [
+            Password::RESET_LINK_SENT  => 'Un lien de réinitialisation a été envoyé à votre adresse email.',
+            Password::INVALID_USER     => 'Aucun compte ne correspond à cette adresse email.',
+            Password::RESET_THROTTLED  => 'Veuillez patienter avant de réessayer.',
+        ];
+        $message = $messages[$status] ?? 'Une erreur est survenue lors de l\'envoi du lien.';
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', $message)
+            : back()->withErrors(['email' => $message]);
     }
 }

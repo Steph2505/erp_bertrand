@@ -330,13 +330,18 @@
 
                 svg { width: 16px; height: 16px; color: $text-muted; }
 
+                // Même style que le bouton de déconnexion de la sidebar :
+                // pleinement arrondi sur les 4 coins, avec de l'espace autour
+                // (fourni par le padding du <form> parent) pour ne pas être
+                // rogné par l'overflow:hidden du menu.
                 &--danger {
                     justify-content: center;
                     background: $danger;
                     color: #fff;
-                    margin: $sp-4;
-                    border-radius: $radius-sm;
-                    width: calc(100% - #{$sp-4 * 2});
+                    border: 1.5px solid transparent;
+                    border-radius: $radius-md;
+                    appearance: none;
+                    width: 100%;
 
                     svg { color: #fff; }
 
@@ -344,9 +349,14 @@
                         background: $danger;
                         filter: brightness(0.88);
                         color: #fff;
+                        border-color: transparent;
                         svg { color: #fff; }
                     }
                 }
+            }
+
+            & > form {
+                padding: $sp-4 $sp-8 $sp-8;
             }
         }
     }

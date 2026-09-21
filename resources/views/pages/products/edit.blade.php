@@ -42,7 +42,7 @@
                          )">
                         <div class="form-group">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                                <label style="margin-bottom:0;">Catégorie</label>
+                                <label style="margin-bottom:0;">Catégorie <span class="required">*</span></label>
                                 <button type="button"
                                         @click="showCreateCategory=!showCreateCategory; createCategoryError=''"
                                         style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">

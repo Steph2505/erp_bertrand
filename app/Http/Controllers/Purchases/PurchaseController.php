@@ -115,12 +115,22 @@ class PurchaseController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Le sous-total dépend des lignes d'articles : on le calcule avant la
+        // validation pour pouvoir borner le montant payé au total réel.
+        $subtotal = collect($request->input('items', []))
+            ->sum(fn($i) => (float) ($i['quantity'] ?? 0) * (float) ($i['unit_price'] ?? 0));
+
+        $willStayPartial = $request->input('payment_type') === 'paid'
+            && round((float) $request->input('amount_paid', $subtotal), 2) < round($subtotal, 2);
+
         $request->validate([
             'supplier_id'              => 'required|exists:suppliers,id',
             'warehouse_id'             => 'nullable|exists:warehouses,id',
             'purchase_date'            => 'required|date',
             'payment_type'             => 'nullable|in:pending,confirmed,paid',
             'payment_account_id'       => 'required_if:payment_type,paid|nullable|exists:payment_accounts,id',
+            'amount_paid'              => 'nullable|numeric|min:0.01|max:' . max($subtotal, 0.01),
+            'expected_payment_date'    => $willStayPartial ? 'required|date|after_or_equal:today' : 'nullable|date',
             'items'                    => 'required|array|min:1',
             'items.*.selling_price'    => 'nullable|numeric|min:0',
             'items.*.wholesale_price'  => 'nullable|numeric|min:0',
@@ -130,22 +140,29 @@ class PurchaseController extends Controller
             return $blocked;
         }
 
+        $type          = $request->payment_type ?? 'pending'; // pending | confirmed | paid
+        $isPaid        = $type === 'paid';
+        $amountPaid    = $isPaid ? min((float) $request->input('amount_paid', $subtotal), $subtotal) : 0;
+        $paymentStatus = !$isPaid ? 'pending' : ($amountPaid >= round($subtotal, 2) ? 'paid' : 'partial');
+
         try {
-            DB::transaction(function () use ($request) {
-                $type      = $request->payment_type ?? 'pending'; // pending | confirmed | paid
-                $isPaid    = $type === 'paid';
+            DB::transaction(function () use ($request, $type, $isPaid, $amountPaid, $paymentStatus) {
                 $isConfirm = $type === 'confirmed' || $isPaid;
-                $reference = 'PUR-' . date('Ymd') . '-' . str_pad(Purchase::count() + 1, 4, '0', STR_PAD_LEFT);
+                // withTrashed() : un achat supprimé (soft-delete) garde sa référence
+                // réservée dans l'index unique — l'ignorer ferait régénérer une
+                // référence déjà prise et provoquerait une collision en base.
+                $reference = 'PUR-' . date('Ymd') . '-' . str_pad(Purchase::withTrashed()->count() + 1, 4, '0', STR_PAD_LEFT);
 
                 $purchase = Purchase::create([
-                    'reference'      => $reference,
-                    'supplier_id'    => $request->supplier_id,
-                    'warehouse_id'   => $request->warehouse_id,
-                    'purchase_date'  => $request->purchase_date,
-                    'status'         => $isConfirm ? 'confirmed' : 'draft',
-                    'payment_status' => $isPaid ? 'paid' : 'pending',
-                    'note'           => $request->note,
-                    'created_by'     => auth()->id(),
+                    'reference'              => $reference,
+                    'supplier_id'            => $request->supplier_id,
+                    'warehouse_id'           => $request->warehouse_id,
+                    'purchase_date'          => $request->purchase_date,
+                    'status'                 => $isConfirm ? 'confirmed' : 'draft',
+                    'payment_status'         => $paymentStatus,
+                    'expected_payment_date'  => $paymentStatus === 'partial' ? $request->expected_payment_date : null,
+                    'note'                   => $request->note,
+                    'created_by'             => auth()->id(),
                 ]);
 
                 $subtotal    = 0;
@@ -205,12 +222,12 @@ class PurchaseController extends Controller
                 $purchase->update([
                     'subtotal'    => $subtotal,
                     'total'       => $subtotal,
-                    'amount_paid' => $isPaid ? $subtotal : 0,
+                    'amount_paid' => $amountPaid,
                 ]);
 
-                if ($isPaid) {
+                if ($isPaid && $amountPaid > 0) {
                     $accountId = $request->payment_account_id ? (int) $request->payment_account_id : null;
-                    $this->paymentService->recordOutflow($purchase, $subtotal, 'cash', $accountId, $request->purchase_date);
+                    $this->paymentService->recordOutflow($purchase, $amountPaid, 'cash', $accountId, $request->purchase_date);
                 }
             });
         } catch (Throwable $e) {
@@ -239,9 +256,14 @@ class PurchaseController extends Controller
 
         $due = round((float) $purchase->total - (float) $purchase->amount_paid, 2);
 
+        // Un paiement partiel doit préciser la date à laquelle le solde sera réglé,
+        // pour pouvoir relancer l'utilisateur si cette date est dépassée.
+        $willStayPartial = round((float) $request->input('amount', 0), 2) < $due;
+
         $request->validate([
-            'amount'             => 'required|numeric|min:0.01|max:' . $due,
-            'payment_account_id' => 'required|exists:payment_accounts,id',
+            'amount'                => 'required|numeric|min:0.01|max:' . $due,
+            'payment_account_id'    => 'required|exists:payment_accounts,id',
+            'expected_payment_date' => $willStayPartial ? 'required|date|after_or_equal:today' : 'nullable|date',
         ]);
 
         $account = PaymentAccount::find($request->payment_account_id);
@@ -253,9 +275,13 @@ class PurchaseController extends Controller
                 $paymentStatus = $newPaid >= (float) $purchase->total ? 'paid' : 'partial';
 
                 $purchase->update([
-                    'amount_paid'    => $newPaid,
-                    'payment_status' => $paymentStatus,
-                    'status'         => $wasDraft ? 'confirmed' : $purchase->status,
+                    'amount_paid'            => $newPaid,
+                    'payment_status'         => $paymentStatus,
+                    'status'                 => $wasDraft ? 'confirmed' : $purchase->status,
+                    // Nouvelle échéance (ou aucune si soldé) — on réarme la relance
+                    // pour ne pas notifier immédiatement sur la base de l'ancienne date.
+                    'expected_payment_date'  => $paymentStatus === 'partial' ? $request->expected_payment_date : null,
+                    'overdue_notified_at'    => null,
                 ]);
 
                 // Si le paiement confirme automatiquement un brouillon, ajuster le stock

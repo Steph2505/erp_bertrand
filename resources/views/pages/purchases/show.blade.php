@@ -130,6 +130,17 @@
                     <strong class="purchase-summary__due-value">{{ \App\Helpers\FormatHelper::money($purchase->amount_due) }}</strong>
                 </div>
                 @endif
+                @if($purchase->expected_payment_date)
+                <div class="purchase-info__row">
+                    <span class="purchase-info__label">Solde prévu le</span>
+                    <span>{{ \App\Helpers\FormatHelper::date($purchase->expected_payment_date) }}</span>
+                </div>
+                @endif
+                @if($purchase->is_overdue)
+                <div class="alert alert--danger" style="margin-top:8px;padding:8px 12px;font-size:13px;">
+                    Échéance dépassée — dette envers {{ $purchase->supplier?->name ?? 'ce fournisseur' }} non réglée.
+                </div>
+                @endif
                 @if($purchase->returns->sum('total') > 0)
                 <div class="purchase-info__row">
                     <span class="purchase-info__label">Retourné</span>
@@ -210,7 +221,7 @@
             <div class="form-grid form-grid--2">
                 <div class="form-group">
                     <label>Montant ({{ $currency }}) <span class="required">*</span></label>
-                    <input type="number" x-model="amount" min="1" step="1" class="form-control" :class="{'form-control--error': errors.amount}"
+                    <input type="number" x-model="amount" min="1" :max="due" step="1" class="form-control" :class="{'form-control--error': errors.amount}"
                            placeholder="{{ number_format($purchase->amount_due, 0, ',', ' ') }}" required>
                     <span class="form-error" x-show="errors.amount" x-text="errors.amount"></span>
                 </div>
@@ -223,6 +234,17 @@
                     </select>
                     <span class="form-error" x-show="errors.accountId" x-text="errors.accountId"></span>
                 </div>
+            </div>
+            <div class="purchase-summary__due-row" x-show="isPartial" style="margin-bottom:12px;">
+                <span class="purchase-summary__due-label">Montant restant après ce paiement</span>
+                <strong class="purchase-summary__due-value" x-text="formatMoney(remaining)"></strong>
+            </div>
+            <div class="form-group" x-show="isPartial">
+                <label>Paiement du solde prévu le <span class="required">*</span></label>
+                <input type="date" x-model="expectedDate" class="form-control" :class="{'form-control--error': errors.expectedDate}"
+                       :min="today">
+                <span class="form-error" x-show="errors.expectedDate" x-text="errors.expectedDate"></span>
+                <p class="form-hint">Ce paiement est partiel : indiquez la date à laquelle le reste sera réglé. Vous serez notifié si cette date est dépassée sans paiement.</p>
             </div>
             <div class="modal-actions">
                 <button type="button" @click="open=false" class="btn btn--light">Annuler</button>
@@ -244,13 +266,25 @@ function payForm(url) {
     return {
         open: false, loading: false, success: '', error: '',
         amount: '{{ number_format($purchase->amount_due, 0, '.', '') }}', accountId: '{{ $accounts->first()->id ?? '' }}',
-        errors: { amount: '', accountId: '' },
+        expectedDate: '', today: new Date().toISOString().slice(0, 10),
+        due: {{ (float) $purchase->amount_due }},
+        errors: { amount: '', accountId: '', expectedDate: '' },
+        get isPartial() {
+            const amt = parseFloat(this.amount || 0);
+            return amt > 0 && amt < this.due;
+        },
+        get remaining() {
+            return Math.max(0, this.due - parseFloat(this.amount || 0));
+        },
+        formatMoney(v) { return new Intl.NumberFormat('fr-FR').format(Math.round(v || 0)) + ' ' + window.CURRENCY; },
         async submit() {
             this.error = ''; this.success = '';
-            this.errors = { amount: '', accountId: '' };
+            this.errors = { amount: '', accountId: '', expectedDate: '' };
             if (!this.amount)    this.errors.amount    = 'Le montant est obligatoire.';
+            else if (parseFloat(this.amount) > this.due) this.errors.amount = 'Le montant ne peut pas dépasser le reste dû (' + this.formatMoney(this.due) + ').';
             if (!this.accountId) this.errors.accountId = 'Le compte de paiement est obligatoire.';
-            if (this.errors.amount || this.errors.accountId) return;
+            if (this.isPartial && !this.expectedDate) this.errors.expectedDate = 'La date prévue du solde est obligatoire pour un paiement partiel.';
+            if (this.errors.amount || this.errors.accountId || this.errors.expectedDate) return;
             const ok = await window.confirmDialog('Enregistrer ce paiement de ' + this.amount + ' ' + window.CURRENCY + ' ?', { confirmLabel: 'Enregistrer' });
             if (!ok) return;
             this.loading = true;
@@ -264,6 +298,7 @@ function payForm(url) {
                 body: JSON.stringify({
                     amount: this.amount,
                     payment_account_id: this.accountId || null,
+                    expected_payment_date: this.isPartial ? this.expectedDate : null,
                 }),
             })
             .then(r => r.json())
@@ -274,8 +309,9 @@ function payForm(url) {
                     window.toastAfterReload('Paiement enregistré avec succès.', 'success');
                     setTimeout(() => window.location.reload(), 900);
                 } else if (data.errors) {
-                    this.errors.amount    = data.errors.amount?.[0]    ?? '';
-                    this.errors.accountId = data.errors.payment_account_id?.[0] ?? '';
+                    this.errors.amount       = data.errors.amount?.[0]    ?? '';
+                    this.errors.accountId    = data.errors.payment_account_id?.[0] ?? '';
+                    this.errors.expectedDate = data.errors.expected_payment_date?.[0] ?? '';
                     this.error = data.message ?? 'Veuillez corriger les erreurs.';
                     window.toast(this.error, 'error');
                 } else {

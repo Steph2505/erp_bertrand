@@ -7,6 +7,7 @@
 @endsection
 
 @section('content')
+<div x-data="{...listPage('{{ route('payment-accounts.api.show', $paymentAccount) }}')}" x-init="filters = {date_from: '', date_to: ''}; fetch()">
 <div class="page-header">
     <div class="page-header__title">
         <h2>{{ $paymentAccount->name }}</h2>
@@ -38,7 +39,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Encaissements (filtre)</div>
-            <div class="stat-card__value" style="color:#12864B;">{{ \App\Helpers\FormatHelper::money($totalCredits) }}</div>
+            <div class="stat-card__value" style="color:#12864B;" x-text="extra.total_credits_display ?? '—'">—</div>
             <div class="stat-card__trend stat-card__trend--up">Entrées sur la période</div>
         </div>
         <div class="stat-card__icon stat-card__icon--green">
@@ -48,7 +49,7 @@
     <div class="stat-card">
         <div class="stat-card__info">
             <div class="stat-card__label">Décaissements (filtre)</div>
-            <div class="stat-card__value" style="color:#C4231A;">{{ \App\Helpers\FormatHelper::money($totalDebits) }}</div>
+            <div class="stat-card__value" style="color:#C4231A;" x-text="extra.total_debits_display ?? '—'">—</div>
             <div class="stat-card__trend stat-card__trend--down">Sorties sur la période</div>
         </div>
         <div class="stat-card__icon stat-card__icon--red">
@@ -70,88 +71,104 @@
 </div>
 
 {{-- Filtre --}}
-<form method="GET" class="table-wrapper" style="padding:16px 20px;margin-bottom:16px;">
+<div class="table-wrapper" style="padding:16px 20px;margin-bottom:16px;">
     <div class="form-grid form-grid--3" style="gap:12px;align-items:flex-end;">
         <div class="form-group" style="margin-bottom:0">
             <label>Date début</label>
-            <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control">
+            <input type="date" x-model="filters.date_from" @change="reset()" class="form-control">
         </div>
         <div class="form-group" style="margin-bottom:0">
             <label>Date fin</label>
-            <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control">
+            <input type="date" x-model="filters.date_to" @change="reset()" class="form-control">
         </div>
         <div style="display:flex;gap:8px;">
-            <button type="submit" class="btn btn--primary">Filtrer</button>
-            <a href="{{ route('payment-accounts.show', $paymentAccount) }}" class="btn btn--ghost">Réinitialiser</a>
+            <button type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
         </div>
     </div>
-</form>
+</div>
 
 {{-- Journal --}}
 <div class="table-wrapper">
     <div class="table-wrapper__header">
         <strong>Journal des mouvements</strong>
-        <span style="font-size:13px;color:#64748B;">{{ $journal->count() }} opération(s)</span>
+        <span style="font-size:13px;color:#64748B;" x-text="total + ' opération(s)'">—</span>
     </div>
-    <table class="data-table">
-        <thead><tr>
-            <th>Date</th>
-            <th>Référence</th>
-            <th>Libellé</th>
-            <th>Mode</th>
-            <th style="text-align:right;color:#C4231A;">Débit (sortie)</th>
-            <th style="text-align:right;color:#12864B;">Crédit (entrée)</th>
-        </tr></thead>
-        <tbody>
-            @forelse($journal as $row)
-            <tr>
-                <td>{{ \App\Helpers\FormatHelper::date($row->date) }}</td>
-                <td style="font-size:12px;color:#64748B;font-weight:600;">{{ $row->reference }}</td>
-                <td>
-                    @if($row->link)
-                        <a href="{{ $row->link }}" style="color:#1749B3;font-weight:500;">{{ $row->label }}</a>
-                    @else
-                        {{ $row->label }}
-                    @endif
-                </td>
-                <td>
-                    <span class="badge badge--gray">{{ $row->method }}</span>
-                </td>
-                <td style="text-align:right;">
-                    @if($row->debit > 0)
-                        <strong style="color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($row->debit) }}</strong>
-                    @else
-                        <span style="color:#CBD5E1;">—</span>
-                    @endif
-                </td>
-                <td style="text-align:right;">
-                    @if($row->credit > 0)
-                        <strong style="color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($row->credit) }}</strong>
-                    @else
-                        <span style="color:#CBD5E1;">—</span>
-                    @endif
-                </td>
-            </tr>
-            @empty
-            <tr><td colspan="6" style="text-align:center;padding:40px;color:#64748B;">Aucun mouvement sur cette période</td></tr>
-            @endforelse
-        </tbody>
-        @if($journal->count() > 0)
-        <tfoot>
-            <tr style="border-top:2px solid #E2E8F0;background:#F8FAFC;font-weight:700;">
-                <td colspan="4">TOTAL</td>
-                <td style="text-align:right;color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($totalDebits) }}</td>
-                <td style="text-align:right;color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($totalCredits) }}</td>
-            </tr>
-            <tr style="background:#F8FAFC;font-weight:700;">
-                <td colspan="4">FLUX NET</td>
-                @php $net = $totalCredits - $totalDebits; @endphp
-                <td colspan="2" style="text-align:right;color:{{ $net >= 0 ? '#12864B' : '#C4231A' }};">
-                    {{ $net >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($net) }}
-                </td>
-            </tr>
-        </tfoot>
-        @endif
-    </table>
+    <div style="position:relative;">
+        <div x-show="loading && rows.length > 0" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
+            <svg style="width:28px;height:28px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </div>
+        <table class="data-table">
+            <thead><tr>
+                <th>Date</th>
+                <th>Référence</th>
+                <th>Libellé</th>
+                <th>Mode</th>
+                <th style="text-align:right;color:#C4231A;">Débit (sortie)</th>
+                <th style="text-align:right;color:#12864B;">Crédit (entrée)</th>
+            </tr></thead>
+            <tbody>
+                <template x-if="loading && rows.length === 0">
+                    <tr><td colspan="6" style="text-align:center;padding:40px;color:#64748B;">Chargement...</td></tr>
+                </template>
+                <template x-if="!loading && rows.length === 0">
+                    <tr><td colspan="6" style="text-align:center;padding:40px;color:#64748B;">Aucun mouvement sur cette période</td></tr>
+                </template>
+                <template x-for="(row, idx) in rows" :key="idx">
+                    <tr>
+                        <td x-text="row.date"></td>
+                        <td style="font-size:12px;color:#64748B;font-weight:600;" x-text="row.reference"></td>
+                        <td>
+                            <template x-if="row.link">
+                                <a :href="row.link" style="color:#1749B3;font-weight:500;" x-text="row.label"></a>
+                            </template>
+                            <template x-if="!row.link">
+                                <span x-text="row.label"></span>
+                            </template>
+                        </td>
+                        <td>
+                            <span class="badge badge--gray" x-text="row.method"></span>
+                        </td>
+                        <td style="text-align:right;">
+                            <template x-if="row.debit_display">
+                                <strong style="color:#C4231A;" x-text="'− ' + row.debit_display"></strong>
+                            </template>
+                            <template x-if="!row.debit_display">
+                                <span style="color:#CBD5E1;">—</span>
+                            </template>
+                        </td>
+                        <td style="text-align:right;">
+                            <template x-if="row.credit_display">
+                                <strong style="color:#12864B;" x-text="'+ ' + row.credit_display"></strong>
+                            </template>
+                            <template x-if="!row.credit_display">
+                                <span style="color:#CBD5E1;">—</span>
+                            </template>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot x-show="rows.length > 0">
+                <tr style="border-top:2px solid #E2E8F0;background:#F8FAFC;font-weight:700;">
+                    <td colspan="4">TOTAL</td>
+                    <td style="text-align:right;color:#C4231A;" x-text="'− ' + (extra.total_debits_display ?? '—')"></td>
+                    <td style="text-align:right;color:#12864B;" x-text="'+ ' + (extra.total_credits_display ?? '—')"></td>
+                </tr>
+                <tr style="background:#F8FAFC;font-weight:700;">
+                    <td colspan="4">FLUX NET</td>
+                    <td colspan="2" :style="'text-align:right;color:' + (extra.net_positive ? '#12864B' : '#C4231A')" x-text="extra.net_display ?? '—'"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="table-wrapper__footer">
+        <span x-text="from + '–' + to + ' sur ' + total"></span>
+        <div style="display:flex;gap:4px;" x-show="lastPage > 1">
+            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+        </div>
+    </div>
 </div>
+</div>
+@include('components.list-page-script')
 @endsection

@@ -3,6 +3,7 @@
 @section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Stock</span>@endsection
 
 @section('content')
+<div x-data="{...listPage('{{ route('reports.api.stock') }}')}" x-init="filters = {search: '', category_id: '', status: ''}; fetch()">
 <div class="page-header">
     <div class="page-header__title"><h2>Rapport de stock</h2><p>État des stocks en temps réel</p></div>
     <div class="page-header__actions">
@@ -20,66 +21,73 @@
     <div class="stat-card"><div class="stat-card__info"><div class="stat-card__label">Rupture</div><div class="stat-card__value" style="color:#C4231A;">{{ $outCount }}</div><div class="stat-card__trend stat-card__trend--down">Stock = 0</div></div><div class="stat-card__icon stat-card__icon--red"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg></div></div>
 </div>
 
-<form method="GET" class="table-wrapper" style="padding:14px 20px;margin-bottom:16px;">
+<div class="table-wrapper" style="padding:14px 20px;margin-bottom:16px;">
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="form-group" style="margin:0"><label>Recherche</label><input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Nom article…"></div>
+        <div class="form-group" style="margin:0"><label>Recherche</label><input type="text" x-model="filters.search" @input.debounce.400ms="reset()" class="form-control" placeholder="Nom article…"></div>
         <div class="form-group" style="margin:0"><label>Catégorie</label>
-            <select name="category_id" class="form-select">
+            <select x-model="filters.category_id" @change="reset()" class="form-select">
                 <option value="">Toutes</option>
-                @foreach($categories as $cat)<option value="{{ $cat->id }}" {{ $categoryId==$cat->id?'selected':''}}>{{ $cat->name }}</option>@endforeach
+                @foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach
             </select>
         </div>
         <div class="form-group" style="margin:0"><label>Statut</label>
-            <select name="status" class="form-select">
+            <select x-model="filters.status" @change="reset()" class="form-select">
                 <option value="">Tous</option>
-                <option value="ok" {{ $status==='ok'?'selected':''}}>OK</option>
-                <option value="low" {{ $status==='low'?'selected':''}}>Stock faible</option>
-                <option value="out" {{ $status==='out'?'selected':''}}>Rupture</option>
+                <option value="ok">OK</option>
+                <option value="low">Stock faible</option>
+                <option value="out">Rupture</option>
             </select>
         </div>
-        <button class="btn btn--primary">Filtrer</button>
-        <a href="{{ route('reports.stock') }}" class="btn btn--ghost">Réinitialiser</a>
-    </div>
-</form>
-
-<div class="table-wrapper">
-    <div class="table-wrapper__header"><strong>Articles</strong><span style="font-size:13px;color:#64748B;">{{ $products->total() }} résultat(s)</span></div>
-    <table class="data-table">
-        <thead><tr>
-            <th>Article</th><th>Catégorie</th><th>Unité</th>
-            <th style="text-align:right">Stock actuel</th>
-            <th style="text-align:right">Stock min.</th>
-            <th style="text-align:right">Valeur (coût)</th>
-            <th>Statut</th>
-        </tr></thead>
-        <tbody>
-            @forelse($products as $p)
-            @php
-                $isOut = $p->stock_quantity <= 0;
-                $isLow = !$isOut && $p->stock_quantity <= $p->min_stock_quantity;
-            @endphp
-            <tr>
-                <td><strong>{{ $p->display_name }}</strong></td>
-                <td>{{ $p->category?->name ?? '—' }}</td>
-                <td>{{ $p->unit?->abbreviation ?? '—' }}</td>
-                <td style="text-align:right;font-weight:600;color:{{ $isOut?'#C4231A':($isLow?'#B45309':'#12864B') }}">{{ \App\Helpers\FormatHelper::number($p->stock_quantity) }}</td>
-                <td style="text-align:right;color:#64748B;">{{ \App\Helpers\FormatHelper::number($p->min_stock_quantity) }}</td>
-                <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($p->stock_quantity * $p->buying_price) }}</td>
-                <td>
-                    @if($isOut) <span class="badge badge--red">Rupture</span>
-                    @elseif($isLow) <span class="badge badge--yellow">Faible</span>
-                    @else <span class="badge badge--green">OK</span>
-                    @endif
-                </td>
-            </tr>
-            @empty
-            <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Aucun article</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    <div class="table-wrapper__footer">
-        <span>{{ $products->firstItem()??0 }}–{{ $products->lastItem()??0 }} sur {{ $products->total() }}</span>
-        {{ $products->withQueryString()->links() }}
+        <button type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
+
+<div class="table-wrapper">
+    <div class="table-wrapper__header"><strong>Articles</strong><span style="font-size:13px;color:#64748B;" x-text="total + ' résultat(s)'">—</span></div>
+    <div style="position:relative;">
+        <div x-show="loading && rows.length > 0" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
+            <svg style="width:28px;height:28px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </div>
+        <table class="data-table">
+            <thead><tr>
+                <th>Article</th><th>Catégorie</th><th>Unité</th>
+                <th style="text-align:right">Stock actuel</th>
+                <th style="text-align:right">Stock min.</th>
+                <th style="text-align:right">Valeur (coût)</th>
+                <th>Statut</th>
+            </tr></thead>
+            <tbody>
+                <template x-if="loading && rows.length === 0">
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Chargement...</td></tr>
+                </template>
+                <template x-if="!loading && rows.length === 0">
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Aucun article</td></tr>
+                </template>
+                <template x-for="(p, idx) in rows" :key="idx">
+                    <tr>
+                        <td><strong x-text="p.name"></strong></td>
+                        <td x-text="p.category_name ?? '—'"></td>
+                        <td x-text="p.unit_abbr ?? '—'"></td>
+                        <td :style="'text-align:right;font-weight:600;color:' + (p.status==='out'?'#C4231A':(p.status==='low'?'#B45309':'#12864B'))" x-text="p.stock_quantity"></td>
+                        <td style="text-align:right;color:#64748B;" x-text="p.min_stock"></td>
+                        <td style="text-align:right" x-text="p.value"></td>
+                        <td>
+                            <span class="badge" :class="p.status==='out'?'badge--red':(p.status==='low'?'badge--yellow':'badge--green')" x-text="p.status==='out'?'Rupture':(p.status==='low'?'Faible':'OK')"></span>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-wrapper__footer">
+        <span x-text="from + '–' + to + ' sur ' + total"></span>
+        <div style="display:flex;gap:4px;" x-show="lastPage > 1">
+            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+        </div>
+    </div>
+</div>
+</div>
+@include('components.list-page-script')
 @endsection

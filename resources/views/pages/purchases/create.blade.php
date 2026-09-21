@@ -21,7 +21,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Confirmer
         </button>
-        <button type="button" @click="window.confirmDialog('Confirmer le paiement de cet achat ?', {confirmLabel:'Payer'}).then(ok => ok && submitForm('paid'))" class="btn btn--primary" :disabled="items.length === 0">
+        <button type="button" @click="openPayModal()" class="btn btn--primary" :disabled="items.length === 0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Payé
         </button>
@@ -117,6 +117,8 @@
             </button>
         </div>
         <input type="hidden" id="payment-type-input" name="payment_type" value="pending">
+        <input type="hidden" id="amount-paid-input" name="amount_paid" value="">
+        <input type="hidden" id="expected-payment-date-input" name="expected_payment_date" value="">
     </div>
 
     <div class="purchase-layout__items">
@@ -281,6 +283,47 @@
         </div>
     </div>
 </div>
+
+{{-- Modal paiement (bouton Payé) --}}
+<div class="modal-overlay" x-show="payModalOpen" x-cloak @click.self="payModalOpen=false" x-transition>
+    <div class="modal modal--sm">
+        <div class="modal__header">
+            <h3>Confirmer le paiement</h3>
+            <button class="modal__close" @click="payModalOpen=false">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="modal__body">
+            <div class="form-grid form-grid--2">
+                <div class="form-group">
+                    <label>Montant ({{ $currency }}) <span class="required">*</span></label>
+                    <input type="number" x-model.number="payAmount" min="1" :max="subtotal" step="1" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Compte débité <span class="required">*</span></label>
+                    <select x-model.number="paymentAccountId" class="form-select">
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->id }}">{{ $account->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="purchase-summary__due-row" x-show="payAmount < subtotal" style="margin-bottom:12px;">
+                <span class="purchase-summary__due-label">Montant restant après ce paiement</span>
+                <strong class="purchase-summary__due-value" x-text="formatMoney(Math.max(0, subtotal - (payAmount || 0)))"></strong>
+            </div>
+            <div class="form-group" x-show="payAmount < subtotal">
+                <label>Paiement du solde prévu le <span class="required">*</span></label>
+                <input type="date" x-model="payExpectedDate" class="form-control" :min="today">
+                <p class="form-hint">Ce paiement est partiel : indiquez la date à laquelle le reste sera réglé.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" @click="payModalOpen=false" class="btn btn--light">Annuler</button>
+                <button type="button" @click="confirmPay()" class="btn btn--pay-filled">Payer</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 @endsection
 
@@ -299,6 +342,11 @@ function purchaseForm() {
         items: [],
         accounts,
         paymentAccountId: (accounts.find(a => a.is_default) ?? accounts[0])?.id ?? '',
+
+        payModalOpen: false,
+        payAmount: 0,
+        payExpectedDate: '',
+        today: new Date().toISOString().slice(0, 10),
 
         quickCreateRowIdx: null,
         newProductName: '', newProductVariation: '', newProductBuying: 0, newProductSelling: 0, newProductWholesale: null,
@@ -451,6 +499,27 @@ function purchaseForm() {
             return new Intl.NumberFormat('fr-FR').format(Math.round(v)) + ' ' + window.CURRENCY;
         },
 
+        openPayModal() {
+            if (!this.selectedSupplier) { window.toast('Le fournisseur est obligatoire.', 'error'); return; }
+            if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
+            const incomplete = this.items.filter(i => !i.product_id);
+            if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de article sélectionné.', 'error'); return; }
+            this.payAmount       = this.subtotal;
+            this.payExpectedDate = '';
+            this.payModalOpen    = true;
+        },
+
+        async confirmPay() {
+            if (!this.paymentAccountId) { window.toast('Sélectionnez le compte de paiement.', 'error'); return; }
+            if (!this.payAmount || this.payAmount <= 0) { window.toast('Le montant est obligatoire.', 'error'); return; }
+            if (this.payAmount > this.subtotal) { window.toast('Le montant ne peut pas dépasser le total (' + this.formatMoney(this.subtotal) + ').', 'error'); return; }
+            if (this.payAmount < this.subtotal && !this.payExpectedDate) { window.toast('La date prévue du solde est obligatoire pour un paiement partiel.', 'error'); return; }
+            const ok = await window.confirmDialog('Confirmer le paiement de ' + this.formatMoney(this.payAmount) + ' ?', { confirmLabel: 'Payer' });
+            if (!ok) return;
+            this.payModalOpen = false;
+            this.submitForm('paid');
+        },
+
         submitForm(paymentType = 'pending') {
             if (!this.selectedSupplier) { window.toast('Le fournisseur est obligatoire.', 'error'); return; }
             if (this.items.length === 0) { window.toast('Ajoutez au moins un article.', 'error'); return; }
@@ -458,6 +527,8 @@ function purchaseForm() {
             if (incomplete.length > 0) { window.toast('Certaines lignes n\'ont pas de article sélectionné.', 'error'); return; }
             if (paymentType === 'paid' && !this.paymentAccountId) { window.toast('Sélectionnez le compte de paiement.', 'error'); return; }
             document.getElementById('payment-type-input').value = paymentType;
+            document.getElementById('amount-paid-input').value = paymentType === 'paid' ? this.payAmount : '';
+            document.getElementById('expected-payment-date-input').value = (paymentType === 'paid' && this.payAmount < this.subtotal) ? this.payExpectedDate : '';
             document.getElementById('purchase-form').submit();
         }
     };

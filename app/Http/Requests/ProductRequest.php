@@ -17,7 +17,7 @@ class ProductRequest extends FormRequest
             'variation'          => 'nullable|string|max:255',
             'description'        => 'nullable|string',
             'barcode'            => 'nullable|string|max:100|unique:products,barcode,' . $productId,
-            'category_id'        => 'nullable|exists:categories,id',
+            'category_id'        => 'required|exists:categories,id',
             'brand_id'           => 'nullable|exists:brands,id',
             'unit_id'            => 'nullable|exists:units,id',
             'buying_price'       => 'required|numeric|min:0',

@@ -4,7 +4,9 @@
 // ─── Autocomplete dropdown (commun à toutes les pages ventes) ─────────────────
 .ac-dropdown {
     position: absolute;
-    z-index: 9999;
+    // Doit rester sous les modales (1000 / 1100) pour ne jamais masquer une
+    // boîte de confirmation restée ouverte pendant qu'un dropdown l'est aussi.
+    z-index: 900;
     background: $bg-white;
     border: 1.5px solid $border;
     border-radius: $radius-md;

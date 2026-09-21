@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use Throwable;
@@ -183,12 +184,15 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $request->validate([
                 'current_password' => 'required|current_password',
-                'password'         => 'min:8|confirmed',
+                'password'         => ['confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             ], [
-                'current_password.required'        => 'Veuillez saisir votre mot de passe actuel.',
+                'current_password.required'         => 'Veuillez saisir votre mot de passe actuel.',
                 'current_password.current_password' => 'Le mot de passe actuel est incorrect.',
-                'password.min'                      => 'Le nouveau mot de passe doit contenir au moins 8 caractères.',
-                'password.confirmed'                => 'La confirmation du mot de passe ne correspond pas.',
+                'password.min'                       => 'Le nouveau mot de passe doit contenir au moins 8 caractères.',
+                'password.mixed'                     => 'Le nouveau mot de passe doit contenir au moins une majuscule et une minuscule.',
+                'password.numbers'                   => 'Le nouveau mot de passe doit contenir au moins un chiffre.',
+                'password.symbols'                   => 'Le nouveau mot de passe doit contenir au moins un caractère spécial.',
+                'password.confirmed'                 => 'La confirmation du mot de passe ne correspond pas.',
             ]);
         }
 

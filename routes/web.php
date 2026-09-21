@@ -64,6 +64,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/search-products',           [PackController::class, 'searchPackableProducts'])->name('search-products');
         Route::get('/search-for-sale',           [PackController::class, 'searchForSale'])->name('search-for-sale');
         Route::get('/',                          [PackController::class, 'index'])->name('index');
+        Route::get('/api/list',                  [PackController::class, 'apiIndex'])->name('api.list');
         Route::get('/create',                    [PackController::class, 'create'])->name('create');
         Route::post('/',                         [PackController::class, 'store'])->name('store');
         Route::get('/{pack}',                    [PackController::class, 'show'])->name('show');
@@ -161,6 +162,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ── Dépenses ─────────────────────────────────────────────────────────────
     Route::prefix('expenses')->name('expenses.')->middleware('permission:manage expenses')->group(function () {
         Route::get('/',                                [ExpenseController::class, 'index'])->name('index');
+        Route::get('/api/list',                        [ExpenseController::class, 'apiIndex'])->name('api.list');
         Route::get('/create',                          fn() => redirect()->route('expenses.index', ['new' => 1]))->name('create');
         Route::post('/',                               [ExpenseController::class, 'store'])->name('store');
         Route::put('/{expense}',                       [ExpenseController::class, 'update'])->name('update');
@@ -175,7 +177,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::prefix('payment-accounts')->name('payment-accounts.')->middleware('permission:manage accounts')->group(function () {
         Route::get('/',                    [PaymentAccountController::class, 'index'])->name('index');
         Route::post('/',                   [PaymentAccountController::class, 'store'])->name('store');
-        Route::get('/{paymentAccount}',    [PaymentAccountController::class, 'show'])->name('show');
+        Route::post('/transfer',           [PaymentAccountController::class, 'transfer'])->name('transfer');
+        Route::get('/{paymentAccount}',           [PaymentAccountController::class, 'show'])->name('show');
+        Route::get('/{paymentAccount}/api/journal', [PaymentAccountController::class, 'apiShow'])->name('api.show');
         Route::put('/{paymentAccount}',    [PaymentAccountController::class, 'update'])->name('update');
         Route::delete('/{paymentAccount}', [PaymentAccountController::class, 'destroy'])->name('destroy');
     });
@@ -186,6 +190,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ── Contacts ─────────────────────────────────────────────────────────────
     Route::prefix('customers')->name('customers.')->middleware('permission:manage customers')->group(function () {
         Route::get('/',               [CustomerController::class, 'index'])->name('index');
+        Route::get('/api/list',       [CustomerController::class, 'apiIndex'])->name('api.list');
         Route::post('/',              [CustomerController::class, 'store'])->name('store');
         Route::get('/{customer}',     [CustomerController::class, 'show'])->name('show');
         Route::put('/{customer}',     [CustomerController::class, 'update'])->name('update');
@@ -196,6 +201,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::prefix('suppliers')->name('suppliers.')->middleware('permission:manage suppliers')->group(function () {
         Route::get('/',               [SupplierController::class, 'index'])->name('index');
+        Route::get('/api/list',       [SupplierController::class, 'apiIndex'])->name('api.list');
         Route::post('/',              [SupplierController::class, 'store'])->name('store');
         Route::get('/{supplier}',     [SupplierController::class, 'show'])->name('show');
         Route::put('/{supplier}',     [SupplierController::class, 'update'])->name('update');
@@ -205,19 +211,36 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ── Rapports ─────────────────────────────────────────────────────────────
     Route::prefix('reports')->name('reports.')->middleware('permission:view reports')->controller(ReportController::class)->group(function () {
         Route::get('/profit-loss',        'profitLoss')->name('profit-loss');
+        Route::get('/api/profit-loss',    'apiProfitLoss')->name('api.profit-loss');
         Route::get('/purchase-sale',      'purchaseSale')->name('purchase-sale');
         Route::get('/tax',                'tax')->name('tax');
-        Route::get('/contacts',           'contacts')->name('contacts');
+        Route::get('/api/tax',            'apiTax')->name('api.tax');
+        Route::get('/customers',          'reportCustomers')->name('customers');
+        Route::get('/api/customers',      'apiReportCustomers')->name('api.customers');
+        Route::get('/suppliers',          'reportSuppliers')->name('suppliers');
+        Route::get('/api/suppliers',      'apiReportSuppliers')->name('api.suppliers');
         Route::get('/stock',              'stock')->name('stock');
+        Route::get('/api/stock',          'apiStock')->name('api.stock');
         Route::get('/stock-adjustment',   'stockAdjustment')->name('stock-adjustment');
+        Route::get('/api/stock-adjustment', 'apiStockAdjustment')->name('api.stock-adjustment');
         Route::get('/product-purchase',   'productPurchase')->name('product-purchase');
+        Route::get('/api/product-purchase', 'apiProductPurchase')->name('api.product-purchase');
         Route::get('/product-sale',       'productSale')->name('product-sale');
+        Route::get('/api/product-sale',   'apiProductSale')->name('api.product-sale');
+        Route::get('/category-profit',      'categoryProfit')->name('category-profit');
+        Route::get('/api/category-profit',  'apiCategoryProfit')->name('api.category-profit');
         Route::get('/purchase-payments',  'purchasePayments')->name('purchase-payments');
+        Route::get('/api/purchase-payments', 'apiPurchasePayments')->name('api.purchase-payments');
         Route::get('/sale-payments',      'salePayments')->name('sale-payments');
+        Route::get('/api/sale-payments',  'apiSalePayments')->name('api.sale-payments');
         Route::get('/expenses',           'expenses')->name('expenses');
+        Route::get('/api/expenses',       'apiExpensesReport')->name('api.expenses');
         Route::get('/pos',                'pos')->name('pos');
+        Route::get('/api/pos',            'apiPos')->name('api.pos');
         Route::get('/agents',             'agents')->name('agents');
+        Route::get('/api/agents',         'apiAgents')->name('api.agents');
         Route::get('/activity',           'activity')->name('activity');
+        Route::get('/api/activity',       'apiActivity')->name('api.activity');
     });
 
     // ── Utilisateurs ─────────────────────────────────────────────────────────

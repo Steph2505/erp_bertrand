@@ -25,13 +25,52 @@ class PackController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         try {
-            $packs       = $this->repo->paginate($request->only(['search', 'is_active']));
-            $stockService = $this->stockService;
-
-            return view('pages.products.packs.index', compact('packs', 'stockService'));
+            return view('pages.products.packs.index');
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des packs');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
+        }
+    }
+
+    public function apiIndex(Request $request): JsonResponse
+    {
+        try {
+            $paginator = $this->repo->paginate($request->only(['search', 'is_active']), 20);
+
+            return response()->json([
+                'data' => $paginator->getCollection()->map(function (Pack $pack) {
+                    $defPrice  = $pack->defaultPrice;
+                    $buy       = $defPrice?->buying_price ?? 0;
+                    $sell      = $defPrice?->selling_price ?? 0;
+                    $margin    = $buy > 0 ? round((($sell - $buy) / $buy) * 100, 1) : 0;
+
+                    return [
+                        'id'           => $pack->id,
+                        'name'         => $pack->name,
+                        'barcode'      => $pack->barcode,
+                        'image_url'    => $pack->getFirstMediaUrl('images') ?: null,
+                        'composition'  => $pack->items->map(fn($i) => "{$i->quantity}× {$i->product->display_name}")->toArray(),
+                        'buying_price'  => \App\Helpers\FormatHelper::money($buy),
+                        'selling_price' => \App\Helpers\FormatHelper::money($sell),
+                        'margin'        => $margin,
+                        'available'     => $this->stockService->availablePackCount($pack->id),
+                        'is_active'     => (bool) $pack->is_active,
+                        'show_url'      => route('packs.show', $pack->id),
+                        'edit_url'      => route('packs.edit', $pack->id),
+                        'toggle_url'    => route('packs.toggle-active', $pack->id),
+                        'destroy_url'   => route('packs.destroy', $pack->id),
+                    ];
+                }),
+                'total'        => $paginator->total(),
+                'per_page'     => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'from'         => $paginator->firstItem() ?? 0,
+                'to'           => $paginator->lastItem() ?? 0,
+            ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement des packs', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger les packs.'], 500);
         }
     }
 

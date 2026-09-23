@@ -111,7 +111,7 @@
 <div class="caisse-grid" x-show="caisses.length > 0">
     <template x-for="caisse in caisses" :key="caisse.id">
         <div class="caisse-card" :class="caisse.is_active ? '' : 'caisse-card--inactive'"
-             x-data="{ editOpen: false }">
+             x-data="{ editOpen: false, mgrSearch: '', mgrOpen: false, mgrId: caisse.manager_id || '', mgrName: caisse.manager_name || '' }">
 
             {{-- En-tête --}}
             <div class="caisse-card__header">
@@ -119,6 +119,12 @@
                 <div class="caisse-card__meta">
                     <div class="caisse-card__name" x-text="caisse.name"></div>
                     <div class="caisse-card__desc" x-text="caisse.description || 'Pas de description'" x-show="caisse.description || !caisse.is_active"></div>
+                    <div class="caisse-card__desc" x-show="caisse.manager_name" style="color:#1749B3;font-weight:600;">
+                        <span x-text="'Gérant : ' + caisse.manager_name"></span>
+                    </div>
+                    <div class="caisse-card__desc" x-show="!caisse.manager_name" style="color:#94A3B8;">
+                        Accès réservé Admin / Super Admin
+                    </div>
                 </div>
                 <span class="badge" :class="caisse.is_active ? 'badge--green' : 'badge--gray'"
                       x-text="caisse.is_active ? 'Active' : 'Inactive'"></span>
@@ -223,6 +229,28 @@
                         <label style="font-size:12px;">Description</label>
                         <input type="text" name="description" :value="caisse.description" class="form-control" placeholder="Optionnel">
                     </div>
+                    @if(auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
+                    <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;position:relative;" @click.outside="mgrOpen=false">
+                        <label style="font-size:12px;">Gérant assigné</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" x-model="mgrSearch" @focus="mgrOpen=true" @input="mgrOpen=true"
+                                   :placeholder="mgrName || 'Aucun (Admin uniquement)'" class="form-control" autocomplete="off">
+                            <input type="hidden" name="manager_id" :value="mgrId">
+                            <div x-show="mgrOpen" x-transition class="autocomplete-dropdown">
+                                <div @mousedown.prevent="mgrId=''; mgrName=''; mgrSearch=''; mgrOpen=false"
+                                     class="autocomplete-dropdown__item" style="color:#64748B;">
+                                    Aucun (Admin uniquement)
+                                </div>
+                                <template x-for="m in managerOptions.filter(m => m.name.toLowerCase().includes(mgrSearch.toLowerCase()))" :key="m.id">
+                                    <div @mousedown.prevent="mgrId=m.id; mgrName=m.name; mgrSearch=''; mgrOpen=false"
+                                         class="autocomplete-dropdown__item">
+                                        <span x-text="m.name"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     <div style="display:flex;gap:8px;">
                         <button type="submit" class="btn btn--primary btn--sm">Sauver</button>
                         <button type="button" @click="editOpen = false" class="btn btn--light btn--sm">Annuler</button>
@@ -253,6 +281,31 @@
                 <label>Description</label>
                 <input type="text" name="description" class="form-control" placeholder="Optionnel">
             </div>
+            @if(auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
+            <div class="form-group" x-data="{ mgrSearch: '', mgrOpen: false, mgrId: '', mgrName: '' }" @click.outside="mgrOpen=false">
+                <label>Gérant assigné <small style="color:#94A3B8;">(optionnel — laisser vide = accès réservé aux Admin/Super Admin)</small></label>
+                <div class="autocomplete-wrap">
+                    <input type="text" x-model="mgrSearch" @focus="mgrOpen=true" @input="mgrOpen=true"
+                           :placeholder="mgrName || 'Aucun (Admin uniquement)'" class="form-control" autocomplete="off">
+                    <input type="hidden" name="manager_id" :value="mgrId">
+                    <div x-show="mgrOpen" x-transition class="autocomplete-dropdown">
+                        <div @mousedown.prevent="mgrId=''; mgrName=''; mgrSearch=''; mgrOpen=false"
+                             class="autocomplete-dropdown__item" style="color:#64748B;">
+                            Aucun (Admin uniquement)
+                        </div>
+                        <template x-for="m in managerOptions.filter(m => m.name.toLowerCase().includes(mgrSearch.toLowerCase()))" :key="m.id">
+                            <div @mousedown.prevent="mgrId=m.id; mgrName=m.name; mgrSearch=''; mgrOpen=false"
+                                 class="autocomplete-dropdown__item">
+                                <span x-text="m.name"></span>
+                            </div>
+                        </template>
+                        <template x-if="managerOptions.filter(m => m.name.toLowerCase().includes(mgrSearch.toLowerCase())).length === 0">
+                            <div class="autocomplete-dropdown__empty">Aucun résultat</div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            @endif
             @if($errors->any() && !$errors->has('caisse'))
             <div class="alert alert--danger" style="margin-bottom:12px;">
                 @foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach
@@ -318,6 +371,8 @@ $caissesJson = $caisses->map(function ($c) use ($currentUserId) {
         'description'    => $c->description,
         'is_active'      => $c->is_active,
         'sessions_count' => $c->sessions_count,
+        'manager_id'     => $c->manager_id,
+        'manager_name'   => $c->manager?->name,
         'my_session'     => (bool) $c->sessions->firstWhere('user_id', $currentUserId),
         'open_session'   => $openSession ? [
             'user_name' => $openSession->user->name,
@@ -343,6 +398,7 @@ function caisseSearch() {
         openCaisse:   null,
         showSessions: {{ $openSessions->count() > 0 ? 'true' : 'false' }},
         caisses:      @json($caissesJson),
+        managerOptions: @json($managers->map(fn($m) => ['id' => $m->id, 'name' => $m->name])),
 
         get total() { return this.caisses.length; },
 

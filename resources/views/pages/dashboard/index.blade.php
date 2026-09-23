@@ -1,23 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Tableau de bord')
 
-@php
-    $chartLabel = match($period) {
-        'today' => "Aujourd'hui (par heure)",
-        'week'  => 'Cette semaine (par jour)',
-        'month' => 'Ce mois (par jour)',
-        'year'  => 'Cette année (par mois)',
-        default => '',
-    };
-    $periodLabel = match($period) {
-        'today' => "Aujourd'hui",
-        'week'  => 'Cette semaine',
-        'month' => 'Ce mois',
-        'year'  => 'Cette année',
-        default => '',
-    };
-@endphp
-
 @section('content')
 <div x-data="dashboard()" x-init="init()">
 
@@ -26,20 +9,19 @@
         <h2>Tableau de bord</h2>
         <p>Vue d'ensemble de votre activité</p>
     </div>
-    <div class="page-header__actions">
+    <div class="page-header__actions" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="filter-tabs">
-            <button @click="setPeriod('today')"  class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'today'  }">Aujourd'hui</button>
-            <button @click="setPeriod('week')"   class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'week'   }">Semaine</button>
-            <button @click="setPeriod('month')"  class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'month'  }">Mois</button>
-            <button @click="setPeriod('year')"   class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'year'   }">Année</button>
+            <button @click="setToday()" class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'today' }">Aujourd'hui</button>
         </div>
+        <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="dateFrom" @change="setCustom()" class="form-control"></div>
+        <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="dateTo" @change="setCustom()" class="form-control"></div>
     </div>
 </div>
 
 {{-- KPI Cards --}}
 <div class="stat-grid">
     {{-- Ventes --}}
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" @click="openModal('sales', 'Ventes')" title="Voir le détail des ventes">
         <div class="stat-card__info">
             <div class="stat-card__label">Ventes</div>
             <div class="stat-card__value" x-text="loading ? '…' : stats.totalSalesFormatted">{{ \App\Helpers\FormatHelper::money($totalSales) }}</div>
@@ -62,8 +44,20 @@
         </div>
     </div>
 
+    {{-- Recette (encaissements réels) --}}
+    <div class="stat-card" style="cursor:pointer" @click="openModal('recette', 'Recette (encaissements)')" title="Voir le détail des encaissements">
+        <div class="stat-card__info">
+            <div class="stat-card__label">Recette</div>
+            <div class="stat-card__value" x-text="loading ? '…' : stats.recetteFormatted">{{ \App\Helpers\FormatHelper::money($recette) }}</div>
+            <div class="stat-card__trend stat-card__trend--flat">Encaissements réels</div>
+        </div>
+        <div class="stat-card__icon stat-card__icon--green">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M3.75 6h16.5a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5v-9a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+        </div>
+    </div>
+
     {{-- Bénéfice net --}}
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" @click="openModal('profit', 'Bénéfice net (marge par vente)')" title="Voir le détail par vente">
         <div class="stat-card__info">
             <div class="stat-card__label">Bénéfice net</div>
             <div class="stat-card__value" x-text="loading ? '…' : stats.netProfitFormatted">{{ \App\Helpers\FormatHelper::money($netProfit) }}</div>
@@ -79,7 +73,7 @@
     </div>
 
     {{-- Achats --}}
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" @click="openModal('purchases', 'Achats')" title="Voir le détail des achats">
         <div class="stat-card__info">
             <div class="stat-card__label">Achats</div>
             <div class="stat-card__value" x-text="loading ? '…' : stats.totalPurchasesFormatted">{{ \App\Helpers\FormatHelper::money($totalPurchases) }}</div>
@@ -90,19 +84,15 @@
         </div>
     </div>
 
-    {{-- Alertes stock --}}
-    <div class="stat-card">
+    {{-- Dépenses --}}
+    <div class="stat-card" style="cursor:pointer" @click="openModal('expenses', 'Dépenses')" title="Voir le détail des dépenses">
         <div class="stat-card__info">
-            <div class="stat-card__label">Alertes stock</div>
-            <div class="stat-card__value" x-text="loading ? '…' : stats.lowStockCount">{{ $lowStockCount }}</div>
-            <div class="stat-card__trend" :class="stats.lowStockCount > 0 ? 'stat-card__trend--down' : 'stat-card__trend--up'">
-                <span x-text="stats.lowStockCount > 0 ? 'Articles en stock faible' : 'Stocks OK'">
-                    {{ $lowStockCount > 0 ? 'Articles en stock faible' : 'Stocks OK' }}
-                </span>
-            </div>
+            <div class="stat-card__label">Dépenses</div>
+            <div class="stat-card__value" x-text="loading ? '…' : stats.totalExpensesFormatted">{{ \App\Helpers\FormatHelper::money($totalExpenses) }}</div>
+            <div class="stat-card__trend stat-card__trend--flat">Charges de la période</div>
         </div>
-        <div class="stat-card__icon stat-card__icon--yellow">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+        <div class="stat-card__icon stat-card__icon--red">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181"/></svg>
         </div>
     </div>
 </div>
@@ -110,14 +100,7 @@
 {{-- Graphiques --}}
 <div class="dashboard__charts">
     <div class="dashboard__chart-card">
-        <h3>Évolution Ventes / Achats — <span x-text="stats.chartLabel">
-            @switch($period)
-                @case('today')  Aujourd'hui (par heure) @break
-                @case('week')   Cette semaine (par jour) @break
-                @case('month')  Ce mois (par jour) @break
-                @case('year')   Cette année (par mois) @break
-            @endswitch
-        </span></h3>
+        <h3>Évolution Ventes / Achats / Recette / Bénéfice / Dépenses — <span x-text="stats.chartLabel">{{ $chartLabel }}</span></h3>
         <div style="position:relative;min-height:200px;">
             <div x-show="loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#64748B;font-size:13px;">
                 Chargement...
@@ -125,101 +108,65 @@
             <canvas id="salesChart" x-show="!loading"></canvas>
         </div>
     </div>
-
-    <div class="dashboard">
-        <div class="dashboard__alerts">
-            <div class="dashboard__alerts-header">
-                <h3>⚠️ Stock faible</h3>
-                <a href="{{ route('reports.stock') }}" class="dashboard__alerts-link">Voir tout</a>
-            </div>
-            @forelse($lowStockProducts as $product)
-                <div class="dashboard__alerts-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
-                    <span class="dashboard__alerts-item-name">{{ $product->display_name }}</span>
-                    <span class="dashboard__alerts-item-stock">{{ $product->stock_quantity }} {{ $product->unit?->abbreviation ?? 'u.' }}</span>
-                </div>
-            @empty
-                <div class="dashboard__empty">Tous les stocks sont suffisants ✓</div>
-            @endforelse
-        </div>
-    </div>
 </div>
 
-{{-- Tables --}}
-<div class="dashboard__tables">
-    {{-- Ventes de la période (POS + directes) --}}
-    <div class="table-wrapper">
-        <div class="table-wrapper__header">
-            <strong class="table-wrapper__title" x-text="'Ventes — ' + periodLabel">Ventes — {{ $periodLabel }}</strong>
-            <span style="font-size:13px;color:#64748B;">
-                <span x-text="loading ? '…' : stats.recentSalesCount">{{ $recentSalesCount }}</span> vente(s) —
-                <strong x-text="loading ? '…' : stats.recentSalesTotalFormatted">{{ \App\Helpers\FormatHelper::money($recentSalesTotal) }}</strong>
-            </span>
+{{-- Modale détail carte --}}
+<div class="modal-overlay" x-show="modalOpen" x-cloak @click.self="closeModal()" x-transition>
+    <div class="modal modal--xl">
+        <div class="modal__header">
+            <strong x-text="modalTitle"></strong>
+            <button class="modal__close" @click="closeModal()">&times;</button>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Référence</th>
-                    <th>Origine</th>
-                    <th>Client</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Statut</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-if="loading">
-                    <tr><td colspan="6" class="cell-empty">Chargement...</td></tr>
-                </template>
-                <template x-if="!loading && stats.recentSales.length === 0">
-                    <tr><td colspan="6" class="cell-empty">Aucune vente sur cette période</td></tr>
-                </template>
-                <template x-for="sale in stats.recentSales" :key="sale.id">
-                    <tr>
-                        <td><a :href="'/sales/' + sale.id" class="cell-reference" x-text="sale.reference"></a></td>
-                        <td><span class="badge" :class="sale.is_pos ? 'badge--blue' : 'badge--gray'" x-text="sale.origin_label"></span></td>
-                        <td x-text="sale.customer"></td>
-                        <td x-text="sale.sale_date"></td>
-                        <td><strong x-text="sale.total"></strong></td>
-                        <td><span class="badge" :class="'badge--' + sale.status_color" x-text="sale.status_label"></span></td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Top articles --}}
-    <div class="table-wrapper">
-        <div class="table-wrapper__header">
-            <strong class="table-wrapper__title">Top articles vendus</strong>
-            <a href="{{ route('reports.product-sale') }}" class="btn btn--ghost btn--sm">Rapport</a>
+        <div class="modal__body" style="padding:0;">
+            <div style="position:relative;min-height:200px;">
+                <div x-show="modalLoading" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
+                    <svg style="width:28px;height:28px;color:#1749B3;animation:spin 1s linear infinite;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th x-text="modalPartyLabel"></th>
+                            <th>Date</th>
+                            <template x-if="modalCard === 'sales'"><th>Origine</th></template>
+                            <th style="text-align:right">Montant</th>
+                            <template x-if="modalCard === 'profit'"><th style="text-align:right">Marge</th></template>
+                            <template x-if="modalCard === 'sales' || modalCard === 'purchases'"><th>Statut</th></template>
+                            <template x-if="modalCard === 'expenses' || modalCard === 'recette'"><th>Détail</th></template>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-if="!modalLoading && modalRows.length === 0">
+                            <tr><td colspan="7" class="cell-empty">Aucun élément sur cette période</td></tr>
+                        </template>
+                        <template x-for="row in modalRows" :key="row.reference">
+                            <tr>
+                                <td>
+                                    <template x-if="row.show_url"><a :href="row.show_url" class="cell-reference" x-text="row.reference"></a></template>
+                                    <template x-if="!row.show_url"><span x-text="row.reference"></span></template>
+                                </td>
+                                <td x-text="row.party"></td>
+                                <td x-text="row.date"></td>
+                                <template x-if="modalCard === 'sales'"><td><span class="badge" :class="row.origin_label === 'POS' ? 'badge--blue' : 'badge--gray'" x-text="row.origin_label"></span></td></template>
+                                <td style="text-align:right"><strong x-text="row.total"></strong></td>
+                                <template x-if="modalCard === 'profit'"><td style="text-align:right" x-text="row.profit"></td></template>
+                                <template x-if="modalCard === 'sales' || modalCard === 'purchases'">
+                                    <td><span class="badge" :class="'badge--' + row.status_color" x-text="row.status_label"></span></td>
+                                </template>
+                                <template x-if="modalCard === 'expenses' || modalCard === 'recette'"><td x-text="row.description"></td></template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-wrapper__footer">
+                <span x-text="modalFrom + '–' + modalTo + ' sur ' + modalTotal"></span>
+                <div style="display:flex;gap:4px;" x-show="modalLastPage > 1">
+                    <button @click="modalGoTo(modalCurrentPage-1)" :disabled="modalCurrentPage<=1||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+                    <button @click="modalGoTo(modalCurrentPage+1)" :disabled="modalCurrentPage>=modalLastPage||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+                </div>
+            </div>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Article / Pack</th>
-                    <th>Unités vendues</th>
-                    <th>Chiffre d'affaires</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-if="loading">
-                    <tr><td colspan="4" class="cell-empty">Chargement...</td></tr>
-                </template>
-                <template x-if="!loading && stats.topProducts.length === 0">
-                    <tr><td colspan="4" class="cell-empty">Aucune donnée sur cette période</td></tr>
-                </template>
-                <template x-for="(item, i) in stats.topProducts" :key="i">
-                    <tr>
-                        <td class="cell-rank" x-text="'#' + (i + 1)"></td>
-                        <td x-text="item.item_name"></td>
-                        <td x-text="item.total_units"></td>
-                        <td><strong x-text="item.total_revenue"></strong></td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
     </div>
 </div>
 
@@ -231,46 +178,123 @@
 <script>
 let salesChartInstance = null;
 
-const PERIOD_LABELS = { today: "Aujourd'hui", week: 'Cette semaine', month: 'Ce mois', year: 'Cette année' };
-
 function dashboard() {
     return {
         period: '{{ $period }}',
+        dateFrom: '{{ $dateFrom }}',
+        dateTo: '{{ $dateTo }}',
         loading: false,
+
+        modalOpen: false,
+        modalCard: '',
+        modalTitle: '',
+        modalRows: [],
+        modalTotal: 0,
+        modalFrom: 0,
+        modalTo: 0,
+        modalCurrentPage: 1,
+        modalLastPage: 1,
+        modalLoading: false,
 
         stats: {
             totalSalesFormatted:        '{{ \App\Helpers\FormatHelper::money($totalSales) }}',
             totalPurchasesFormatted:    '{{ \App\Helpers\FormatHelper::money($totalPurchases) }}',
             totalExpensesFormatted:     '{{ \App\Helpers\FormatHelper::money($totalExpenses) }}',
+            recetteFormatted:           '{{ \App\Helpers\FormatHelper::money($recette) }}',
             netProfitFormatted:         '{{ \App\Helpers\FormatHelper::money($netProfit) }}',
             netProfitPositive:          {{ $netProfit >= 0 ? 'true' : 'false' }},
-            lowStockCount:              {{ $lowStockCount }},
             salesTrend:                 {{ round($salesTrend, 1) }},
             salesTrendPositive:         {{ $salesTrend >= 0 ? 'true' : 'false' }},
             chartLabel:                 @json($chartLabel),
-            topProducts:                @json($topProducts),
-            recentSales:                @json($recentSales),
-            recentSalesCount:           {{ $recentSalesCount }},
-            recentSalesTotalFormatted:  '{{ \App\Helpers\FormatHelper::money($recentSalesTotal) }}',
         },
 
         chartData: @json($chartData),
 
-        get periodLabel() {
-            return PERIOD_LABELS[this.period] ?? '';
+        get modalPartyLabel() {
+            return {
+                sales:     'Client',
+                profit:    'Client',
+                purchases: 'Fournisseur',
+                expenses:  'Catégorie',
+                recette:   'Vente liée',
+            }[this.modalCard] ?? '—';
         },
 
         init() {
             this.$nextTick(() => this.buildChart());
         },
 
-        async setPeriod(p) {
-            if (this.period === p || this.loading) return;
-            this.period = p;
+        openModal(card, title) {
+            this.modalCard  = card;
+            this.modalTitle = title;
+            this.modalOpen  = true;
+            this.modalCurrentPage = 1;
+            this.fetchModalPage();
+        },
+
+        closeModal() {
+            this.modalOpen = false;
+        },
+
+        modalGoTo(page) {
+            if (page < 1 || page > this.modalLastPage) return;
+            this.modalCurrentPage = page;
+            this.fetchModalPage();
+        },
+
+        async fetchModalPage() {
+            this.modalLoading = true;
+            try {
+                const params = new URLSearchParams({
+                    card: this.modalCard,
+                    period: this.period,
+                    date_from: this.dateFrom,
+                    date_to: this.dateTo,
+                    page: this.modalCurrentPage,
+                });
+                const res  = await fetch(`{{ route('dashboard.card-detail') }}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+                });
+                const data = await res.json();
+
+                this.modalRows        = data.data;
+                this.modalTotal       = data.total;
+                this.modalFrom        = data.from;
+                this.modalTo          = data.to;
+                this.modalCurrentPage = data.current_page;
+                this.modalLastPage    = data.last_page;
+            } catch (e) {
+                console.error('Modal detail error:', e);
+            } finally {
+                this.modalLoading = false;
+            }
+        },
+
+        setToday() {
+            if (this.period === 'today' || this.loading) return;
+            const today = new Date().toISOString().slice(0, 10);
+            this.dateFrom = today;
+            this.dateTo   = today;
+            this.fetchStats('today');
+        },
+
+        setCustom() {
+            if (!this.dateFrom || !this.dateTo || this.loading) return;
+            if (this.dateFrom > this.dateTo) return;
+            this.fetchStats('custom');
+        },
+
+        async fetchStats(period) {
+            this.period  = period;
             this.loading = true;
 
             try {
-                const res  = await fetch(`{{ route('dashboard.stats') }}?period=${p}`, {
+                const params = new URLSearchParams({ period });
+                if (period === 'custom') {
+                    params.set('date_from', this.dateFrom);
+                    params.set('date_to', this.dateTo);
+                }
+                const res  = await fetch(`{{ route('dashboard.stats') }}?${params.toString()}`, {
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
                 });
                 const data = await res.json();
@@ -311,6 +335,27 @@ function dashboard() {
                             label: 'Achats',
                             data: this.chartData.purchasesData,
                             backgroundColor: 'rgba(59,130,246,0.65)',
+                            borderRadius: 6,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Recette',
+                            data: this.chartData.recetteData,
+                            backgroundColor: 'rgba(6,182,212,0.75)',
+                            borderRadius: 6,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Bénéfice',
+                            data: this.chartData.profitData,
+                            backgroundColor: 'rgba(124,58,237,0.75)',
+                            borderRadius: 6,
+                            borderSkipped: false,
+                        },
+                        {
+                            label: 'Dépenses',
+                            data: this.chartData.expensesData,
+                            backgroundColor: 'rgba(196,35,26,0.7)',
                             borderRadius: 6,
                             borderSkipped: false,
                         }

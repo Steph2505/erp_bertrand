@@ -43,7 +43,8 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'active'])->group(function () {
 
     Route::get('/',              [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/stats', [DashboardController::class, 'apiStats'])->name('dashboard.stats');
+    Route::get('/dashboard/stats', [DashboardController::class, 'apiStats'])->middleware('permission:view financial dashboard')->name('dashboard.stats');
+    Route::get('/dashboard/card-detail', [DashboardController::class, 'apiCardDetail'])->middleware('permission:view financial dashboard')->name('dashboard.card-detail');
 
     // ── Produits ──────────────────────────────────────────────────────────────
     Route::prefix('products')->name('products.')->middleware('permission:manage products')->group(function () {

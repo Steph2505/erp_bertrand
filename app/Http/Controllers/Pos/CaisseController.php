@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Caisse;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,15 @@ class CaisseController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         try {
-            $userId = auth()->id();
+            $user   = $request->user();
+            $userId = $user->id;
 
             $caisses = Caisse::withCount('sessions')
-                ->with(['sessions' => fn($q) => $q->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
+                ->with(['manager', 'sessions' => fn($q) => $q->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
                 ->orderBy('name')
-                ->get();
+                ->get()
+                ->filter(fn($c) => $c->canBeOpenedBy($user))
+                ->values();
 
             $openSessions = \App\Models\PosSession::whereNull('closed_at')
                 ->with(['caisse', 'user', 'warehouse'])
@@ -28,8 +32,9 @@ class CaisseController extends Controller
                 ->get();
 
             $warehouses = \App\Models\Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $managers   = User::where('is_active', true)->permission('manage pos')->orderBy('name')->get(['id', 'name']);
 
-            return view('pages.pos.caisses', compact('caisses', 'warehouses', 'userId', 'openSessions'));
+            return view('pages.pos.caisses', compact('caisses', 'warehouses', 'userId', 'openSessions', 'managers'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page des caisses');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');
@@ -40,22 +45,26 @@ class CaisseController extends Controller
     {
         try {
             $q      = $request->get('q', '');
-            $userId = auth()->id();
+            $user   = $request->user();
+            $userId = $user->id;
 
             $caisses = Caisse::withCount('sessions')
-                ->with(['sessions' => fn($query) => $query->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
+                ->with(['manager', 'sessions' => fn($query) => $query->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
                 ->when($q, fn($query) => $query->where(function ($query) use ($q) {
                     $query->where('name', 'like', "%{$q}%")
                           ->orWhere('description', 'like', "%{$q}%");
                 }))
                 ->orderBy('name')
                 ->get()
+                ->filter(fn($c) => $c->canBeOpenedBy($user))
                 ->map(fn($c) => [
                     'id'             => $c->id,
                     'name'           => $c->name,
                     'description'    => $c->description,
                     'is_active'      => $c->is_active,
                     'sessions_count' => $c->sessions_count,
+                    'manager_id'     => $c->manager_id,
+                    'manager_name'   => $c->manager?->name,
                     'my_session'     => $c->sessions->firstWhere('user_id', $userId) ? true : false,
                     'open_session'   => $c->sessions->first() ? [
                         'user_name'  => $c->sessions->first()->user->name,
@@ -66,7 +75,8 @@ class CaisseController extends Controller
                     'toggle_url'     => route('pos.caisses.toggle', $c->id),
                     'destroy_url'    => route('pos.caisses.destroy', $c->id),
                     'update_url'     => route('pos.caisses.update', $c->id),
-                ]);
+                ])
+                ->values();
 
             return response()->json(['caisses' => $caisses, 'total' => $caisses->count()]);
         } catch (Throwable $e) {
@@ -94,12 +104,20 @@ class CaisseController extends Controller
         $request->validate([
             'name'        => 'required|string|max:100|unique:caisses,name',
             'description' => 'nullable|string|max:255',
+            'manager_id'  => 'nullable|exists:users,id',
         ]);
+
+        // Un Admin/Super Admin choisit librement le gérant (ou aucun = accès
+        // réservé aux admins). Un autre rôle ne peut créer une caisse que pour
+        // lui-même : il en devient automatiquement le gérant.
+        $isAdmin   = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
+        $managerId = $isAdmin ? ($request->manager_id ?: null) : $request->user()->id;
 
         try {
             $caisse = Caisse::create([
                 'name'        => $request->name,
                 'description' => $request->description,
+                'manager_id'  => $managerId,
                 'is_active'   => true,
             ]);
         } catch (Throwable $e) {
@@ -126,12 +144,20 @@ class CaisseController extends Controller
         $request->validate([
             'name'        => 'required|string|max:100|unique:caisses,name,' . $caisse->id,
             'description' => 'nullable|string|max:255',
+            'manager_id'  => 'nullable|exists:users,id',
         ]);
+
+        // Seul un Admin/Super Admin peut changer le gérant assigné. Un autre
+        // rôle qui modifie une caisse ne peut pas se retirer ni réassigner
+        // la gestion à quelqu'un d'autre.
+        $isAdmin   = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
+        $managerId = $isAdmin ? ($request->manager_id ?: null) : $caisse->manager_id;
 
         try {
             $caisse->update([
                 'name'        => $request->name,
                 'description' => $request->description,
+                'manager_id'  => $managerId,
             ]);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la mise à jour de la caisse', ['caisse_id' => $caisse->id]);

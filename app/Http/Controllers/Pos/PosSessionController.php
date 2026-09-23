@@ -30,6 +30,10 @@ class PosSessionController extends Controller
     {
         try {
             $paginator = PosSession::with(['user', 'warehouse', 'caisse'])
+                ->when(
+                    ! $request->user()->hasAnyRole(['Admin', 'Super Admin']),
+                    fn($q) => $q->where('user_id', $request->user()->id)
+                )
                 ->orderByDesc('opened_at')
                 ->paginate(10, ['*'], 'page', $request->integer('page', 1));
 
@@ -70,6 +74,11 @@ class PosSessionController extends Controller
             'warehouse_id'    => 'nullable|exists:warehouses,id',
         ]);
 
+        $caisse = \App\Models\Caisse::find($request->caisse_id);
+        if (! $caisse->canBeOpenedBy($request->user())) {
+            return back()->withInput()->with('error', 'Cette caisse est assignée à un autre utilisateur.');
+        }
+
         try {
             DB::transaction(function () use ($request) {
                 // Fermer toute session ouverte de cet utilisateur
@@ -96,6 +105,10 @@ class PosSessionController extends Controller
 
     public function close(Request $request, PosSession $session): RedirectResponse
     {
+        if ($session->user_id !== auth()->id() && ! auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
+            abort(403, 'Vous ne pouvez clôturer que vos propres sessions de caisse.');
+        }
+
         $request->validate([
             'closing_balance' => 'required|numeric|min:0',
             'note'            => 'nullable|string|max:500',
@@ -127,6 +140,10 @@ class PosSessionController extends Controller
 
     public function show(PosSession $session): View|RedirectResponse
     {
+        if ($session->user_id !== auth()->id() && ! auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
+            abort(403, 'Vous ne pouvez consulter que vos propres sessions de caisse.');
+        }
+
         try {
             $session->load(['user', 'warehouse', 'caisse', 'sales.customer', 'sales.items']);
 

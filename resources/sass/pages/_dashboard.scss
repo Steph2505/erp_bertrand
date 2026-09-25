@@ -51,11 +51,9 @@
 .dashboard {
     &__charts {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr;
         gap: $sp-20;
         margin-top: $sp-20;
-
-        @media (max-width: 1024px) { grid-template-columns: 1fr; }
     }
 
     &__tables {

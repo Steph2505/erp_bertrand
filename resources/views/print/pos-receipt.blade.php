@@ -34,7 +34,6 @@
             .no-print { display:none!important; }
             .receipt { width:100%; }
         }
-        @page { size: 80mm auto; margin: 5mm; }
     </style>
 </head>
 <body>
@@ -159,5 +158,19 @@
     </div>
 
 </div>
+
+<script>
+    // "size: 80mm auto" n'est pas une syntaxe CSS valide (le mot-clé "auto" ne peut
+    // pas être combiné à une longueur) — Chrome l'ignore silencieusement et retombe
+    // sur le format Letter en paysage. On calcule donc la hauteur réelle du ticket
+    // et on injecte une règle @page avec deux longueurs explicites (seule syntaxe
+    // honorée par le moteur d'impression), pour obtenir un vrai format ticket 80mm.
+    (function () {
+        const heightMm = Math.ceil(document.querySelector('.receipt').offsetHeight / 96 * 25.4) + 10;
+        const style = document.createElement('style');
+        style.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 5mm; }';
+        document.head.appendChild(style);
+    })();
+</script>
 </body>
 </html>

@@ -32,7 +32,10 @@ class PosController extends Controller
         try {
         $customers          = Customer::with('group')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone', 'customer_group_id']);
         $warehouses         = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $caisses            = \App\Models\Caisse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $caisses            = \App\Models\Caisse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'manager_id'])
+            ->filter(fn($c) => $c->canBeOpenedBy(auth()->user()))
+            ->values()
+            ->map(fn($c) => ['id' => $c->id, 'name' => $c->name]);
         $categories         = \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $customerGroups     = CustomerGroup::orderBy('name')->get(['id', 'name', 'is_wholesale']);
         $defaultWarehouseId = (int) \App\Models\Setting::get('default_warehouse_id');

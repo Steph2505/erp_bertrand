@@ -20,7 +20,7 @@ class UserController extends Controller
         'Commerce'       => ['manage products', 'manage purchases', 'manage pos'],
         'Stock'          => ['manage stock'],
         'Contacts'       => ['manage customers', 'manage suppliers'],
-        'Finance'        => ['manage expenses', 'manage accounts', 'view reports'],
+        'Finance'        => ['manage expenses', 'manage accounts', 'view reports', 'view financial dashboard'],
         'Administration' => ['manage settings', 'manage users'],
         'Notifications'  => ['receive notifications'],
     ];
@@ -35,6 +35,7 @@ class UserController extends Controller
         'manage expenses'       => 'Dépenses',
         'manage accounts'       => 'Comptes',
         'view reports'          => 'Rapports',
+        'view financial dashboard' => 'Dashboard financier',
         'manage settings'       => 'Paramètres',
         'manage users'          => 'Utilisateurs',
         'receive notifications' => 'Recevoir les notifications',
@@ -44,6 +45,7 @@ class UserController extends Controller
     {
         try {
             $users = User::with(['roles', 'permissions'])
+                ->whereDoesntHave('roles', fn($q) => $q->where('name', 'Super Admin'))
                 ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
                 ->latest()
                 ->paginate(20);

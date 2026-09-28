@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Connexion') — Espace Mokolo d'Obala</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon-64.png') }}">
     <script>window.__flashMessages = @json($flashMessages);</script>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>

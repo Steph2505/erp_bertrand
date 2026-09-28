@@ -36,7 +36,7 @@ class Product extends Model implements HasMedia
     protected static function boot(): void
     {
         parent::boot();
-        static::creating(fn($m) => $m->slug ??= Str::slug($m->name));
+        static::creating(fn($m) => $m->slug ??= Str::slug("{$m->name}-{$m->variation}"));
     }
 
     public function category(): BelongsTo    { return $this->belongsTo(Category::class); }

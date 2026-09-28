@@ -29,9 +29,9 @@
                         @error('name') <span class="form-error">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group form-group--full">
-                        <label>Variation</label>
-                        <input type="text" name="variation" class="form-control @error('variation') form-control--error @enderror" value="{{ old('variation') }}" placeholder="ex: Rouge - XL">
-                        <p class="form-hint">Optionnel — laisser vide si le article n'a pas de variation. Sera affiché sous la forme « Nom - Variation ».</p>
+                        <label>Variation <span class="required">*</span></label>
+                        <input type="text" name="variation" class="form-control @error('variation') form-control--error @enderror" value="{{ old('variation') }}" placeholder="ex: Rouge - XL" required>
+                        <p class="form-hint">Sera affiché sous la forme « Nom - Variation ».</p>
                         @error('variation') <span class="form-error">{{ $message }}</span> @enderror
                     </div>
                     <div style="display:contents"

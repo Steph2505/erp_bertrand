@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
 {
@@ -13,8 +14,13 @@ class ProductRequest extends FormRequest
         $productId = $this->route('product')?->id;
 
         return [
-            'name'               => 'required|string|max:255',
-            'variation'          => 'nullable|string|max:255',
+            'name'               => [
+                'required', 'string', 'max:255',
+                Rule::unique('products', 'name')
+                    ->where(fn ($query) => $query->where('variation', $this->input('variation')))
+                    ->ignore($productId),
+            ],
+            'variation'          => 'required|string|max:255',
             'description'        => 'nullable|string',
             'barcode'            => 'nullable|string|max:100|unique:products,barcode,' . $productId,
             'category_id'        => 'required|exists:categories,id',
@@ -39,6 +45,8 @@ class ProductRequest extends FormRequest
     {
         return [
             'name.required'          => 'Le nom du produit est obligatoire.',
+            'name.unique'            => 'Cet article existe déjà.',
+            'variation.required'     => 'La variation est obligatoire.',
             'buying_price.required'  => 'Le prix d\'achat est obligatoire.',
             'selling_price.required' => 'Le prix de vente est obligatoire.',
         ];

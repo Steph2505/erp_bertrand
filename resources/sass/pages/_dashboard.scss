@@ -97,6 +97,10 @@
         border-radius: $radius-lg;
         border: 1px solid $border;
         padding: $sp-20;
+        // Carte = piste de grille (.dashboard__charts) : sans ça, le scroll
+        // horizontal du graphique sur mobile (cf. __chart-scroll) ferait
+        // déborder toute la page au lieu de rester contenu dans la carte.
+        min-width: 0;
 
         h3 {
             font-size: 15px;
@@ -105,6 +109,20 @@
         }
 
         canvas { max-height: 280px; }
+    }
+
+    // Permet d'agrandir le graphique sur mobile (lisibilité des barres/
+    // labels) tout en le confinant à un scroll horizontal propre dans sa
+    // carte, plutôt que de le compresser à la largeur de l'écran.
+    &__chart-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    &__chart-inner {
+        @include mobile {
+            min-width: 600px;
+        }
     }
 
     &__alerts {

@@ -101,11 +101,13 @@
 <div class="dashboard__charts">
     <div class="dashboard__chart-card">
         <h3>Évolution Ventes / Achats / Recette / Bénéfice / Dépenses — <span x-text="stats.chartLabel">{{ $chartLabel }}</span></h3>
-        <div style="position:relative;min-height:200px;">
-            <div x-show="loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#64748B;font-size:13px;">
-                Chargement...
+        <div class="dashboard__chart-scroll">
+            <div class="dashboard__chart-inner" style="position:relative;min-height:200px;">
+                <div x-show="loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#64748B;font-size:13px;">
+                    Chargement...
+                </div>
+                <canvas id="salesChart" x-show="!loading"></canvas>
             </div>
-            <canvas id="salesChart" x-show="!loading"></canvas>
         </div>
     </div>
 </div>

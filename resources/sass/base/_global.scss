@@ -75,8 +75,6 @@ body {
         display: flex;
         gap: $sp-8;
         flex-wrap: wrap;
-
-        @include stack-actions-mobile;
     }
 }
 

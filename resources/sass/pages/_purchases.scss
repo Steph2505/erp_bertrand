@@ -216,6 +216,11 @@
     table.data-table {
         table-layout: fixed;
         width: 100%;
+        // Sans ce plancher, les colonnes en % se compressent jusqu'à devenir
+        // inutilisables sur petit écran (recherche d'article, saisie de prix
+        // dans quelques pixels) au lieu de déclencher le scroll horizontal du
+        // .table-wrapper : le tableau doit pouvoir dépasser son conteneur.
+        min-width: 720px;
 
         // Par défaut une cellule de tableau est en content-box : le padding
         // s'ajoute à la largeur définie (%) au lieu d'en faire partie, donc
@@ -901,22 +906,6 @@
     margin-bottom: 12px;
 }
 
-// ─── Responsive tables ────────────────────────────────────────────────────────
-@include mobile {
-    .table-wrapper {
-        overflow-x: auto;
-    }
-
-    .purchase-items {
-        &__col-qty        { width: auto; }
-        &__col-price      { width: auto; }
-        &__col-sale-price { width: auto; }
-        &__col-total      { width: auto; }
-    }
-}
-
-@include tablet {
-    .table-wrapper {
-        overflow-x: auto;
-    }
-}
+// Le scroll horizontal sous 768px (quand le tableau dépasse son conteneur à
+// cause de son min-width) est déjà géré par la règle générique de
+// .table-wrapper dans _table.scss — rien de spécifique aux achats à ajouter ici.

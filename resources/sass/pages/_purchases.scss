@@ -47,6 +47,11 @@
 
     &__form {
         grid-area: form;
+        // Sans ceci, une piste de grille ne peut pas rétrécir sous la taille
+        // intrinsèque de son contenu (min-width:auto par défaut), ce qui fait
+        // déborder toute la page sur mobile au lieu de laisser le contenu
+        // interne (ex: tableau d'articles) scroller dans son propre wrapper.
+        min-width: 0;
     }
 
     &__recap {
@@ -54,10 +59,12 @@
         display: flex;
         flex-direction: column;
         gap: $sp-12;
+        min-width: 0;
     }
 
     &__items {
         grid-area: items;
+        min-width: 0;
     }
 }
 

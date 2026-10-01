@@ -1,4 +1,31 @@
 @use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ── Filtres de dates (Aujourd'hui / Du / Au) ────────────────────────
+// Sur mobile, chaque champ passe sur sa propre ligne en pleine largeur
+// au lieu de se répartir sur 2 lignes de façon imprévisible (ex: le
+// bouton "Aujourd'hui" qui partage sa ligne avec "Du").
+.dashboard__date-filters {
+    display: flex;
+    gap: $sp-12;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: stretch;
+
+        .filter-tabs,
+        .form-group {
+            width: 100%;
+        }
+
+        .filter-tabs__btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
 
 // ── Stat card profit color ──────────────────────────────────────────
 .stat-card__value {

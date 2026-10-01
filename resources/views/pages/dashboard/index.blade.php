@@ -9,7 +9,7 @@
         <h2>Tableau de bord</h2>
         <p>Vue d'ensemble de votre activité</p>
     </div>
-    <div class="page-header__actions" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+    <div class="page-header__actions dashboard__date-filters">
         <div class="filter-tabs">
             <button @click="setToday()" class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'today' }">Aujourd'hui</button>
         </div>

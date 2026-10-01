@@ -92,8 +92,22 @@ window.confirmDialog = (message, options = {}) => Alpine.store('confirmDialog').
 Alpine.data('imagePreview', () => ({
     previews: [],
     onChange(event) {
+        const maxSize = 2 * 1024 * 1024; // 2 Mo
+        const files = Array.from(event.target.files || []);
+        const oversized = files.filter((file) => file.size > maxSize);
+
         this.previews = [];
-        Array.from(event.target.files || []).forEach((file) => {
+
+        if (oversized.length) {
+            window.toast(
+                `Image trop volumineuse (max 2 Mo) : ${oversized.map((file) => file.name).join(', ')}`,
+                'error'
+            );
+            event.target.value = '';
+            return;
+        }
+
+        files.forEach((file) => {
             const reader = new FileReader();
             reader.onload = (e) => this.previews.push(e.target.result);
             reader.readAsDataURL(file);

@@ -35,6 +35,12 @@
             </div>
         </template>
     </div>
+
+    <div class="page-loader" x-data x-show="$store.pageLoader.visible" x-cloak x-transition>
+        <div class="page-loader__spinner"></div>
+        <p class="page-loader__message" x-text="$store.pageLoader.message"></p>
+    </div>
+
     @yield('content')
 </body>
 </html>

@@ -89,11 +89,67 @@ Alpine.store('confirmDialog', {
 
 window.confirmDialog = (message, options = {}) => Alpine.store('confirmDialog').open(message, options);
 
+// ─── Loader plein écran ────────────────────────────────────────────────────
+// Affiché automatiquement dès qu'un formulaire est réellement soumis (y
+// compris après confirmation via confirmDialog, puisque $el.submit() passe
+// par la méthode native interceptée ci-dessous). Reste visible jusqu'au
+// chargement de la page suivante, donc aucun appel pour le masquer n'est
+// nécessaire dans le cas normal.
+Alpine.store('pageLoader', {
+    visible: false,
+    message: 'Traitement en cours...',
+
+    show(message = 'Traitement en cours...') {
+        this.message = message;
+        this.visible = true;
+    },
+
+    hide() {
+        this.visible = false;
+    },
+});
+
+window.showPageLoader = (message) => Alpine.store('pageLoader').show(message);
+window.hidePageLoader = () => Alpine.store('pageLoader').hide();
+
+const _nativeFormSubmit = HTMLFormElement.prototype.submit;
+HTMLFormElement.prototype.submit = function () {
+    if (!this.hasAttribute('data-no-loader')) {
+        window.showPageLoader();
+    }
+    return _nativeFormSubmit.call(this);
+};
+
+// Capture les soumissions "classiques" (clic sur un bouton submit sans
+// confirmDialog ni $el.submit() programmatique). Si un gestionnaire Alpine a
+// déjà fait preventDefault() (ex: confirmDialog en attente, validation custom
+// qui bloque l'envoi), on ne montre rien : soit le vrai submit() programmatique
+// l'affichera plus tard, soit il n'y aura jamais d'envoi.
+document.addEventListener('submit', (event) => {
+    if (event.defaultPrevented) return;
+    if (event.target.hasAttribute('data-no-loader')) return;
+    window.showPageLoader();
+});
+
 Alpine.data('imagePreview', () => ({
     previews: [],
     onChange(event) {
+        const maxSize = 2 * 1024 * 1024; // 2 Mo
+        const files = Array.from(event.target.files || []);
+        const oversized = files.filter((file) => file.size > maxSize);
+
         this.previews = [];
-        Array.from(event.target.files || []).forEach((file) => {
+
+        if (oversized.length) {
+            window.toast(
+                `Image trop volumineuse (max 2 Mo) : ${oversized.map((file) => file.name).join(', ')}`,
+                'error'
+            );
+            event.target.value = '';
+            return;
+        }
+
+        files.forEach((file) => {
             const reader = new FileReader();
             reader.onload = (e) => this.previews.push(e.target.result);
             reader.readAsDataURL(file);

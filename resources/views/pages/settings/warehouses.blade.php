@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Entrepôts')
 @section('breadcrumb')
-    <a href="{{ route('settings.company') }}">Paramètres</a>
+    <a title="Aller à : Paramètres" href="{{ route('settings.company') }}">Paramètres</a>
     <span class="sep">/</span><span class="current">Entrepôts</span>
 @endsection
 
@@ -14,7 +14,7 @@
         <p>Lieux de stockage et points de vente</p>
     </div>
     <div class="page-header__actions">
-        <button @click="showModal = true; editWh = null" class="btn btn--primary">
+        <button title="Créer un nouvel entrepôt" @click="showModal = true; editWh = null" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvel entrepôt
         </button>
@@ -113,7 +113,7 @@
     <div class="modal modal--md">
         <div class="modal__header">
             <h3 x-text="editWh ? 'Modifier l\'entrepôt' : 'Nouvel entrepôt'"></h3>
-            <button class="modal__close" @click="showModal = false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="showModal = false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -151,8 +151,8 @@
             </template>
 
             <div class="modal__footer" style="padding:0;border:none;margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary">Enregistrer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
+                <button title="Enregistrer les informations saisies" type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>
     </div>

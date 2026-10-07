@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Bénéfice par catégorie')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Bénéfice par catégorie</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Bénéfice par catégorie</span>@endsection
 
 @section('content')
 <div class="page-header">
@@ -55,7 +55,7 @@
             </select>
         </div>
 
-        <button type="button" @click="resetFilters()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="resetFilters()" class="btn btn--ghost">Réinitialiser</button>
 
         <button type="button" class="btn btn--ghost btn--icon" title="Voir en diagramme"
                 @click="view = 'chart'; $nextTick(() => renderChart())" x-show="view === 'list'">

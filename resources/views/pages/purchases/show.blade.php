@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Achat ' . $purchase->reference)
 @section('breadcrumb')
-    <a href="{{ route('purchases.index') }}">Achats</a>
+    <a title="Aller à : Achats" href="{{ route('purchases.index') }}">Achats</a>
     <span class="sep">/</span>
     <span class="current">{{ $purchase->reference }}</span>
 @endsection
@@ -14,11 +14,11 @@
         <p>Achat du {{ \App\Helpers\FormatHelper::date($purchase->purchase_date) }}</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('print.purchase', $purchase) }}" target="_blank" class="btn btn--light">
+        <a title="Imprimer le bon" href="{{ route('print.purchase', $purchase) }}" target="_blank" class="btn btn--light">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659"/></svg>
             Imprimer le bon
         </a>
-        <a href="{{ route('purchases.index') }}" class="btn btn--ghost">Retour</a>
+        <a title="Revenir à la page précédente" href="{{ route('purchases.index') }}" class="btn btn--ghost">Retour</a>
     </div>
 </div>
 
@@ -151,19 +151,19 @@
         </div>
 
         @if($purchase->status === 'draft')
-        <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn--light btn--full">
+        <a title="Modifier ce brouillon" href="{{ route('purchases.edit', $purchase) }}" class="btn btn--light btn--full">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>
             Modifier le brouillon
         </a>
         <form method="POST" action="{{ route('purchases.confirm', $purchase) }}"
               @submit.prevent="window.confirmDialog('Confirmer cet achat ? Le stock sera mis à jour et l\'opération ne pourra plus être modifiée.', {confirmLabel:'Confirmer'}).then(ok => ok && $el.submit())">
             @csrf @method('PATCH')
-            <button type="submit" class="btn btn--confirm-filled btn--full">Confirmer l'achat</button>
+            <button title="Confirmer l'achat et mettre à jour le stock" type="submit" class="btn btn--confirm-filled btn--full">Confirmer l'achat</button>
         </form>
         @endif
 
         @if($purchase->payment_status !== 'paid')
-        <button @click="open=true" class="btn btn--pay-filled btn--full">
+        <button title="Enregistrer un paiement pour cet achat" @click="open=true" class="btn btn--pay-filled btn--full">
             <span>Enregistrer un paiement</span>
             @if($purchase->status === 'draft')
                 <span style="font-size:11px;opacity:.8;">(confirme automatiquement)</span>
@@ -172,7 +172,7 @@
         @endif
 
         @if($purchase->status === 'confirmed')
-        <a href="{{ route('purchase-returns.create', ['purchase_id' => $purchase->id]) }}"
+        <a title="Créer un retour pour cet achat" href="{{ route('purchase-returns.create', ['purchase_id' => $purchase->id]) }}"
            class="btn btn--return btn--full">
             Créer un retour
         </a>
@@ -180,7 +180,7 @@
 
         <form method="POST" action="{{ route('purchases.destroy', $purchase) }}" @submit.prevent="window.confirmDialog('Supprimer cet achat ?', {variant:'danger', confirmLabel:'Supprimer'}).then(ok => ok && $el.submit())">
             @csrf @method('DELETE')
-            <button type="submit" class="btn btn--danger btn--full">Supprimer</button>
+            <button title="Supprimer cet achat" type="submit" class="btn btn--danger btn--full">Supprimer</button>
         </form>
 
         @if($purchase->payments->count() > 0)
@@ -211,7 +211,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3>Régler cet achat</h3>
-            <button class="modal__close" @click="open=false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="open=false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -247,8 +247,8 @@
                 <p class="form-hint">Ce paiement est partiel : indiquez la date à laquelle le reste sera réglé. Vous serez notifié si cette date est dépassée sans paiement.</p>
             </div>
             <div class="modal-actions">
-                <button type="button" @click="open=false" class="btn btn--light">Annuler</button>
-                <button type="button" @click="submit()" :disabled="loading" class="btn btn--pay-filled">
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="open=false" class="btn btn--light">Annuler</button>
+                <button title="Valider le paiement de cet achat" type="button" @click="submit()" :disabled="loading" class="btn btn--pay-filled">
                     <span x-show="!loading">Valider</span>
                     <span x-show="loading">...</span>
                 </button>

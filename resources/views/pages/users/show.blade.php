@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $user->name)
 @section('breadcrumb')
-    <a href="{{ route('users.index') }}">Utilisateurs</a>
+    <a title="Aller à : Utilisateurs" href="{{ route('users.index') }}">Utilisateurs</a>
     <span class="sep">/</span><span class="current">{{ $user->name }}</span>
 @endsection
 
@@ -13,7 +13,7 @@
         <p style="color:#64748b;">{{ $user->email }}</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('users.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Revenir à la page précédente" href="{{ route('users.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 

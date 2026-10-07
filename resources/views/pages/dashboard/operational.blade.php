@@ -40,7 +40,7 @@
     <strong style="display:block;margin-bottom:16px;">Accès rapide</strong>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
         @foreach($quickLinks as $link)
-        <a href="{{ route($link['route']) }}" class="btn btn--ghost" style="display:flex;align-items:center;gap:8px;">
+        <a title="Ouvrir : {{ $link['label'] }}" href="{{ route($link['route']) }}" class="btn btn--ghost" style="display:flex;align-items:center;gap:8px;">
             <x-icon name="{{ $link['icon'] }}" class="quick-link-icon" />
             {{ $link['label'] }}
         </a>

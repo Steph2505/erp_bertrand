@@ -11,7 +11,7 @@
     </div>
     <div class="page-header__actions dashboard__date-filters">
         <div class="filter-tabs">
-            <button @click="setToday()" class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'today' }">Aujourd'hui</button>
+            <button title="Filtrer sur la date du jour" @click="setToday()" class="filter-tabs__btn" :class="{ 'filter-tabs__btn--active': period === 'today' }">Aujourd'hui</button>
         </div>
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="dateFrom" @change="setCustom()" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="dateTo" @change="setCustom()" class="form-control"></div>
@@ -117,7 +117,7 @@
     <div class="modal modal--xl">
         <div class="modal__header">
             <strong x-text="modalTitle"></strong>
-            <button class="modal__close" @click="closeModal()">&times;</button>
+            <button title="Fermer la fenêtre" class="modal__close" @click="closeModal()">&times;</button>
         </div>
         <div class="modal__body" style="padding:0;">
             <div style="position:relative;min-height:200px;">
@@ -144,7 +144,7 @@
                         <template x-for="row in modalRows" :key="row.reference">
                             <tr>
                                 <td>
-                                    <template x-if="row.show_url"><a :href="row.show_url" class="cell-reference" x-text="row.reference"></a></template>
+                                    <template x-if="row.show_url"><a :title="'Ouvrir : ' + (row.reference)" :href="row.show_url" class="cell-reference" x-text="row.reference"></a></template>
                                     <template x-if="!row.show_url"><span x-text="row.reference"></span></template>
                                 </td>
                                 <td x-text="row.party"></td>
@@ -164,8 +164,8 @@
             <div class="table-wrapper__footer">
                 <span x-text="modalFrom + '–' + modalTo + ' sur ' + modalTotal"></span>
                 <div style="display:flex;gap:4px;" x-show="modalLastPage > 1">
-                    <button @click="modalGoTo(modalCurrentPage-1)" :disabled="modalCurrentPage<=1||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-                    <button @click="modalGoTo(modalCurrentPage+1)" :disabled="modalCurrentPage>=modalLastPage||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+                    <button title="Page précédente" @click="modalGoTo(modalCurrentPage-1)" :disabled="modalCurrentPage<=1||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+                    <button title="Page suivante" @click="modalGoTo(modalCurrentPage+1)" :disabled="modalCurrentPage>=modalLastPage||modalLoading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $product->display_name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Articles</a>
+    <a title="Aller à : Articles" href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">{{ $product->display_name }}</span>
 @endsection
@@ -13,8 +13,8 @@
         <p>Fiche article détaillée</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('products.edit', $product) }}" class="btn btn--outline">Modifier</a>
-        <a href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Modifier cet article" href="{{ route('products.edit', $product) }}" class="btn btn--outline">Modifier</a>
+        <a title="Revenir à la page précédente" href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 
@@ -28,24 +28,20 @@
                     <p>{{ $product->category?->name ?? '—' }}</p>
                 </div>
                 <div>
-                    <p class="field-label">Marque</p>
-                    <p>{{ $product->brand?->name ?? '—' }}</p>
-                </div>
-                <div>
                     <p class="field-label">Unité</p>
                     <p>{{ $product->unit?->name ?? '—' }}</p>
-                </div>
-                <div>
-                    <p class="field-label">Code-barres</p>
-                    <p>{{ $product->barcode ?? '—' }}</p>
                 </div>
                 <div>
                     <p class="field-label">Prix d'achat</p>
                     <p>{{ \App\Helpers\FormatHelper::money($product->buying_price) }}</p>
                 </div>
                 <div>
-                    <p class="field-label">Prix de vente</p>
+                    <p class="field-label">PU de vente détail</p>
                     <p class="field-price-main">{{ \App\Helpers\FormatHelper::money($product->selling_price) }}</p>
+                </div>
+                <div>
+                    <p class="field-label">PU de vente gros</p>
+                    <p class="field-price-main">{{ \App\Helpers\FormatHelper::money($product->wholesale_price ?? $product->selling_price) }}</p>
                 </div>
                 <div>
                     <p class="field-label">Stock actuel</p>
@@ -69,9 +65,9 @@
             <table class="data-table">
                 <thead><tr><th>Type</th><th>Qté</th><th>Référence</th><th>Date</th></tr></thead>
                 <tbody>
-                    @forelse($product->stockMovements as $mv)
+                    @forelse($movements as $mv)
                         <tr>
-                            <td><span class="badge badge--{{ $mv->quantity > 0 ? 'green' : 'red' }}">{{ $mv->type }}</span></td>
+                            <td><span class="badge badge--{{ $mv->quantity > 0 ? 'green' : 'red' }}">{{ ['sale' => 'Vente', 'purchase' => 'Achat'][$mv->type] ?? $mv->type }}</span></td>
                             <td class="movement-qty {{ $mv->quantity > 0 ? 'movement-qty--positive' : 'movement-qty--negative' }}">
                                 {{ $mv->quantity > 0 ? '+' : '' }}{{ $mv->quantity }}
                             </td>
@@ -83,6 +79,10 @@
                     @endforelse
                 </tbody>
             </table>
+            <div class="table-wrapper__footer">
+                <span>{{ $movements->firstItem() ?? 0 }}–{{ $movements->lastItem() ?? 0 }} sur {{ $movements->total() }}</span>
+                {{ $movements->links() }}
+            </div>
         </div>
     </div>
 
@@ -103,10 +103,6 @@
                 <div class="status-row">
                     <span class="status-row__label">Packable</span>
                     @if($product->can_be_packed) <span class="badge badge--pack">📦 Oui</span> @else <span class="badge badge--gray">Non</span> @endif
-                </div>
-                <div class="status-row">
-                    <span class="status-row__label">Variations</span>
-                    @if($product->has_variations) <span class="badge badge--blue">Oui</span> @else <span class="badge badge--gray">Non</span> @endif
                 </div>
             </div>
         </div>

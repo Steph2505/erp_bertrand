@@ -48,7 +48,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
         <p>{{ $users->total() }} utilisateur(s) dans le système</p>
     </div>
     <div class="page-header__actions">
-        <button @click="openCreate()" class="btn btn--primary">
+        <button title="Créer un nouvel utilisateur" @click="openCreate()" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvel utilisateur
         </button>
@@ -128,7 +128,7 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
     <div class="modal" style="max-width:640px;width:100%;">
         <div class="modal__header">
             <h3 x-text="editUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'"></h3>
-            <button class="modal__close" @click="showModal = false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="showModal = false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -181,10 +181,10 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                     <h4 style="font-size:13px;font-weight:700;color:#0E1726;">Droits d'accès</h4>
                     <div style="display:flex;gap:8px;">
-                        <button type="button" @click="checkedPerms = {{ collect(array_merge(...array_values($permissionGroups)))->toJson() }}"
+                        <button title="Cocher toutes les permissions" type="button" @click="checkedPerms = {{ collect(array_merge(...array_values($permissionGroups)))->toJson() }}"
                                 style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;">Tout cocher</button>
                         <span style="color:#e2e8f0;">|</span>
-                        <button type="button" @click="checkedPerms = []"
+                        <button title="Décocher toutes les cases" type="button" @click="checkedPerms = []"
                                 style="font-size:11px;color:#94a3b8;background:none;border:none;cursor:pointer;padding:0;">Tout décocher</button>
                     </div>
                 </div>
@@ -214,8 +214,8 @@ $roleDefaultPermsJs = $roleDefaultPerms->toJson();
             </div>
 
             <div class="modal__footer" style="padding:0;border:none;margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" @click="showModal = false" class="btn btn--light" :disabled="submitting">Annuler</button>
-                <button type="submit" class="btn btn--primary" :disabled="submitting">
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal = false" class="btn btn--light" :disabled="submitting">Annuler</button>
+                <button title="Enregistrer l'utilisateur" type="submit" class="btn btn--primary" :disabled="submitting">
                     <svg x-show="submitting" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.416" stroke-dashoffset="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
                     <span x-text="submitting ? 'Enregistrement...' : 'Enregistrer'"></span>
                 </button>

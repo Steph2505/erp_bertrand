@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Achat par article')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat article</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat article</span>@endsection
 
 @section('content')
 <div x-data="reportAjax('{{ route('reports.api.product-purchase') }}', {date_from: '{{ $from }}', date_to: '{{ $to }}'})" x-init="fetch()">
@@ -8,8 +8,8 @@
     <div class="page-header__title"><h2>Achat par article</h2><p>Volume d'achat par article sur la période</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.product-sale') }}" class="filter-tabs__btn">Vente article</a>
-            <a href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn filter-tabs__btn--active">Achat article</a>
+            <a title="Aller à : Vente article" href="{{ route('reports.product-sale') }}" class="filter-tabs__btn">Vente article</a>
+            <a title="Aller à : Achat article" href="{{ route('reports.product-purchase') }}" class="filter-tabs__btn filter-tabs__btn--active">Achat article</a>
         </div>
     </div>
 </div>
@@ -18,7 +18,7 @@
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="filters.date_from" @change="fetch()" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="filters.date_to" @change="fetch()" class="form-control"></div>
-        <button type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
 

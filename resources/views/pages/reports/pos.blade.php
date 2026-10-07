@@ -1,13 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Rapport de caisse')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Caisse POS</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Caisse POS</span>@endsection
 
 @section('content')
 <div x-data="{...listPage('{{ route('reports.api.pos') }}')}" x-init="filters = {date_from: '{{ $from }}', date_to: '{{ $to }}'}; fetch()">
 <div class="page-header">
     <div class="page-header__title"><h2>Rapport de caisse (POS)</h2><p>Sessions de caisse par période</p></div>
     <div class="page-header__actions">
-        <a href="{{ route('pos.sessions.index') }}" class="btn btn--ghost">Voir sessions</a>
+        <a title="Voir les sessions de cette caisse" href="{{ route('pos.sessions.index') }}" class="btn btn--ghost">Voir sessions</a>
     </div>
 </div>
 
@@ -15,7 +15,7 @@
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="filters.date_from" @change="reset()" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="filters.date_to" @change="reset()" class="form-control"></div>
-        <button type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
 
@@ -50,7 +50,7 @@
                 <template x-for="s in rows" :key="s.id">
                     <tr>
                         <td>
-                            <a :href="s.show_url" style="color:#1749B3;font-weight:500;" x-text="s.opened_at"></a>
+                            <a :title="'Ouvrir : ' + (s.opened_at)" :href="s.show_url" style="color:#1749B3;font-weight:500;" x-text="s.opened_at"></a>
                         </td>
                         <td x-text="s.caisse_name ?? '—'"></td>
                         <td x-text="s.user_name ?? '—'"></td>
@@ -77,9 +77,9 @@
     <div class="table-wrapper__footer">
         <span x-text="from + '–' + to + ' sur ' + total"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>

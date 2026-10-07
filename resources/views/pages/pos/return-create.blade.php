@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Nouveau retour')
 @section('breadcrumb')
-<a href="{{ route('pos.list') }}">Historique POS</a>
-<a href="{{ route('pos.returns.index') }}">Retours</a>
+<a title="Aller à : Historique POS" href="{{ route('pos.list') }}">Historique POS</a>
+<a title="Aller à : Retours" href="{{ route('pos.returns.index') }}">Retours</a>
 <span class="current">Nouveau retour</span>
 @endsection
 
@@ -78,8 +78,8 @@
             @endif
 
             <div class="return-create__actions">
-                <a href="{{ route('pos.returns.index') }}" class="btn btn--light">Annuler</a>
-                <button type="submit" class="btn btn--danger" :disabled="!selectedSale || returnAmount <= 0">
+                <a title="Annuler et fermer sans enregistrer" href="{{ route('pos.returns.index') }}" class="btn btn--light">Annuler</a>
+                <button title="Enregistrer le retour" type="submit" class="btn btn--danger" :disabled="!selectedSale || returnAmount <= 0">
                     Enregistrer le retour
                 </button>
             </div>

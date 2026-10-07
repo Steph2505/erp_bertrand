@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Packs')
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Articles</a>
+    <a title="Aller à : Articles" href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">Packs</span>
 @endsection
@@ -14,7 +14,7 @@
         <p x-text="total + ' pack(s) — ventes groupées à déduction automatique en unités'">—</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('packs.create') }}" class="btn btn--primary">
+        <a title="Aller à : Ajouter un pack" href="{{ route('packs.create') }}" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Ajouter un pack
         </a>
@@ -42,7 +42,7 @@
                 <option value="1">Actif</option>
                 <option value="0">Inactif</option>
             </select>
-            <button type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
+            <button title="Réinitialiser tous les filtres" type="button" @click="clearFilters()" class="btn btn--ghost">Réinitialiser</button>
         </div>
     </div>
 
@@ -71,7 +71,7 @@
                     <tr>
                         <td colspan="8" class="table-empty-cell">
                             Aucun pack créé.
-                            <a href="{{ route('packs.create') }}">Créer le premier pack</a>
+                            <a title="Créer le premier pack" href="{{ route('packs.create') }}">Créer le premier pack</a>
                         </td>
                     </tr>
                 </template>
@@ -86,7 +86,7 @@
                                     <div class="data-table__img pack-cell__img-placeholder">📦</div>
                                 </template>
                                 <div>
-                                    <a :href="pack.show_url" class="pack-cell__name" x-text="pack.name"></a>
+                                    <a :title="'Ouvrir : ' + (pack.name)" :href="pack.show_url" class="pack-cell__name" x-text="pack.name"></a>
                                     <template x-if="pack.barcode">
                                         <div class="pack-cell__barcode" x-text="pack.barcode"></div>
                                     </template>
@@ -150,9 +150,9 @@
     <div class="table-wrapper__footer">
         <span x-text="from + '-' + to + ' sur ' + total"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>

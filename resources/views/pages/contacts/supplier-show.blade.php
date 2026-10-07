@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $supplier->name)
 @section('breadcrumb')
-    <a href="{{ route('suppliers.index') }}">Fournisseurs</a>
+    <a title="Aller à : Fournisseurs" href="{{ route('suppliers.index') }}">Fournisseurs</a>
     <span class="sep">/</span><span class="current">{{ $supplier->name }}</span>
 @endsection
 
@@ -17,7 +17,7 @@
         </p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('suppliers.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Revenir à la page précédente" href="{{ route('suppliers.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 
@@ -73,7 +73,7 @@
                 @php $due = max(0, (float) $purchase->total - (float) $purchase->amount_paid); @endphp
                 <tr>
                     <td>
-                        <a href="{{ route('purchases.show', $purchase) }}" style="color:#3b82f6;font-weight:600;text-decoration:none;"
+                        <a title="Ouvrir : {{ $purchase->reference }}" href="{{ route('purchases.show', $purchase) }}" style="color:#3b82f6;font-weight:600;text-decoration:none;"
                            onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                             {{ $purchase->reference }}
                         </a>

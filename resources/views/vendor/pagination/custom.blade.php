@@ -22,7 +22,7 @@
                     @if ($page == $paginator->currentPage())
                         <span class="btn btn--primary btn--sm" aria-current="page" style="min-width:36px;justify-content:center;">{{ $page }}</span>
                     @else
-                        <a href="{{ $url }}" class="btn btn--ghost btn--sm" style="min-width:36px;justify-content:center;">{{ $page }}</a>
+                        <a title="Ouvrir : {{ $page }}" href="{{ $url }}" class="btn btn--ghost btn--sm" style="min-width:36px;justify-content:center;">{{ $page }}</a>
                     @endif
                 @endforeach
             @endif

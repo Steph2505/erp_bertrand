@@ -11,7 +11,7 @@
         <p x-text="total + ' ajustement(s)'">—</p>
     </div>
     <div class="page-header__actions">
-        <button @click="showModal = true" class="btn btn--primary">
+        <button title="Créer un nouvel ajustement de stock" @click="showModal = true" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvel ajustement
         </button>
@@ -29,7 +29,7 @@
             <option value="addition">+ Entrée</option>
             <option value="subtraction">− Sortie</option>
         </select>
-        <button x-show="search || filterType" @click="search='';filterType='';resetList()" class="btn btn--ghost btn--sm">✕ Effacer</button>
+        <button title="Effacer la sélection" x-show="search || filterType" @click="search='';filterType='';resetList()" class="btn btn--ghost btn--sm">✕ Effacer</button>
         <span x-show="loading" class="text-muted text-sm">Chargement...</span>
     </div>
 </div>
@@ -64,9 +64,9 @@
     <div class="table-wrapper__footer">
         <span x-text="listFrom + '–' + listTo + ' sur ' + total" class="text-muted text-sm"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>
@@ -76,7 +76,7 @@
     <div class="modal modal--lg">
         <div class="modal__header">
             <h3>Nouvel ajustement de stock</h3>
-            <button class="modal__close" @click="showModal = false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="showModal = false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -122,7 +122,7 @@
                     <input type="number" x-model.number="newItem.quantity" min="1" class="form-control">
                 </div>
                 <div>
-                    <button type="button" @click="addItem()" class="btn btn--primary">+ Ajouter</button>
+                    <button title="Ajouter un élément" type="button" @click="addItem()" class="btn btn--primary">+ Ajouter</button>
                 </div>
             </div>
             <table class="data-table" style="margin-bottom:16px;">
@@ -136,14 +136,14 @@
                                 <input type="number" :name="'items['+idx+'][quantity]'" x-model.number="item.quantity" min="1" class="purchase-items__qty-input">
                                 <input type="hidden" :name="'items['+idx+'][product_id]'" :value="item.product_id">
                             </td>
-                            <td><button type="button" @click="items.splice(idx,1)" class="btn btn--danger btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button></td>
+                            <td><button title="Supprimer cet ajustement" type="button" @click="items.splice(idx,1)" class="btn btn--danger btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
+                <button title="Enregistrer les informations saisies" type="submit" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
             </div>
         </form>
     </div>

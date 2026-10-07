@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Nouvel achat')
 @section('breadcrumb')
-    <a href="{{ route('purchases.index') }}">Achats</a>
+    <a title="Aller à : Achats" href="{{ route('purchases.index') }}">Achats</a>
     <span class="sep">/</span><span class="current">Nouvel achat</span>
 @endsection
 
@@ -13,15 +13,15 @@
 <div class="page-header">
     <div class="page-header__title"><h2>Nouvel achat</h2></div>
     <div class="page-header__actions">
-        <a href="{{ route('purchases.index') }}" class="btn btn--light">Annuler</a>
-        <button type="button" @click="submitForm('pending')" class="btn btn--light" :disabled="items.length === 0">
+        <a title="Annuler et fermer sans enregistrer" href="{{ route('purchases.index') }}" class="btn btn--light">Annuler</a>
+        <button title="Enregistrer comme brouillon (sans valider)" type="button" @click="submitForm('pending')" class="btn btn--light" :disabled="items.length === 0">
             Brouillon
         </button>
-        <button type="button" @click="submitForm('confirmed')" class="btn btn--ghost btn--confirm" :disabled="items.length === 0">
+        <button title="Confirmer cette action" type="button" @click="submitForm('confirmed')" class="btn btn--ghost btn--confirm" :disabled="items.length === 0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Confirmer
         </button>
-        <button type="button" @click="openPayModal()" class="btn btn--primary" :disabled="items.length === 0">
+        <button title="Marquer comme payé" type="button" @click="openPayModal()" class="btn btn--primary" :disabled="items.length === 0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             Payé
         </button>
@@ -112,7 +112,7 @@
                     @endforeach
                 </select>
             </div>
-            <button type="button" @click="submitForm()" class="btn btn--primary purchase-summary__cta" :disabled="items.length === 0">
+            <button title="Enregistrer l'achat" type="button" @click="submitForm()" class="btn btn--primary purchase-summary__cta" :disabled="items.length === 0">
                 Enregistrer l'achat
             </button>
         </div>
@@ -126,7 +126,7 @@
             <div class="table-wrapper__header">
                 <strong>Articles de l'achat</strong>
                 <span x-text="items.length + ' article(s)'" class="purchase-items__count"></span>
-                <button type="button" @click="addRow()" class="btn btn--primary btn--sm">
+                <button title="Ajouter une nouvelle ligne" type="button" @click="addRow()" class="btn btn--primary btn--sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="purchase-items__add-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Ajouter une ligne
                 </button>
@@ -211,7 +211,7 @@
                             </td>
                             <td class="purchase-items__line-total" x-text="formatMoney(item.quantity * item.unit_price)"></td>
                             <td>
-                                <button type="button" @click="removeRow(idx)" class="btn btn--danger btn--sm btn--icon">
+                                <button title="Supprimer cet achat" type="button" @click="removeRow(idx)" class="btn btn--danger btn--sm btn--icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                                 </button>
                             </td>
@@ -229,7 +229,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3>Nouveau article</h3>
-            <button class="modal__close" @click="quickCreateRowIdx = null">
+            <button title="Fermer la fenêtre" class="modal__close" @click="quickCreateRowIdx = null">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -274,8 +274,8 @@
             </div>
             <p x-show="createProductError" x-text="createProductError" style="color:#ef4444;font-size:13px;margin-top:-8px;"></p>
             <div class="modal-footer-std">
-                <button type="button" @click="quickCreateRowIdx = null" class="btn btn--light">Annuler</button>
-                <button type="button" @click="quickCreateProduct(quickCreateRowIdx)" class="btn btn--primary" :disabled="creatingProduct || !newProductName.trim() || !newProductCategoryId || !newProductUnitId">
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="quickCreateRowIdx = null" class="btn btn--light">Annuler</button>
+                <button title="Créer et ajouter" type="button" @click="quickCreateProduct(quickCreateRowIdx)" class="btn btn--primary" :disabled="creatingProduct || !newProductName.trim() || !newProductCategoryId || !newProductUnitId">
                     <span x-show="!creatingProduct">Créer & ajouter</span>
                     <span x-show="creatingProduct">...</span>
                 </button>
@@ -289,7 +289,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3>Confirmer le paiement</h3>
-            <button class="modal__close" @click="payModalOpen=false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="payModalOpen=false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -318,8 +318,8 @@
                 <p class="form-hint">Ce paiement est partiel : indiquez la date à laquelle le reste sera réglé.</p>
             </div>
             <div class="modal-actions">
-                <button type="button" @click="payModalOpen=false" class="btn btn--light">Annuler</button>
-                <button type="button" @click="confirmPay()" class="btn btn--pay-filled">Payer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="payModalOpen=false" class="btn btn--light">Annuler</button>
+                <button title="Enregistrer le paiement" type="button" @click="confirmPay()" class="btn btn--pay-filled">Payer</button>
             </div>
         </div>
     </div>

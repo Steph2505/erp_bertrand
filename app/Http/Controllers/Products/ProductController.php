@@ -58,6 +58,7 @@ class ProductController extends Controller
                 'show_url'     => route('products.show', $p->id),
                 'edit_url'     => route('products.edit', $p->id),
                 'delete_url'   => route('products.destroy', $p->id),
+                'is_used'      => $this->isUsed($p),
             ]);
 
             return response()->json([
@@ -145,8 +146,9 @@ class ProductController extends Controller
     public function show(Product $product): View|RedirectResponse
     {
         try {
-            $product->load(['category', 'unit', 'brand', 'variations', 'stockMovements' => fn($q) => $q->latest()->limit(20)]);
-            return view('pages.products.show', compact('product'));
+            $product->load(['category', 'unit', 'brand', 'variations']);
+            $movements = $product->stockMovements()->latest()->paginate(10)->withQueryString();
+            return view('pages.products.show', compact('product', 'movements'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement du produit', ['product_id' => $product->id]);
             return redirect()->route('products.index')->with('error', 'Une erreur est survenue lors du chargement du produit.');
@@ -192,13 +194,33 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Produit mis à jour.');
     }
 
+    private function isUsed(Product $product): bool
+    {
+        return $product->stockMovements()->exists()
+            || \App\Models\PurchaseItem::where('product_id', $product->id)->exists()
+            || \App\Models\SaleItem::where('product_id', $product->id)->exists();
+    }
+
     public function destroy(Product $product): RedirectResponse
     {
+        if ($this->isUsed($product)) {
+            $message = 'Impossible de supprimer cet article : il est déjà utilisé dans des achats, des ventes ou des mouvements de stock.';
+            return request()->expectsJson()
+                ? response()->json(['message' => $message], 409)
+                : back()->with('error', $message);
+        }
+
         try {
             $this->repo->delete($product);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la suppression du produit', ['product_id' => $product->id]);
-            return back()->with('error', 'Une erreur est survenue lors de la suppression du produit.');
+            return request()->expectsJson()
+                ? response()->json(['message' => 'Une erreur est survenue lors de la suppression du produit.'], 500)
+                : back()->with('error', 'Une erreur est survenue lors de la suppression du produit.');
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json(['message' => 'Produit supprimé.']);
         }
 
         return redirect()->route('products.index')->with('success', 'Produit supprimé.');

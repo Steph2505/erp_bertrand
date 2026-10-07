@@ -39,10 +39,10 @@
 <body>
 
 <div class="no-print" style="text-align:center;padding:16px;background:#f1f5f9;margin-bottom:0;">
-    <button onclick="window.print()" style="padding:8px 20px;background:#1749B3;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;margin-right:8px;">
+    <button title="Imprimer ce document" onclick="window.print()" style="padding:8px 20px;background:#1749B3;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;margin-right:8px;">
         🖨️ Imprimer
     </button>
-    <button onclick="window.close()" style="padding:8px 16px;background:#e2e8f0;color:#0E1726;border:none;border-radius:6px;cursor:pointer;font-size:13px;">
+    <button title="Fermer cette fenêtre" onclick="window.close()" style="padding:8px 16px;background:#e2e8f0;color:#0E1726;border:none;border-radius:6px;cursor:pointer;font-size:13px;">
         Fermer
     </button>
 </div>

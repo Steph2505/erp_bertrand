@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', $caisse->name)
 @section('breadcrumb')
-    <a href="{{ route('pos.index') }}">POS</a>
+    <a title="Aller à : POS" href="{{ route('pos.index') }}">POS</a>
     <span class="sep">/</span>
-    <a href="{{ route('pos.caisses.index') }}">Caisses</a>
+    <a title="Aller à : Caisses" href="{{ route('pos.caisses.index') }}">Caisses</a>
     <span class="sep">/</span><span class="current">{{ $caisse->name }}</span>
 @endsection
 
@@ -19,7 +19,7 @@
         @else
             <span class="badge badge--gray" style="font-size:13px;padding:6px 14px;">Inactive</span>
         @endif
-        <a href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Revenir à la page précédente" href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 
@@ -85,7 +85,7 @@
                 </td>
                 <td>
                     <div class="data-table__actions" style="justify-content:flex-end;">
-                        <a href="{{ route('pos.sessions.show', $session) }}" class="btn btn--ghost btn--sm">Détail</a>
+                        <a title="Voir le détail" href="{{ route('pos.sessions.show', $session) }}" class="btn btn--ghost btn--sm">Détail</a>
                     </div>
                 </td>
             </tr>

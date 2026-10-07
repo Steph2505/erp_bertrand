@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', "Nouveau retour d'achat")
 @section('breadcrumb')
-    <a href="{{ route('purchases.index') }}">Achats</a>
+    <a title="Aller à : Achats" href="{{ route('purchases.index') }}">Achats</a>
     <span class="sep">/</span>
-    <a href="{{ route('purchase-returns.index') }}">Retours</a>
+    <a title="Aller à : Retours" href="{{ route('purchase-returns.index') }}">Retours</a>
     <span class="sep">/</span><span class="current">Nouveau retour</span>
 @endsection
 
@@ -93,8 +93,8 @@
             @endif
 
             <div class="purchase-return-create__actions">
-                <a href="{{ route('purchase-returns.index') }}" class="btn btn--light">Annuler</a>
-                <button type="submit" class="btn btn--danger"
+                <a title="Annuler et fermer sans enregistrer" href="{{ route('purchase-returns.index') }}" class="btn btn--light">Annuler</a>
+                <button title="Enregistrer le retour" type="submit" class="btn btn--danger"
                         :disabled="!selectedPurchase || returnAmount <= 0 || returnAmount > (selectedPurchase?.total ?? 0)">
                     Enregistrer le retour
                 </button>

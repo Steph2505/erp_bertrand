@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', $pack->name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Articles</a>
+    <a title="Aller à : Articles" href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
-    <a href="{{ route('packs.index') }}">Packs</a>
+    <a title="Aller à : Packs" href="{{ route('packs.index') }}">Packs</a>
     <span class="sep">/</span>
     <span class="current">{{ $pack->name }}</span>
 @endsection
@@ -15,8 +15,8 @@
         <p>Détail du pack — composition et disponibilité</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('packs.edit', $pack) }}" class="btn btn--outline">Modifier</a>
-        <a href="{{ route('packs.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Modifier ce pack" href="{{ route('packs.edit', $pack) }}" class="btn btn--outline">Modifier</a>
+        <a title="Revenir à la page précédente" href="{{ route('packs.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 
@@ -42,7 +42,7 @@
                     @foreach($pack->items as $item)
                         <tr>
                             <td>
-                                <a href="{{ route('products.show', $item->product) }}" class="font-600">{{ $item->product->display_name }}</a>
+                                <a title="Ouvrir : {{ $item->product->display_name }}" href="{{ route('products.show', $item->product) }}" class="font-600">{{ $item->product->display_name }}</a>
                                 <div class="text-xs text-muted">{{ $item->product->unit?->abbreviation ?? 'u.' }}</div>
                             </td>
                             <td><strong>{{ $item->quantity }}</strong> u.</td>

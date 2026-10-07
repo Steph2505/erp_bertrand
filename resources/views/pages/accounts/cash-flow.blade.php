@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Flux de trésorerie')
 @section('breadcrumb')
-    <a href="{{ route('payment-accounts.index') }}">Comptes</a>
+    <a title="Aller à : Comptes" href="{{ route('payment-accounts.index') }}">Comptes</a>
     <span class="sep">/</span>
     <span class="current">Flux de trésorerie</span>
 @endsection
@@ -20,8 +20,8 @@
                 @endforeach
             </select>
         </form>
-        <a href="{{ route('accounts.balance-sheet') }}" class="btn btn--ghost">Bilan</a>
-        <a href="{{ route('accounts.trial-balance') }}" class="btn btn--ghost">Balance</a>
+        <a title="Aller à : Bilan" href="{{ route('accounts.balance-sheet') }}" class="btn btn--ghost">Bilan</a>
+        <a title="Aller à : Balance" href="{{ route('accounts.trial-balance') }}" class="btn btn--ghost">Balance</a>
     </div>
 </div>
 

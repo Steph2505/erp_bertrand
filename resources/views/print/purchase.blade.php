@@ -49,10 +49,10 @@
 
     {{-- Bouton impression --}}
     <div class="no-print" style="text-align:right;margin-bottom:20px;display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="window.print()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+        <button title="Imprimer ce document" onclick="window.print()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
             🖨️ Imprimer
         </button>
-        <button onclick="window.close()" style="padding:10px 20px;background:#f1f5f9;color:#0E1726;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
+        <button title="Fermer cette fenêtre" onclick="window.close()" style="padding:10px 20px;background:#f1f5f9;color:#0E1726;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
             Fermer
         </button>
     </div>

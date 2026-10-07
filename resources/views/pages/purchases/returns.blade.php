@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Retours achats')
 @section('breadcrumb')
-    <a href="{{ route('purchases.index') }}">Achats</a>
+    <a title="Aller à : Achats" href="{{ route('purchases.index') }}">Achats</a>
     <span class="sep">/</span><span class="current">Retours</span>
 @endsection
 
@@ -12,7 +12,7 @@
         <p>{{ $returns->total() }} retour(s) enregistré(s)</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('purchase-returns.create') }}" class="btn btn--primary">
+        <a title="Créer un nouveau retour" href="{{ route('purchase-returns.create') }}" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouveau retour
         </a>
@@ -37,7 +37,7 @@
             <tr>
                 <td class="purchase-returns__ref">{{ $ret->reference }}</td>
                 <td>
-                    <a href="{{ route('purchases.show', $ret->purchase) }}" class="purchase-returns__purchase-link">
+                    <a title="Ouvrir : {{ $ret->purchase->reference }}" href="{{ route('purchases.show', $ret->purchase) }}" class="purchase-returns__purchase-link">
                         {{ $ret->purchase->reference }}
                     </a>
                 </td>

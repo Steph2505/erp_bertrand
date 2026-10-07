@@ -18,8 +18,8 @@
             x-text="new Intl.NumberFormat('fr-FR').format(Math.round(total)) + ' ' + window.CURRENCY"></strong>
     </div>
     <div class="pos-session-banner__actions">
-        <a href="{{ route('pos.sessions.show', $activeSession) }}" class="btn btn--ghost btn--sm">Voir détail</a>
-        <button @click="document.getElementById('close-session-panel').classList.toggle('hidden')" class="btn btn--warning btn--sm">Clôturer la caisse</button>
+        <a title="Voir le détail" href="{{ route('pos.sessions.show', $activeSession) }}" class="btn btn--ghost btn--sm">Voir détail</a>
+        <button title="Clôturer la session de caisse en cours" @click="document.getElementById('close-session-panel').classList.toggle('hidden')" class="btn btn--warning btn--sm">Clôturer la caisse</button>
     </div>
 </div>
 <div id="close-session-panel" class="pos-close-panel hidden">
@@ -29,8 +29,8 @@
         <span class="pos-close-panel__label">Clôturer la caisse :</span>
         <input type="number" name="closing_balance" step="1" min="0" class="form-control pos-close-panel__input-balance" placeholder="Montant compté" required>
         <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Note (optionnel)">
-        <button type="submit" class="btn btn--danger btn--sm">Confirmer</button>
-        <button type="button" class="btn btn--light btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
+        <button title="Confirmer cette action" type="submit" class="btn btn--danger btn--sm">Confirmer</button>
+        <button title="Annuler et fermer sans enregistrer" type="button" class="btn btn--light btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
     </form>
 </div>
 @endif
@@ -96,7 +96,7 @@
             <div class="form-group" @click.outside="caisseOpen=false; caisseSearch=selectedCaisse?.name??''">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                     <label style="margin-bottom:0;">Caisse <span class="required">*</span></label>
-                    <button type="button"
+                    <button title="Afficher ou masquer le formulaire de création de caisse" type="button"
                             @click="showCreate=!showCreate; createError=''"
                             style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -114,7 +114,7 @@
                                    @keydown.escape="showCreate=false"
                                    class="form-control" placeholder="Ex : Caisse 2" x-ref="newNameInput">
                         </div>
-                        <button type="button" @click="quickCreate()"
+                        <button title="Créer et sélectionner" type="button" @click="quickCreate()"
                                 class="btn btn--primary btn--sm"
                                 :disabled="creating || !newName.trim()">
                             <span x-show="!creating">Créer & sélectionner</span>
@@ -150,7 +150,7 @@
                 <div x-show="selectedCaisse && !showCreate" style="margin-top:6px;display:flex;align-items:center;gap:6px;">
                     <span style="font-size:12px;color:#64748B;">Sélectionnée :</span>
                     <span class="badge badge--green" x-text="selectedCaisse?.name"></span>
-                    <button type="button" @click="selectedCaisse=null;caisseSearch=''"
+                    <button title="Choisir une autre caisse" type="button" @click="selectedCaisse=null;caisseSearch=''"
                             style="font-size:11px;color:#94A3B8;background:none;border:none;cursor:pointer;padding:0;">✕</button>
                 </div>
             </div>
@@ -171,11 +171,11 @@
             </div>
 
             <div class="modal-footer-std" style="gap:8px;">
-                <a href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">
+                <a title="Voir la liste des caisses" href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
                     Liste des caisses
                 </a>
-                <button type="submit" class="btn btn--primary" style="flex:1;justify-content:center;" :disabled="!selectedCaisse">
+                <button title="Ouvrir une session de caisse" type="submit" class="btn btn--primary" style="flex:1;justify-content:center;" :disabled="!selectedCaisse">
                     Ouvrir la caisse
                 </button>
             </div>
@@ -252,18 +252,18 @@
 
         {{-- Filtres --}}
         <div class="pos-catalog__categories">
-            <button @click="filterCat=''"
+            <button title="Sélectionner tous les éléments" @click="filterCat=''"
                     class="pos-catalog__category-btn"
                     :class="{'pos-catalog__category-btn--active': filterCat===''}">
                 Tous
             </button>
-            <button @click="filterCat='packable'"
+            <button title="Packs" @click="filterCat='packable'"
                     class="pos-catalog__category-btn"
                     :class="{'pos-catalog__category-btn--active': filterCat==='packable'}">
                 Packs
             </button>
             @foreach($categories as $category)
-                <button @click="filterCat='cat_{{ $category->id }}'"
+                <button title="Filtrer les articles de la catégorie {{ $category->name }}" @click="filterCat='cat_{{ $category->id }}'"
                         class="pos-catalog__category-btn"
                         :class="{'pos-catalog__category-btn--active': filterCat==='cat_{{ $category->id }}'}">
                     {{ $category->name }}
@@ -310,7 +310,7 @@
     </div>
 
     {{-- Bouton flottant panier (mobile uniquement) --}}
-    <button type="button" class="pos-cart-fab" @click="mobileCartOpen = true">
+    <button title="Afficher le panier" type="button" class="pos-cart-fab" @click="mobileCartOpen = true">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
         <span class="pos-cart-fab__badge" x-show="cart.length > 0" x-text="cart.length"></span>
     </button>
@@ -323,8 +323,8 @@
         <div class="pos-cart__header">
             <strong style="font-size:15px;">Panier <span x-text="'(' + cart.length + ')'" style="color:#64748B;font-weight:400;"></span></strong>
             <div style="display:flex;align-items:center;gap:12px;">
-                <button @click="clearCart()" x-show="cart.length > 0" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;">Vider</button>
-                <button type="button" class="pos-cart__close" @click="mobileCartOpen = false">
+                <button title="Vider le panier" @click="clearCart()" x-show="cart.length > 0" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;">Vider</button>
+                <button title="Fermer le panier" type="button" class="pos-cart__close" @click="mobileCartOpen = false">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -341,15 +341,15 @@
                 <div class="pos-cart__item">
                     <div class="pos-cart__item-name" x-text="item.item_name"></div>
                     <div class="pos-cart__item-qty">
-                        <button @click="decQty(idx)" style="color:#C4231A;">−</button>
+                        <button title="Diminuer la quantité" @click="decQty(idx)" style="color:#C4231A;">−</button>
                         <span x-text="item.quantity"></span>
-                        <button @click="incQty(idx)" style="color:#1749B3;">+</button>
+                        <button title="Augmenter la quantité" @click="incQty(idx)" style="color:#1749B3;">+</button>
                     </div>
                     <input type="number" min="0" step="1" class="pos-cart__item-price-input"
                            x-model.number="item.unit_price"
                            @input="if (item.unit_price < 0 || item.unit_price === '') item.unit_price = 0">
                     <span class="pos-cart__item-total" x-text="fmtCompact(item.quantity * item.unit_price)"></span>
-                    <button @click="removeItem(idx)" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:16px;flex-shrink:0;">×</button>
+                    <button title="Retirer cet article du panier" @click="removeItem(idx)" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:16px;flex-shrink:0;">×</button>
                 </div>
             </template>
         </div>
@@ -362,7 +362,7 @@
 
             {{-- Paiement --}}
             <div x-show="!showPayment">
-                <button @click="showPayment = true" class="btn btn--primary w-full" style="justify-content:center;padding:14px;" :disabled="cart.length === 0">
+                <button title="Passer à l'encaissement de la vente" @click="showPayment = true" class="btn btn--primary w-full" style="justify-content:center;padding:14px;" :disabled="cart.length === 0">
                     Procéder au paiement →
                 </button>
             </div>
@@ -389,8 +389,8 @@
                     Monnaie : <strong x-text="fmt(amountReceived - total)"></strong>
                 </div>
                 <div class="pos-payment-footer">
-                    <button @click="showPayment = false" class="btn btn--ghost pos-payment-footer__back">Retour</button>
-                    <button @click="checkout()" class="btn btn--primary pos-payment-footer__validate"
+                    <button title="Revenir à la page précédente" @click="showPayment = false" class="btn btn--ghost pos-payment-footer__back">Retour</button>
+                    <button title="Valider la vente et encaisser" @click="checkout()" class="btn btn--primary pos-payment-footer__validate"
                         :disabled="cart.length === 0 || amountReceived < total">
                         Valider ✓
                     </button>
@@ -410,8 +410,8 @@
                     Monnaie : <span x-text="fmt(lastChange)"></span>
                 </p>
                 <div class="pos-success-modal__actions">
-                    <a :href="'/pos/'+lastSaleId+'/receipt'" target="_blank" class="btn btn--light">Imprimer le ticket</a>
-                    <button @click="successSale = false; newSale()" class="btn btn--primary">Nouvelle vente</button>
+                    <a title="Imprimer le ticket de caisse" :href="'/pos/'+lastSaleId+'/receipt'" target="_blank" class="btn btn--light">Imprimer le ticket</a>
+                    <button title="Créer une nouvelle vente" @click="successSale = false; newSale()" class="btn btn--primary">Nouvelle vente</button>
                 </div>
             </div>
         </div>

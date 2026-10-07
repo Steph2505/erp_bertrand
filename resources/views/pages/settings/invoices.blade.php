@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Paramètres factures')
 @section('breadcrumb')
-    <a href="{{ route('settings.company') }}">Paramètres</a>
+    <a title="Aller à : Paramètres" href="{{ route('settings.company') }}">Paramètres</a>
     <span class="sep">/</span><span class="current">Factures</span>
 @endsection
 
@@ -12,7 +12,7 @@
         <p>Personnaliser vos factures et bons de commande</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('settings.company') }}" class="btn btn--ghost">Retour entreprise</a>
+        <a title="Revenir aux paramètres de l'entreprise" href="{{ route('settings.company') }}" class="btn btn--ghost">Retour entreprise</a>
     </div>
 </div>
 
@@ -55,7 +55,7 @@
                     Afficher le logo sur les factures
                 </label>
             </div>
-            <button type="submit" class="btn btn--primary">Sauvegarder</button>
+            <button title="Sauvegarder les modifications" type="submit" class="btn btn--primary">Sauvegarder</button>
         </form>
     </div>
 

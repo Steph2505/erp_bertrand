@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Bilan')
 @section('breadcrumb')
-    <a href="{{ route('payment-accounts.index') }}">Comptes</a>
+    <a title="Aller à : Comptes" href="{{ route('payment-accounts.index') }}">Comptes</a>
     <span class="sep">/</span>
     <span class="current">Bilan</span>
 @endsection
@@ -16,8 +16,8 @@
         <form method="GET" style="display:flex;gap:8px;align-items:center;">
             <input type="date" name="date" value="{{ $asOfDate }}" class="form-control" style="width:auto;" onchange="this.form.submit()">
         </form>
-        <a href="{{ route('accounts.trial-balance') }}" class="btn btn--ghost">Balance de vérification</a>
-        <a href="{{ route('accounts.cash-flow') }}" class="btn btn--ghost">Flux de trésorerie</a>
+        <a title="Aller à : Balance de vérification" href="{{ route('accounts.trial-balance') }}" class="btn btn--ghost">Balance de vérification</a>
+        <a title="Aller à : Flux de trésorerie" href="{{ route('accounts.cash-flow') }}" class="btn btn--ghost">Flux de trésorerie</a>
     </div>
 </div>
 

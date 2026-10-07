@@ -30,11 +30,11 @@
                     <span class="form-error">{{ $message }}</span>
                 @enderror
             </div>
-            <button type="submit" class="btn btn--primary w-full" style="justify-content:center;">Envoyer le lien</button>
+            <button title="Envoyer le lien de réinitialisation par e-mail" type="submit" class="btn btn--primary w-full" style="justify-content:center;">Envoyer le lien</button>
         </form>
 
         <div class="auth-standalone__footer">
-            <a href="{{ route('login') }}" class="auth-link">← Retour à la connexion</a>
+            <a title="Revenir à la page de connexion" href="{{ route('login') }}" class="auth-link">← Retour à la connexion</a>
         </div>
     </div>
 </div>

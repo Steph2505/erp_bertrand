@@ -11,7 +11,7 @@
         <p x-text="total + ' transfert(s)'">—</p>
     </div>
     <div class="page-header__actions">
-        <button @click="showModal = true" class="btn btn--primary">
+        <button title="Créer un nouveau transfert de stock" @click="showModal = true" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouveau transfert
         </button>
@@ -37,7 +37,7 @@
                 <option value="{{ $w->id }}">{{ $w->name }}</option>
             @endforeach
         </select>
-        <button x-show="search || filterStatus || filterWarehouse" @click="search='';filterStatus='';filterWarehouse='';resetList()" class="btn btn--ghost btn--sm">✕ Effacer</button>
+        <button title="Effacer la sélection" x-show="search || filterStatus || filterWarehouse" @click="search='';filterStatus='';filterWarehouse='';resetList()" class="btn btn--ghost btn--sm">✕ Effacer</button>
         <span x-show="loading" class="text-muted text-sm">Chargement...</span>
     </div>
 </div>
@@ -73,9 +73,9 @@
     <div class="table-wrapper__footer">
         <span x-text="listFrom + '–' + listTo + ' sur ' + total" class="text-muted text-sm"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>
@@ -85,7 +85,7 @@
     <div class="modal modal--lg">
         <div class="modal__header">
             <h3>Nouveau transfert de stock</h3>
-            <button class="modal__close" @click="showModal = false">
+            <button title="Fermer la fenêtre" class="modal__close" @click="showModal = false">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -121,7 +121,7 @@
                 <div class="table-wrapper__header">
                     <strong>Articles à transférer</strong>
                     <span x-text="items.length + ' article(s)'" class="text-muted text-sm"></span>
-                    <button type="button" @click="addRow()" class="btn btn--primary btn--sm" :disabled="!fromId">
+                    <button title="Ajouter une nouvelle ligne" type="button" @click="addRow()" class="btn btn--primary btn--sm" :disabled="!fromId">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         Ajouter une ligne
                     </button>
@@ -156,15 +156,15 @@
                                            class="form-control" :style="item.quantity > item.available ? 'border-color:#C4231A;color:#C4231A;' : ''" style="width:90px;text-align:center;">
                                     <div x-show="item.quantity > item.available" class="item-stock-error" x-text="'Max ' + item.available"></div>
                                 </td>
-                                <td><button type="button" @click="items.splice(idx,1)" class="btn btn--danger btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button></td>
+                                <td><button title="Supprimer ce transfert" type="button" @click="items.splice(idx,1)" class="btn btn--danger btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button></td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
             </div>
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
-                <button type="button" @click="submitTransfer($el.closest('form'))" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
+                <button title="Enregistrer les informations saisies" type="button" @click="submitTransfer($el.closest('form'))" class="btn btn--primary" :disabled="items.length === 0">Enregistrer</button>
             </div>
         </form>
     </div>

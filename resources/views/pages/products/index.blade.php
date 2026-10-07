@@ -11,9 +11,9 @@
         <p x-text="total + ' article(s) au total'">— article(s) au total</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('units.index') }}" class="btn btn--ghost">Unités</a>
-        <a href="{{ route('categories.index') }}" class="btn btn--ghost">Catégories</a>
-        <a href="{{ route('products.create') }}" class="btn btn--primary">
+        <a title="Aller à : Unités" href="{{ route('units.index') }}" class="btn btn--ghost">Unités</a>
+        <a title="Aller à : Catégories" href="{{ route('categories.index') }}" class="btn btn--ghost">Catégories</a>
+        <a title="Aller à : Ajouter un article" href="{{ route('products.create') }}" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Ajouter un article
         </a>
@@ -54,7 +54,7 @@
             </label>
 
             {{-- Réinitialiser --}}
-            <button x-show="hasFilters" @click="clearFilters()" class="btn btn--ghost btn--sm">
+            <button title="Effacer la sélection" x-show="hasFilters" @click="clearFilters()" class="btn btn--ghost btn--sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                 Effacer
             </button>
@@ -91,7 +91,7 @@
                     <th>Prix vente</th>
                     <th>Packable</th>
                     <th>Statut</th>
-                    <th class="th-right">Actions</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -113,7 +113,7 @@
                     <tr>
                         <td colspan="7" class="table-empty-cell">
                             Aucun article trouvé.
-                            <a href="{{ route('products.create') }}" style="color:#1749B3;">Ajouter le premier</a>
+                            <a title="Ajouter le premier article" href="{{ route('products.create') }}" style="color:#1749B3;">Ajouter le premier</a>
                         </td>
                     </tr>
                 </template>
@@ -132,7 +132,7 @@
                                     </div>
                                 </template>
                                 <div class="product-cell__info">
-                                    <a :href="product.show_url" class="product-cell__name" x-text="product.name"></a>
+                                    <a :title="'Ouvrir : ' + (product.name)" :href="product.show_url" class="product-cell__name" x-text="product.name"></a>
                                     <div class="product-cell__barcode" x-show="product.barcode" x-text="product.barcode"></div>
                                 </div>
                             </div>
@@ -153,7 +153,7 @@
                                   x-text="product.is_active ? 'Actif' : 'Inactif'"></span>
                         </td>
                         <td>
-                            <div class="data-table__actions">
+                            <div class="data-table__actions" style="justify-content:flex-start;">
                                 <a :href="product.show_url" class="btn btn--ghost btn--icon" title="Voir">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
                                 </a>
@@ -184,7 +184,7 @@
 
             {{-- Pages --}}
             <template x-for="p in pages" :key="p">
-                <button @click="p !== '…' && goTo(p)"
+                <button :title="'Aller à la page ' + p" @click="p !== '…' && goTo(p)"
                         class="btn btn--sm"
                         :class="p === currentPage ? 'btn--primary' : (p === '…' ? 'btn--ghost' : 'btn--ghost')"
                         :disabled="p === '…' || loading"
@@ -284,13 +284,22 @@ function productList() {
         },
 
         async deleteProduct(product) {
+            if (product.is_used) {
+                window.toast('Impossible de supprimer cet article : il est déjà utilisé dans des achats, des ventes ou des mouvements de stock.', 'error');
+                return;
+            }
             const ok = await window.confirmDialog('Supprimer le article « ' + product.name + ' » ?', { variant: 'danger', confirmLabel: 'Supprimer' });
             if (!ok) return;
             try {
-                await fetch(product.delete_url, {
+                const res = await fetch(product.delete_url, {
                     method:  'DELETE',
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' }
                 });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    window.toast(err.message || 'Erreur lors de la suppression.', 'error');
+                    return;
+                }
                 this.products = this.products.filter(p => p.id !== product.id);
                 this.total--;
                 if (this.products.length === 0 && this.currentPage > 1) {

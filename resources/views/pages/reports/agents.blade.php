@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Représentants')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Représentants</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Représentants</span>@endsection
 
 @section('content')
 <div x-data="reportAjax('{{ route('reports.api.agents') }}', {date_from: '{{ $from }}', date_to: '{{ $to }}'})" x-init="fetch()">
@@ -12,7 +12,7 @@
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="filters.date_from" @change="fetch()" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="filters.date_to" @change="fetch()" class="form-control"></div>
-        <button type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
 

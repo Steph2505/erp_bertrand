@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Profit / Perte')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Profit / Perte</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Profit / Perte</span>@endsection
 
 @php
     $ranges = [
@@ -22,7 +22,7 @@
     <div class="page-header__actions">
         <div class="filter-tabs">
             @foreach(['day' => 'Jour', 'week' => 'Semaine', 'month' => 'Mois', 'year' => 'Année'] as $key => $label)
-                <button type="button" @click="filters = {date_from: '{{ $ranges[$key][0] }}', date_to: '{{ $ranges[$key][1] }}'}; fetch()"
+                <button title="Appliquer la période : {{ $label }}" type="button" @click="filters = {date_from: '{{ $ranges[$key][0] }}', date_to: '{{ $ranges[$key][1] }}'}; fetch()"
                    class="filter-tabs__btn" :class="filters.date_from === '{{ $ranges[$key][0] }}' && filters.date_to === '{{ $ranges[$key][1] }}' ? 'filter-tabs__btn--active' : ''">{{ $label }}</button>
             @endforeach
         </div>
@@ -33,7 +33,7 @@
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
         <div class="form-group" style="margin:0"><label>Du</label><input type="date" x-model="filters.date_from" @change="fetch()" class="form-control"></div>
         <div class="form-group" style="margin:0"><label>Au</label><input type="date" x-model="filters.date_to" @change="fetch()" class="form-control"></div>
-        <button type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}'}; fetch()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
 

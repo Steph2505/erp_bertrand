@@ -1,4 +1,31 @@
 @use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ── Filtres de dates (Aujourd'hui / Du / Au) ────────────────────────
+// Sur mobile, chaque champ passe sur sa propre ligne en pleine largeur
+// au lieu de se répartir sur 2 lignes de façon imprévisible (ex: le
+// bouton "Aujourd'hui" qui partage sa ligne avec "Du").
+.dashboard__date-filters {
+    display: flex;
+    gap: $sp-12;
+    align-items: flex-end;
+    flex-wrap: wrap;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: stretch;
+
+        .filter-tabs,
+        .form-group {
+            width: 100%;
+        }
+
+        .filter-tabs__btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
 
 // ── Stat card profit color ──────────────────────────────────────────
 .stat-card__value {
@@ -70,6 +97,10 @@
         border-radius: $radius-lg;
         border: 1px solid $border;
         padding: $sp-20;
+        // Carte = piste de grille (.dashboard__charts) : sans ça, le scroll
+        // horizontal du graphique sur mobile (cf. __chart-scroll) ferait
+        // déborder toute la page au lieu de rester contenu dans la carte.
+        min-width: 0;
 
         h3 {
             font-size: 15px;
@@ -78,6 +109,20 @@
         }
 
         canvas { max-height: 280px; }
+    }
+
+    // Permet d'agrandir le graphique sur mobile (lisibilité des barres/
+    // labels) tout en le confinant à un scroll horizontal propre dans sa
+    // carte, plutôt que de le compresser à la largeur de l'écran.
+    &__chart-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    &__chart-inner {
+        @include mobile {
+            min-width: 600px;
+        }
     }
 
     &__alerts {

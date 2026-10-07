@@ -36,7 +36,7 @@
                 <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
             </div>
 
-            <button type="submit" class="btn btn--primary w-full" style="justify-content:center;">Réinitialiser le mot de passe</button>
+            <button title="Définir un nouveau mot de passe" type="submit" class="btn btn--primary w-full" style="justify-content:center;">Réinitialiser le mot de passe</button>
         </form>
     </div>
 </div>

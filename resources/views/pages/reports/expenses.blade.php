@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('title', 'Rapport de dépenses')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Dépenses</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Dépenses</span>@endsection
 
 @section('content')
 <div x-data="{...reportAjax('{{ route('reports.api.expenses') }}', {date_from: '{{ $from }}', date_to: '{{ $to }}', category: ''}), categoryOptions: @js($categoryOptions)}" x-init="fetch()">
 <div class="page-header">
     <div class="page-header__title"><h2>Rapport de dépenses</h2><p>Charges d'exploitation et achats fournisseurs payés, par catégorie</p></div>
     <div class="page-header__actions">
-        <a href="{{ route('expenses.index') }}" class="btn btn--ghost">Journal des dépenses</a>
+        <a title="Voir le journal des dépenses" href="{{ route('expenses.index') }}" class="btn btn--ghost">Journal des dépenses</a>
     </div>
 </div>
 
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <button type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}',category:''}; fetch()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}',category:''}; fetch()" class="btn btn--ghost">Réinitialiser</button>
     </div>
 </div>
 

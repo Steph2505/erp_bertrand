@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Ajouter un article')
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Articles</a>
+    <a title="Aller à : Articles" href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
     <span class="current">Ajouter</span>
 @endsection
@@ -11,7 +11,7 @@
     <div class="page-header__title">
         <h2>Ajouter un article</h2>
     </div>
-    <a href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
+    <a title="Revenir à la page précédente" href="{{ route('products.index') }}" class="btn btn--ghost">← Retour</a>
 </div>
 
 <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data"
@@ -44,7 +44,7 @@
                         <div class="form-group">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                                 <label style="margin-bottom:0;">Catégorie <span class="required">*</span></label>
-                                <button type="button"
+                                <button title="Afficher ou masquer le formulaire de création de catégorie" type="button"
                                         @click="showCreateCategory=!showCreateCategory; createCategoryError=''"
                                         style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -67,7 +67,7 @@
                                                @keydown.escape="showCreateCategory=false"
                                                class="form-control" placeholder="Ex : Boissons">
                                     </div>
-                                    <button type="button" @click="createCategory()"
+                                    <button title="Créer la catégorie et la sélectionner" type="button" @click="createCategory()"
                                             class="btn btn--primary btn--sm"
                                             :disabled="creatingCategory || !newCategoryName.trim()">
                                         <span x-show="!creatingCategory">Créer</span>
@@ -81,7 +81,7 @@
                         <div class="form-group">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                                 <label style="margin-bottom:0;">Unité</label>
-                                <button type="button"
+                                <button title="Afficher ou masquer le formulaire de création d'unité" type="button"
                                         @click="showCreateUnit=!showCreateUnit; createUnitError=''"
                                         style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -111,7 +111,7 @@
                                                @keydown.escape="showCreateUnit=false"
                                                class="form-control" placeholder="kg">
                                     </div>
-                                    <button type="button" @click="createUnit()"
+                                    <button title="Créer l'unité et la sélectionner" type="button" @click="createUnit()"
                                             class="btn btn--primary btn--sm"
                                             :disabled="creatingUnit || !newUnitName.trim() || !newUnitAbbr.trim()">
                                         <span x-show="!creatingUnit">Créer</span>
@@ -228,8 +228,8 @@
             </div>
 
             <div class="product-form__actions">
-                <button type="submit" class="btn btn--primary">Enregistrer</button>
-                <a href="{{ route('products.index') }}" class="btn btn--light">Annuler</a>
+                <button title="Enregistrer les informations saisies" type="submit" class="btn btn--primary">Enregistrer</button>
+                <a title="Annuler et fermer sans enregistrer" href="{{ route('products.index') }}" class="btn btn--light">Annuler</a>
             </div>
         </div>
     </div>

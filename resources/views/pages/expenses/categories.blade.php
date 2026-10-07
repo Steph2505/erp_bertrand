@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Catégories de dépenses')
 @section('breadcrumb')
-    <a href="{{ route('expenses.index') }}">Dépenses</a>
+    <a title="Aller à : Dépenses" href="{{ route('expenses.index') }}">Dépenses</a>
     <span class="sep">/</span><span class="current">Catégories</span>
 @endsection
 
@@ -14,8 +14,8 @@
         <p>{{ $categories->total() }} catégorie(s)</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('expenses.index') }}" class="btn btn--ghost">← Dépenses</a>
-        <button @click="showModal = true; editCat = null" class="btn btn--primary">
+        <a title="Aller à : Dépenses" href="{{ route('expenses.index') }}" class="btn btn--ghost">← Dépenses</a>
+        <button title="Créer une nouvelle catégorie" @click="showModal = true; editCat = null" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvelle catégorie
         </button>
@@ -77,7 +77,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3 x-text="editCat ? 'Modifier la catégorie' : 'Nouvelle catégorie'"></h3>
-            <button @click="showModal=false" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;line-height:1;">×</button>
+            <button title="Fermer la fenêtre" @click="showModal=false" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;line-height:1;">×</button>
         </div>
         <form :action="editCat ? '/expenses/categories/'+editCat.id : '{{ route('expenses.categories.store') }}'"
               method="POST" class="modal__body">
@@ -89,8 +89,8 @@
                        placeholder="Ex : Loyer, Carburant..." required autofocus>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-                <button type="button" @click="showModal=false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary">Enregistrer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal=false" class="btn btn--light">Annuler</button>
+                <button title="Enregistrer les informations saisies" type="submit" class="btn btn--primary">Enregistrer</button>
             </div>
         </form>
     </div>

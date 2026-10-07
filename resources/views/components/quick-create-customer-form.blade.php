@@ -21,7 +21,7 @@
     </select>
 </div>
 <div style="display:flex;gap:8px;align-items:center;">
-    <button type="button" @click="{{ $onSubmit }}"
+    <button title="Créer et sélectionner" type="button" @click="{{ $onSubmit }}"
             class="btn btn--primary btn--sm" style="flex:1;justify-content:center;"
             :disabled="{{ $creating }}||!{{ $nameModel }}.trim()">
         <span x-show="!{{ $creating }}">Créer &amp; sélectionner</span>

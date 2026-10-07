@@ -36,7 +36,7 @@
                 <option value="low">Stock faible</option>
                 <option value="out">Rupture</option>
             </select>
-            <button x-show="hasFilters" @click="clearFilters()" class="btn btn--ghost btn--sm">✕ Effacer</button>
+            <button title="Effacer la sélection" x-show="hasFilters" @click="clearFilters()" class="btn btn--ghost btn--sm">✕ Effacer</button>
         </div>
         <span x-show="loading" class="text-muted text-sm">Chargement...</span>
     </div>
@@ -64,7 +64,7 @@
                 </template>
                 <template x-for="p in rows" :key="p.id">
                     <tr>
-                        <td style="vertical-align:top;"><a :href="p.show_url" class="product-cell__name" x-text="p.name"></a></td>
+                        <td style="vertical-align:top;"><a :title="'Ouvrir : ' + (p.name)" :href="p.show_url" class="product-cell__name" x-text="p.name"></a></td>
                         <td style="vertical-align:top;" x-text="p.category"></td>
                         <td style="vertical-align:top;">
                             <template x-if="extra.warehouse_filter">
@@ -100,9 +100,9 @@
     <div class="table-wrapper__footer">
         <span x-text="from + '–' + to + ' sur ' + total" class="text-muted text-sm"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>

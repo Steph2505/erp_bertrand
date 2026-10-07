@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $customer->name)
 @section('breadcrumb')
-    <a href="{{ route('customers.index') }}">Clients</a>
+    <a title="Aller à : Clients" href="{{ route('customers.index') }}">Clients</a>
     <span class="sep">/</span><span class="current">{{ $customer->name }}</span>
 @endsection
 
@@ -17,7 +17,7 @@
         </p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('customers.index') }}" class="btn btn--ghost">← Retour</a>
+        <a title="Revenir à la page précédente" href="{{ route('customers.index') }}" class="btn btn--ghost">← Retour</a>
     </div>
 </div>
 
@@ -84,7 +84,7 @@
                 @forelse($sales as $sale)
                 <tr>
                     <td>
-                        <a href="{{ route('pos.receipt', $sale) }}" style="color:#1749B3;font-weight:600;text-decoration:none;"
+                        <a title="Ouvrir : {{ $sale->reference }}" href="{{ route('pos.receipt', $sale) }}" style="color:#1749B3;font-weight:600;text-decoration:none;"
                            onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
                             {{ $sale->reference }}
                         </a>

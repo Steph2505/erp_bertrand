@@ -43,7 +43,7 @@ class SupplierController extends Controller
                     'address'         => $s->address,
                     'opening_balance' => (float) $s->opening_balance,
                     'is_active'       => (bool) $s->is_active,
-                    'total_purchases' => FormatHelper::money((float) ($s->purchases_sum_total ?? 0)),
+                    'total_purchases' => FormatHelper::money((float) ($s->purchases_sum_total ?? 0) + (float) $s->opening_balance),
                     'show_url'        => route('suppliers.show', $s->id),
                     'destroy_url'     => route('suppliers.destroy', $s->id),
                 ]),
@@ -75,6 +75,8 @@ class SupplierController extends Controller
                 COALESCE(SUM(amount_paid), 0) as total_paid,
                 COALESCE(SUM(total - amount_paid), 0) as total_due
             ')->first();
+
+            $stats->total_achats = (float) $stats->total_achats + (float) $supplier->opening_balance;
 
             return view('pages.contacts.supplier-show', compact('supplier', 'purchases', 'stats'));
         } catch (Throwable $e) {

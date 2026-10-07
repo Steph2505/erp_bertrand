@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Liste des caisses')
 @section('breadcrumb')
-    <a href="{{ route('pos.index') }}">POS</a>
+    <a title="Aller à : POS" href="{{ route('pos.index') }}">POS</a>
     <span class="sep">/</span><span class="current">Liste des caisses</span>
 @endsection
 
@@ -16,13 +16,13 @@
     </div>
     <div class="page-header__actions">
         @if($openSessions->count() > 0)
-        <button @click="showSessions = !showSessions" class="btn btn--ghost">
+        <button title="Afficher ou masquer les sessions actives" @click="showSessions = !showSessions" class="btn btn--ghost">
             <span class="badge badge--green" style="font-size:11px;padding:2px 8px;">{{ $openSessions->count() }}</span>
             Sessions actives
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;" :style="showSessions ? 'transform:rotate(180deg)' : ''"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
         </button>
         @endif
-        <button @click="showModal = true" class="btn btn--primary">
+        <button title="Créer une nouvelle caisse" @click="showModal = true" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvelle caisse
         </button>
@@ -58,9 +58,9 @@
             <div style="font-size:12px;color:#64748B;">{{ $session->opened_at->diffForHumans() }}</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;">
-            <a href="{{ route('pos.sessions.show', $session) }}" class="btn btn--ghost btn--sm">Détail</a>
+            <a title="Voir le détail" href="{{ route('pos.sessions.show', $session) }}" class="btn btn--ghost btn--sm">Détail</a>
             @if($session->user_id === auth()->id())
-            <a href="{{ route('pos.index') }}" class="btn btn--primary btn--sm">Continuer</a>
+            <a title="Continuer vers l'étape suivante" href="{{ route('pos.index') }}" class="btn btn--primary btn--sm">Continuer</a>
             @endif
         </div>
     </div>
@@ -80,7 +80,7 @@
                    class="form-control"
                    placeholder="Rechercher une caisse...">
         </div>
-        <button x-show="query" @click="clear()" class="btn btn--ghost">
+        <button title="Effacer la sélection" x-show="query" @click="clear()" class="btn btn--ghost">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             Effacer
         </button>
@@ -99,10 +99,10 @@
         <div style="font-size:48px;margin-bottom:16px;">🔍</div>
         <p style="font-size:15px;font-weight:600;margin-bottom:8px;" x-text="query ? 'Aucune caisse pour « ' + query + ' »' : 'Aucune caisse configurée'"></p>
         <template x-if="query">
-            <button @click="clear()" class="btn btn--ghost">Voir toutes les caisses</button>
+            <button title="Afficher la liste de toutes les caisses" @click="clear()" class="btn btn--ghost">Voir toutes les caisses</button>
         </template>
         <template x-if="!query">
-            <button @click="showModal = true" class="btn btn--primary">Créer une caisse</button>
+            <button title="Créer une nouvelle caisse" @click="showModal = true" class="btn btn--primary">Créer une caisse</button>
         </template>
     </div>
 </template>
@@ -158,13 +158,13 @@
             {{-- Pied --}}
             <div class="caisse-card__footer">
                 <template x-if="caisse.my_session">
-                    <a href="{{ route('pos.index') }}" class="btn btn--primary btn--sm">
+                    <a title="Continuer vers l'étape suivante" href="{{ route('pos.index') }}" class="btn btn--primary btn--sm">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
                         Continuer
                     </a>
                 </template>
                 <template x-if="!caisse.my_session && caisse.is_active">
-                    <button @click="startSession(caisse)" class="btn btn--primary btn--sm">
+                    <button title="Ouvrir cette caisse" @click="startSession(caisse)" class="btn btn--primary btn--sm">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                         Ouvrir
                     </button>
@@ -252,8 +252,8 @@
                     </div>
                     @endif
                     <div style="display:flex;gap:8px;">
-                        <button type="submit" class="btn btn--primary btn--sm">Sauver</button>
-                        <button type="button" @click="editOpen = false" class="btn btn--light btn--sm">Annuler</button>
+                        <button title="Sauvegarder les modifications" type="submit" class="btn btn--primary btn--sm">Sauver</button>
+                        <button title="Annuler et fermer sans enregistrer" type="button" @click="editOpen = false" class="btn btn--light btn--sm">Annuler</button>
                     </div>
                 </form>
             </div>
@@ -267,7 +267,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3>Nouvelle caisse</h3>
-            <button @click="showModal = false" class="modal__close">
+            <button title="Fermer la fenêtre" @click="showModal = false" class="modal__close">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -312,8 +312,8 @@
             </div>
             @endif
             <div class="modal-footer-std">
-                <button type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary">Créer la caisse</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="showModal = false" class="btn btn--light">Annuler</button>
+                <button title="Créer la caisse avec les informations saisies" type="submit" class="btn btn--primary">Créer la caisse</button>
             </div>
         </form>
     </div>
@@ -324,7 +324,7 @@
     <div class="modal modal--sm">
         <div class="modal__header">
             <h3>Ouvrir la caisse</h3>
-            <button @click="openModal = false" class="modal__close">
+            <button title="Fermer la fenêtre" @click="openModal = false" class="modal__close">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -352,8 +352,8 @@
             </div>
             @endif
             <div class="modal-footer-std">
-                <button type="button" @click="openModal = false" class="btn btn--light">Annuler</button>
-                <button type="submit" class="btn btn--primary">Ouvrir et commencer</button>
+                <button title="Annuler et fermer sans enregistrer" type="button" @click="openModal = false" class="btn btn--light">Annuler</button>
+                <button title="Ouvrir la caisse et commencer à vendre" type="submit" class="btn btn--primary">Ouvrir et commencer</button>
             </div>
         </form>
     </div>

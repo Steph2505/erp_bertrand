@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Rapport fournisseurs')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Fournisseurs</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Fournisseurs</span>@endsection
 
 @section('content')
 <div x-data="{...listPage('{{ route('reports.api.suppliers') }}'), view: 'list', chartInstance: null, supplierOptions: @js($supplierOptions),
@@ -38,8 +38,8 @@
     <div class="page-header__title"><h2>Fournisseurs</h2><p>Volume d'achat et dette par fournisseur</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
-            <a href="{{ route('reports.customers') }}" class="filter-tabs__btn">Clients</a>
-            <a href="{{ route('reports.suppliers') }}" class="filter-tabs__btn filter-tabs__btn--active">Fournisseurs</a>
+            <a title="Aller à : Clients" href="{{ route('reports.customers') }}" class="filter-tabs__btn">Clients</a>
+            <a title="Aller à : Fournisseurs" href="{{ route('reports.suppliers') }}" class="filter-tabs__btn filter-tabs__btn--active">Fournisseurs</a>
         </div>
     </div>
 </div>
@@ -74,7 +74,7 @@
             </div>
         </div>
 
-        <button type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}',supplier:''}; reset()" class="btn btn--ghost">Réinitialiser</button>
+        <button title="Réinitialiser tous les filtres" type="button" @click="filters={date_from:'{{ $from }}',date_to:'{{ $to }}',supplier:''}; reset()" class="btn btn--ghost">Réinitialiser</button>
         <button type="button" class="btn btn--ghost btn--icon" title="Voir en diagramme"
                 @click="view = 'chart'; $nextTick(() => renderChart())" x-show="view === 'list'">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
@@ -127,7 +127,7 @@
                     <tr>
                         <td style="color:#64748B;font-weight:700;" x-text="'#' + (from + i)"></td>
                         <td>
-                            <a :href="s.show_url" style="color:#1749B3;font-weight:500;" x-text="s.name"></a>
+                            <a :title="'Ouvrir : ' + (s.name)" :href="s.show_url" style="color:#1749B3;font-weight:500;" x-text="s.name"></a>
                         </td>
                         <td style="text-align:right" x-text="s.nb_purchases"></td>
                         <td style="text-align:right;font-weight:600;color:#1749B3;" x-text="formatMoney(s.total_purchases)"></td>
@@ -147,9 +147,9 @@
     <div class="table-wrapper__footer">
         <span x-text="from + '–' + to + ' sur ' + total"></span>
         <div style="display:flex;gap:4px;" x-show="lastPage > 1">
-            <button @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
-            <template x-for="p in pages" :key="p"><button @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
-            <button @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
+            <button title="Page précédente" @click="goTo(currentPage-1)" :disabled="currentPage<=1||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+            <template x-for="p in pages" :key="p"><button :title="'Aller à la page ' + p" @click="p!=='…'&&goTo(p)" class="btn btn--sm" :class="p===currentPage?'btn--primary':'btn--ghost'" :disabled="p==='…'||loading" x-text="p" style="min-width:34px;justify-content:center;"></button></template>
+            <button title="Page suivante" @click="goTo(currentPage+1)" :disabled="currentPage>=lastPage||loading" class="btn btn--ghost btn--sm btn--icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></button>
         </div>
     </div>
 </div>

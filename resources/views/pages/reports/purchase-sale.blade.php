@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Achat & Vente')
-@section('breadcrumb')<a href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat & Vente</span>@endsection
+@section('breadcrumb')<a title="Aller à : Rapports" href="{{ route('reports.profit-loss') }}">Rapports</a><span class="sep">/</span><span class="current">Achat & Vente</span>@endsection
 
 @section('content')
 <div class="page-header">

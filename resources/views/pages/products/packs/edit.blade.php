@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Modifier : ' . $pack->name)
 @section('breadcrumb')
-    <a href="{{ route('products.index') }}">Articles</a>
+    <a title="Aller à : Articles" href="{{ route('products.index') }}">Articles</a>
     <span class="sep">/</span>
-    <a href="{{ route('packs.index') }}">Packs</a>
+    <a title="Aller à : Packs" href="{{ route('packs.index') }}">Packs</a>
     <span class="sep">/</span>
     <span class="current">Modifier</span>
 @endsection
@@ -13,7 +13,7 @@
     <div class="page-header__title">
         <h2>Modifier : {{ $pack->name }}</h2>
     </div>
-    <a href="{{ route('packs.show', $pack) }}" class="btn btn--ghost">← Détail</a>
+    <a title="Revenir au détail" href="{{ route('packs.show', $pack) }}" class="btn btn--ghost">← Détail</a>
 </div>
 
 @php
@@ -89,7 +89,7 @@
                                 <input type="number" class="pack-composer__qty-input" :name="'items[' + index + '][quantity]'" x-model.number="item.quantity" min="1" @change="updateBuyingPrice()">
                             </div>
                             <div class="pack-composer__unit-cost" x-text="item.buying_price + ' ' + window.CURRENCY + '/u.'"></div>
-                            <button type="button" class="pack-composer__remove" @click="removeItem(index)">
+                            <button title="Retirer cet article du pack" type="button" class="pack-composer__remove" @click="removeItem(index)">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -178,8 +178,8 @@
             </div>
 
             <div class="pack-form__actions">
-                <button type="submit" class="btn btn--primary">Mettre à jour</button>
-                <a href="{{ route('packs.show', $pack) }}" class="btn btn--light">Annuler</a>
+                <button title="Mettre à jour avec les informations saisies" type="submit" class="btn btn--primary">Mettre à jour</button>
+                <a title="Annuler et fermer sans enregistrer" href="{{ route('packs.show', $pack) }}" class="btn btn--light">Annuler</a>
             </div>
         </div>
     </div>

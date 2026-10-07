@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Entreprise')
 @section('breadcrumb')
-    <a href="{{ route('settings.company') }}">Paramètres</a>
+    <a title="Aller à : Paramètres" href="{{ route('settings.company') }}">Paramètres</a>
     <span class="sep">/</span><span class="current">Entreprise</span>
 @endsection
 
@@ -12,9 +12,9 @@
         <p>Coordonnées et identité de votre établissement</p>
     </div>
     <div class="page-header__actions">
-        <a href="{{ route('settings.warehouses') }}" class="btn btn--ghost">Entrepôts</a>
-        <a href="{{ route('settings.invoices') }}" class="btn btn--ghost">Factures</a>
-        <a href="{{ route('settings.tax-rates') }}" class="btn btn--ghost">Taux de TVA</a>
+        <a title="Aller à : Entrepôts" href="{{ route('settings.warehouses') }}" class="btn btn--ghost">Entrepôts</a>
+        <a title="Aller à : Factures" href="{{ route('settings.invoices') }}" class="btn btn--ghost">Factures</a>
+        <a title="Aller à : Taux de TVA" href="{{ route('settings.tax-rates') }}" class="btn btn--ghost">Taux de TVA</a>
     </div>
 </div>
 
@@ -75,7 +75,7 @@
                            value="{{ $settings['currency_symbol'] ?? 'XOF' }}" placeholder="XOF">
                 </div>
             </div>
-            <button type="submit" class="btn btn--primary">Sauvegarder</button>
+            <button title="Sauvegarder les modifications" type="submit" class="btn btn--primary">Sauvegarder</button>
         </form>
     </div>
 
@@ -91,9 +91,9 @@
             @if($lockedUntil)
                 <p class="text-sm mb-16"><span class="badge badge--warning">Actuellement verrouillé jusqu'au {{ \App\Helpers\FormatHelper::date($lockedUntil) }}</span></p>
             @endif
-            <button type="submit" class="btn btn--primary">Enregistrer</button>
+            <button title="Enregistrer les informations saisies" type="submit" class="btn btn--primary">Enregistrer</button>
             @if($lockedUntil)
-                <button type="submit" class="btn btn--light" onclick="this.form.accounting_locked_until.value=''">Retirer le verrou</button>
+                <button title="Retirer le verrou de ce compte" type="submit" class="btn btn--light" onclick="this.form.accounting_locked_until.value=''">Retirer le verrou</button>
             @endif
         </form>
     </div>
@@ -124,15 +124,15 @@
         <div class="settings-company__quick-links">
             <h3 class="settings-company__section-title--sm">Accès rapide</h3>
             <div class="settings-company__quick-links-list">
-                <a href="{{ route('settings.warehouses') }}" class="btn btn--ghost settings-company__quick-link">
+                <a title="Gérer les entrepôts et sites" href="{{ route('settings.warehouses') }}" class="btn btn--ghost settings-company__quick-link">
                     Gérer les entrepôts / sites
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="settings-company__quick-link-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
-                <a href="{{ route('settings.invoices') }}" class="btn btn--ghost settings-company__quick-link">
+                <a title="Configurer les factures" href="{{ route('settings.invoices') }}" class="btn btn--ghost settings-company__quick-link">
                     Paramètres des factures
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="settings-company__quick-link-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
-                <a href="{{ route('settings.tax-rates') }}" class="btn btn--ghost settings-company__quick-link">
+                <a title="Aller à : Taux de TVA" href="{{ route('settings.tax-rates') }}" class="btn btn--ghost settings-company__quick-link">
                     Taux de TVA
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="settings-company__quick-link-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>

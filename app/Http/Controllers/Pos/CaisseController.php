@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Throwable;
 
@@ -20,7 +21,7 @@ class CaisseController extends Controller
             $userId = $user->id;
 
             $caisses = Caisse::withCount('sessions')
-                ->with(['manager', 'sessions' => fn($q) => $q->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
+                ->with(['manager', 'authorizedUsers:id,name', 'sessions' => fn($q) => $q->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
                 ->orderBy('name')
                 ->get()
                 ->filter(fn($c) => $c->canBeOpenedBy($user))
@@ -29,7 +30,9 @@ class CaisseController extends Controller
             $openSessions = \App\Models\PosSession::whereNull('closed_at')
                 ->with(['caisse', 'user', 'warehouse'])
                 ->orderByDesc('opened_at')
-                ->get();
+                ->get()
+                ->filter(fn($session) => $session->caisse?->canBeOpenedBy($user))
+                ->values();
 
             $warehouses = \App\Models\Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
             $managers   = User::where('is_active', true)->permission('manage pos')->orderBy('name')->get(['id', 'name']);
@@ -49,7 +52,7 @@ class CaisseController extends Controller
             $userId = $user->id;
 
             $caisses = Caisse::withCount('sessions')
-                ->with(['manager', 'sessions' => fn($query) => $query->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
+                ->with(['manager', 'authorizedUsers:id,name', 'sessions' => fn($query) => $query->whereNull('closed_at')->with('user')->orderByDesc('opened_at')])
                 ->when($q, fn($query) => $query->where(function ($query) use ($q) {
                     $query->where('name', 'like', "%{$q}%")
                           ->orWhere('description', 'like', "%{$q}%");
@@ -65,6 +68,8 @@ class CaisseController extends Controller
                     'sessions_count' => $c->sessions_count,
                     'manager_id'     => $c->manager_id,
                     'manager_name'   => $c->manager?->name,
+                    'authorized_user_ids' => $c->authorizedUsers->pluck('id'),
+                    'authorized_user_names' => $c->authorizedUsers->pluck('name'),
                     'my_session'     => $c->sessions->firstWhere('user_id', $userId) ? true : false,
                     'open_session'   => $c->sessions->first() ? [
                         'user_name'  => $c->sessions->first()->user->name,
@@ -85,8 +90,10 @@ class CaisseController extends Controller
         }
     }
 
-    public function show(Caisse $caisse): View|RedirectResponse
+    public function show(Request $request, Caisse $caisse): View|RedirectResponse
     {
+        $this->ensureCaisseAccess($request, $caisse);
+
         try {
             $caisse->load([
                 'sessions' => fn($q) => $q->with('user', 'warehouse')->orderByDesc('opened_at'),
@@ -101,10 +108,23 @@ class CaisseController extends Controller
 
     public function store(Request $request): RedirectResponse|JsonResponse
     {
+        $canCreateCaisse = $request->user()->hasAnyRole(['Admin', 'Super Admin'])
+            || $request->user()->can('create caisses');
+
+        if (! $canCreateCaisse) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Vous n’avez pas le droit de créer une caisse.'], 403);
+            }
+
+            abort(403, 'Vous n’avez pas le droit de créer une caisse.');
+        }
+
         $request->validate([
             'name'        => 'required|string|max:100|unique:caisses,name',
             'description' => 'nullable|string|max:255',
             'manager_id'  => 'nullable|exists:users,id',
+            'user_ids'    => 'nullable|array',
+            'user_ids.*'  => 'integer|distinct|exists:users,id',
         ]);
 
         // Un Admin/Super Admin choisit librement le gérant (ou aucun = accès
@@ -112,14 +132,20 @@ class CaisseController extends Controller
         // lui-même : il en devient automatiquement le gérant.
         $isAdmin   = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
         $managerId = $isAdmin ? ($request->manager_id ?: null) : $request->user()->id;
+        $userIds   = $isAdmin ? $this->validatedAuthorizedUserIds($request, $request->input('user_ids') ?? []) : [];
 
         try {
-            $caisse = Caisse::create([
-                'name'        => $request->name,
-                'description' => $request->description,
-                'manager_id'  => $managerId,
-                'is_active'   => true,
-            ]);
+            $caisse = DB::transaction(function () use ($request, $managerId, $userIds) {
+                $caisse = Caisse::create([
+                    'name'        => $request->name,
+                    'description' => $request->description,
+                    'manager_id'  => $managerId,
+                    'is_active'   => true,
+                ]);
+                $caisse->authorizedUsers()->sync($userIds);
+
+                return $caisse;
+            });
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la création de la caisse', ['name' => $request->name]);
 
@@ -141,10 +167,14 @@ class CaisseController extends Controller
 
     public function update(Request $request, Caisse $caisse): RedirectResponse
     {
+        $this->ensureCaisseAccess($request, $caisse);
+
         $request->validate([
             'name'        => 'required|string|max:100|unique:caisses,name,' . $caisse->id,
             'description' => 'nullable|string|max:255',
             'manager_id'  => 'nullable|exists:users,id',
+            'user_ids'    => 'nullable|array',
+            'user_ids.*'  => 'integer|distinct|exists:users,id',
         ]);
 
         // Seul un Admin/Super Admin peut changer le gérant assigné. Un autre
@@ -152,13 +182,20 @@ class CaisseController extends Controller
         // la gestion à quelqu'un d'autre.
         $isAdmin   = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
         $managerId = $isAdmin ? ($request->manager_id ?: null) : $caisse->manager_id;
+        $userIds   = $isAdmin ? $this->validatedAuthorizedUserIds($request, $request->input('user_ids') ?? []) : null;
 
         try {
-            $caisse->update([
-                'name'        => $request->name,
-                'description' => $request->description,
-                'manager_id'  => $managerId,
-            ]);
+            DB::transaction(function () use ($caisse, $request, $managerId, $isAdmin, $userIds) {
+                $caisse->update([
+                    'name'        => $request->name,
+                    'description' => $request->description,
+                    'manager_id'  => $managerId,
+                ]);
+
+                if ($isAdmin) {
+                    $caisse->authorizedUsers()->sync($userIds);
+                }
+            });
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la mise à jour de la caisse', ['caisse_id' => $caisse->id]);
             return back()->withInput()->with('error', 'Une erreur est survenue lors de la mise à jour de la caisse.');
@@ -167,8 +204,10 @@ class CaisseController extends Controller
         return back()->with('success', 'Caisse mise à jour.');
     }
 
-    public function toggleActive(Caisse $caisse): RedirectResponse
+    public function toggleActive(Request $request, Caisse $caisse): RedirectResponse
     {
+        $this->ensureCaisseAccess($request, $caisse);
+
         try {
             $caisse->update(['is_active' => !$caisse->is_active]);
         } catch (Throwable $e) {
@@ -179,8 +218,10 @@ class CaisseController extends Controller
         return back()->with('success', $caisse->is_active ? 'Caisse activée.' : 'Caisse désactivée.');
     }
 
-    public function destroy(Caisse $caisse): RedirectResponse
+    public function destroy(Request $request, Caisse $caisse): RedirectResponse
     {
+        $this->ensureCaisseAccess($request, $caisse);
+
         // Session ouverte en cours — blocage strict
         if ($caisse->sessions()->whereNull('closed_at')->exists()) {
             return back()->withErrors(['caisse' => 'Impossible : cette caisse a une session ouverte. Clôturez-la d\'abord.']);
@@ -199,5 +240,26 @@ class CaisseController extends Controller
         }
 
         return back()->with('success', 'Caisse supprimée.');
+    }
+
+    private function validatedAuthorizedUserIds(Request $request, array $userIds): array
+    {
+        $eligibleIds = User::whereIn('id', $userIds)
+            ->where('is_active', true)
+            ->permission('manage pos')
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        if (count($eligibleIds) !== count(array_unique(array_map('intval', $userIds)))) {
+            abort(422, 'Sélectionnez uniquement des utilisateurs actifs autorisés à gérer le POS.');
+        }
+
+        return $eligibleIds;
+    }
+
+    private function ensureCaisseAccess(Request $request, Caisse $caisse): void
+    {
+        abort_unless($caisse->canBeOpenedBy($request->user()), 404);
     }
 }

@@ -17,7 +17,8 @@ use Throwable;
 class UserController extends Controller
 {
     private const PERMISSION_GROUPS = [
-        'Commerce'       => ['manage products', 'manage purchases', 'manage pos'],
+        'Commerce'       => ['manage products', 'manage purchases'],
+        'Point de vente' => ['manage pos', 'create caisses', 'close pos sessions'],
         'Stock'          => ['manage stock'],
         'Contacts'       => ['manage customers', 'manage suppliers'],
         'Finance'        => ['manage expenses', 'manage accounts', 'view reports', 'view financial dashboard'],
@@ -28,7 +29,9 @@ class UserController extends Controller
     private const PERMISSION_LABELS = [
         'manage products'       => 'Articles',
         'manage purchases'      => 'Achats',
-        'manage pos'            => 'Point de vente',
+        'manage pos'            => 'Accéder au point de vente',
+        'create caisses'        => 'Créer une caisse',
+        'close pos sessions'    => 'Clôturer une session de caisse',
         'manage stock'          => 'Stock',
         'manage customers'      => 'Clients',
         'manage suppliers'      => 'Fournisseurs',

@@ -5,7 +5,7 @@
 
 @section('content')
 {{-- Bannière session + modal ouverture --}}
-<div x-data="{ openSessionModal: {{ $activeSession ? 'false' : 'true' }} }">
+<div x-data="{ openSessionModal: {{ $activeSession ? 'false' : 'true' }} }" @if($activeSession) data-pos-active-session @endif>
 
 @if($activeSession)
 <div class="pos-session-banner">
@@ -19,20 +19,22 @@
     </div>
     <div class="pos-session-banner__actions">
         <a title="Voir le détail" href="{{ route('pos.sessions.show', $activeSession) }}" class="btn btn--ghost btn--sm">Voir détail</a>
+        @can('close pos sessions')
         <button title="Clôturer la session de caisse en cours" @click="document.getElementById('close-session-panel').classList.toggle('hidden')" class="btn btn--warning btn--sm">Clôturer la caisse</button>
+        @endcan
     </div>
 </div>
+@can('close pos sessions')
 <div id="close-session-panel" class="pos-close-panel hidden">
-    <form method="POST" action="{{ route('pos.sessions.close', $activeSession) }}" class="pos-close-panel__form"
-          @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && $el.submit())">
+        <form method="POST" action="{{ route('pos.sessions.close', $activeSession) }}" data-success-url="{{ route('pos.sessions.show', $activeSession) }}" class="pos-close-panel__form" data-no-loader
+            @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && window.closeSessionAndDownload($el))">
         @csrf
         <span class="pos-close-panel__label">Clôturer la caisse :</span>
-        <input type="number" name="closing_balance" step="1" min="0" class="form-control pos-close-panel__input-balance" placeholder="Montant compté" required>
-        <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Note (optionnel)">
         <button title="Confirmer cette action" type="submit" class="btn btn--danger btn--sm">Confirmer</button>
         <button title="Annuler et fermer sans enregistrer" type="button" class="btn btn--light btn--sm" onclick="document.getElementById('close-session-panel').classList.add('hidden')">Annuler</button>
     </form>
 </div>
+@endcan
 @endif
 
 {{-- Modal ouverture caisse --}}
@@ -41,12 +43,15 @@
         <div class="modal__header">
             <h3>Ouvrir la caisse</h3>
         </div>
-        <form method="POST" action="{{ route('pos.sessions.open') }}" class="modal__body" @keydown.escape.prevent
+          <form method="POST" action="{{ route('pos.sessions.open') }}" class="modal__body" data-no-loader
+              @submit.prevent="window.submitPosSessionOpening($el)" @keydown.escape.prevent
               x-data="{
                   caisseSearch:'', caisseOpen:false, selectedCaisse:null,
                   caisses: {{ Js::from($caisses) }},
                   showCreate: false,
                   newName: '',
+                  newUserIds: [],
+                  userOptions: {{ Js::from($managers->map(fn($user) => ['id' => $user->id, 'name' => $user->name])) }},
                   creating: false,
                   createError: '',
                   get filteredCaisses() {
@@ -70,7 +75,7 @@
                                   'Accept':        'application/json',
                                   'X-CSRF-TOKEN':  document.querySelector('meta[name=csrf-token]').content,
                               },
-                              body: JSON.stringify({ name: this.newName }),
+                              body: JSON.stringify({ name: this.newName, user_ids: this.newUserIds }),
                           });
                           const data = await res.json();
                           if (data.success) {
@@ -96,12 +101,14 @@
             <div class="form-group" @click.outside="caisseOpen=false; caisseSearch=selectedCaisse?.name??''">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                     <label style="margin-bottom:0;">Caisse <span class="required">*</span></label>
+                    @can('create caisses')
                     <button title="Afficher ou masquer le formulaire de création de caisse" type="button"
                             @click="showCreate=!showCreate; createError=''"
                             style="font-size:12px;color:#1749B3;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-weight:600;">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         <span x-text="showCreate ? 'Annuler' : 'Créer une caisse'"></span>
                     </button>
+                    @endcan
                 </div>
 
                 {{-- Mini formulaire création rapide --}}
@@ -121,6 +128,17 @@
                             <span x-show="creating">...</span>
                         </button>
                     </div>
+                    @if(auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
+                    <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;max-height:100px;overflow:auto;">
+                        <span style="width:100%;font-size:12px;color:#475569;">Utilisateurs autorisés :</span>
+                        <template x-for="user in userOptions" :key="user.id">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                                <input type="checkbox" :value="user.id" x-model="newUserIds">
+                                <span x-text="user.name"></span>
+                            </label>
+                        </template>
+                    </div>
+                    @endif
                     <p x-show="createError" x-text="createError" style="color:#ef4444;font-size:12px;margin-top:6px;margin-bottom:0;"></p>
                 </div>
 
@@ -170,12 +188,20 @@
                 </select>
             </div>
 
+            <div class="form-group" data-opening-code-panel hidden style="display:none;">
+                <label>Code de vérification reçu par mail</label>
+                <input type="text" name="verification_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                       autocomplete="one-time-code" class="form-control" placeholder="Code à 6 chiffres">
+                <button type="button" class="btn btn--ghost btn--sm" style="margin-top:8px;"
+                        @click="window.resendPosSessionOpeningCode($el.closest('form'))">Renvoyer le code</button>
+            </div>
+
             <div class="modal-footer-std" style="gap:8px;">
                 <a title="Voir la liste des caisses" href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
                     Liste des caisses
                 </a>
-                <button title="Ouvrir une session de caisse" type="submit" class="btn btn--primary" style="flex:1;justify-content:center;" :disabled="!selectedCaisse">
+                <button title="Ouvrir une session de caisse" data-open-submit type="submit" class="btn btn--primary" style="flex:1;justify-content:center;" :disabled="!selectedCaisse">
                     Ouvrir la caisse
                 </button>
             </div>

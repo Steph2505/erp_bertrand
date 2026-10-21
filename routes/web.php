@@ -132,6 +132,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/sessions',            [PosSessionController::class, 'index'])->name('sessions.index');
         Route::get('/sessions/api/list',   [PosSessionController::class, 'apiIndex'])->name('sessions.api.list');
         Route::post('/sessions/open',      [PosSessionController::class, 'open'])->name('sessions.open');
+        Route::post('/sessions/{session}/verify-access', [PosSessionController::class, 'verifyReturnAccessCode'])->name('sessions.verify-access');
         Route::post('/sessions/{session}/close', [PosSessionController::class, 'close'])->name('sessions.close');
         Route::get('/sessions/{session}',  [PosSessionController::class, 'show'])->name('sessions.show');
         // Gestion des caisses

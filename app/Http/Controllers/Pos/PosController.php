@@ -30,8 +30,29 @@ class PosController extends Controller
     public function index(): View|RedirectResponse
     {
         try {
+        $activeSession = PosSession::where('user_id', auth()->id())
+            ->whereNull('closed_at')
+            ->with(['warehouse', 'caisse'])
+            ->latest()
+            ->first();
+
+        $user = auth()->user();
+        $isAdmin = $user->hasAnyRole(['Admin', 'Super Admin']);
+
+        if ($activeSession && ! $isAdmin && ! $activeSession->caisse?->canBeOpenedBy($user)) {
+            abort(404);
+        }
+
+        if ($activeSession && ! $isAdmin) {
+            $verifiedSessionId = session()->pull('pos_access_verified_for');
+            if ((int) $verifiedSessionId !== (int) $activeSession->id) {
+                return view('pages.pos.session-access-code', compact('activeSession'));
+            }
+        }
+
         $customers          = Customer::with('group')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone', 'customer_group_id']);
         $warehouses         = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $managers           = \App\Models\User::where('is_active', true)->permission('manage pos')->orderBy('name')->get(['id', 'name']);
         $caisses            = \App\Models\Caisse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'manager_id'])
             ->filter(fn($c) => $c->canBeOpenedBy(auth()->user()))
             ->values()
@@ -39,13 +60,7 @@ class PosController extends Controller
         $categories         = \App\Models\Category::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $customerGroups     = CustomerGroup::orderBy('name')->get(['id', 'name', 'is_wholesale']);
         $defaultWarehouseId = (int) \App\Models\Setting::get('default_warehouse_id');
-        $activeSession      = PosSession::where('user_id', auth()->id())
-            ->whereNull('closed_at')
-            ->with(['warehouse', 'caisse'])
-            ->latest()
-            ->first();
-
-        return view('pages.pos.index', compact('customers', 'warehouses', 'caisses', 'categories', 'customerGroups', 'defaultWarehouseId', 'activeSession'));
+        return view('pages.pos.index', compact('customers', 'warehouses', 'caisses', 'categories', 'customerGroups', 'defaultWarehouseId', 'activeSession', 'managers'));
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors du chargement de la page POS');
             return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement de la page.');

@@ -22,10 +22,12 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;" :style="showSessions ? 'transform:rotate(180deg)' : ''"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
         </button>
         @endif
+        @can('create caisses')
         <button title="Créer une nouvelle caisse" @click="showModal = true" class="btn btn--primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             Nouvelle caisse
         </button>
+        @endcan
     </div>
 </div>
 
@@ -102,7 +104,9 @@
             <button title="Afficher la liste de toutes les caisses" @click="clear()" class="btn btn--ghost">Voir toutes les caisses</button>
         </template>
         <template x-if="!query">
+            @can('create caisses')
             <button title="Créer une nouvelle caisse" @click="showModal = true" class="btn btn--primary">Créer une caisse</button>
+            @endcan
         </template>
     </div>
 </template>
@@ -111,7 +115,7 @@
 <div class="caisse-grid" x-show="caisses.length > 0">
     <template x-for="caisse in caisses" :key="caisse.id">
         <div class="caisse-card" :class="caisse.is_active ? '' : 'caisse-card--inactive'"
-             x-data="{ editOpen: false, mgrSearch: '', mgrOpen: false, mgrId: caisse.manager_id || '', mgrName: caisse.manager_name || '' }">
+               x-data="{ editOpen: false, mgrSearch: '', mgrOpen: false, mgrId: caisse.manager_id || '', mgrName: caisse.manager_name || '', authorizedUserIds: caisse.authorized_user_ids || [] }">
 
             {{-- En-tête --}}
             <div class="caisse-card__header">
@@ -123,7 +127,10 @@
                         <span x-text="'Gérant : ' + caisse.manager_name"></span>
                     </div>
                     <div class="caisse-card__desc" x-show="!caisse.manager_name" style="color:#94A3B8;">
-                        Accès réservé Admin / Super Admin
+                        <span x-show="!caisse.authorized_user_names?.length">Accès réservé Admin / Super Admin</span>
+                    </div>
+                    <div class="caisse-card__desc" x-show="caisse.authorized_user_names?.length" style="color:#1749B3;">
+                        <span x-text="'Accès : ' + caisse.authorized_user_names.join(', ')"></span>
                     </div>
                 </div>
                 <span class="badge" :class="caisse.is_active ? 'badge--green' : 'badge--gray'"
@@ -250,6 +257,18 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group" style="flex:1 1 100%;margin-bottom:0;">
+                        <label style="font-size:12px;">Utilisateurs autorisés</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px 16px;max-height:110px;overflow:auto;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                            @foreach($managers as $manager)
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin:0;">
+                                <input type="checkbox" name="user_ids[]" value="{{ $manager->id }}"
+                                       :checked="authorizedUserIds.includes({{ $manager->id }})">
+                                {{ $manager->name }}
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
                     @endif
                     <div style="display:flex;gap:8px;">
                         <button title="Sauvegarder les modifications" type="submit" class="btn btn--primary btn--sm">Sauver</button>
@@ -283,7 +302,7 @@
             </div>
             @if(auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
             <div class="form-group" x-data="{ mgrSearch: '', mgrOpen: false, mgrId: '', mgrName: '' }" @click.outside="mgrOpen=false">
-                <label>Gérant assigné <small style="color:#94A3B8;">(optionnel — laisser vide = accès réservé aux Admin/Super Admin)</small></label>
+                <label>Gérant principal <small style="color:#94A3B8;">(optionnel)</small></label>
                 <div class="autocomplete-wrap">
                     <input type="text" x-model="mgrSearch" @focus="mgrOpen=true" @input="mgrOpen=true"
                            :placeholder="mgrName || 'Aucun (Admin uniquement)'" class="form-control" autocomplete="off">
@@ -304,6 +323,18 @@
                         </template>
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <label>Utilisateurs autorisés à ouvrir cette caisse</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px 16px;max-height:140px;overflow:auto;padding:10px;border:1px solid #e2e8f0;border-radius:6px;">
+                    @foreach($managers as $manager)
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:0;">
+                        <input type="checkbox" name="user_ids[]" value="{{ $manager->id }}">
+                        {{ $manager->name }}
+                    </label>
+                    @endforeach
+                </div>
+                <small style="color:#64748B;">Les administrateurs conservent toujours l’accès.</small>
             </div>
             @endif
             @if($errors->any() && !$errors->has('caisse'))
@@ -328,7 +359,8 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <form method="POST" action="{{ route('pos.sessions.open') }}" class="modal__body">
+          <form method="POST" action="{{ route('pos.sessions.open') }}" class="modal__body" data-no-loader
+              @submit.prevent="window.submitPosSessionOpening($el)">
             @csrf
             <input type="hidden" name="caisse_id" :value="openCaisse?.id">
             <div class="form-group">
@@ -351,9 +383,16 @@
                 </select>
             </div>
             @endif
+            <div class="form-group" data-opening-code-panel hidden style="display:none;">
+                <label>Code de vérification reçu par mail</label>
+                <input type="text" name="verification_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                       autocomplete="one-time-code" class="form-control" placeholder="Code à 6 chiffres">
+                <button type="button" class="btn btn--ghost btn--sm" style="margin-top:8px;"
+                        @click="window.resendPosSessionOpeningCode($el.closest('form'))">Renvoyer le code</button>
+            </div>
             <div class="modal-footer-std">
                 <button title="Annuler et fermer sans enregistrer" type="button" @click="openModal = false" class="btn btn--light">Annuler</button>
-                <button title="Ouvrir la caisse et commencer à vendre" type="submit" class="btn btn--primary">Ouvrir et commencer</button>
+                <button title="Ouvrir la caisse et commencer à vendre" data-open-submit type="submit" class="btn btn--primary">Ouvrir et commencer</button>
             </div>
         </form>
     </div>
@@ -373,6 +412,8 @@ $caissesJson = $caisses->map(function ($c) use ($currentUserId) {
         'sessions_count' => $c->sessions_count,
         'manager_id'     => $c->manager_id,
         'manager_name'   => $c->manager?->name,
+        'authorized_user_ids' => $c->authorizedUsers->pluck('id'),
+        'authorized_user_names' => $c->authorizedUsers->pluck('name'),
         'my_session'     => (bool) $c->sessions->firstWhere('user_id', $currentUserId),
         'open_session'   => $openSession ? [
             'user_name' => $openSession->user->name,

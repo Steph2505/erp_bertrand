@@ -6,31 +6,31 @@
     <title>Ticket {{ $sale->reference }}</title>
     <style>
         * { margin:0;padding:0;box-sizing:border-box; }
-        body { font-family:'Courier New',Courier,monospace;font-size:12px;color:#000;background:#fff; }
+        body { font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#000;background:#fff; }
         .receipt { width:72mm;margin:0 auto;padding:3mm 1mm; }
         .center { text-align:center; }
         .company-name { font-size:16px;font-weight:700;margin-bottom:2px;overflow-wrap:anywhere; }
-        .company-sub { font-size:10px;line-height:1.5;overflow-wrap:anywhere; }
+        .company-sub { font-size:11px;line-height:1.5;overflow-wrap:anywhere; }
         .divider-dashed { border:none;border-top:1px dashed #000;margin:2mm 0; }
         .divider-solid { border:none;border-top:1px solid #000;margin:2mm 0; }
-        .meta { font-size:11px;line-height:1.65; }
+        .meta { font-size:12px;line-height:1.65; }
         .meta-row { display:flex;justify-content:space-between;gap:8px; }
         .meta-row span:last-child { text-align:right;overflow-wrap:anywhere; }
-        table { width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px; }
+        table { width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px; }
         th { text-align:left;font-weight:700;padding:1mm 0;border-bottom:1px solid #000; }
         th:nth-child(2), td:nth-child(2) { width:10mm;text-align:center; }
         th:last-child { width:23mm;text-align:right; }
         td { padding:1.2mm 0;vertical-align:top;overflow-wrap:anywhere; }
         td:last-child { text-align:right;white-space:normal;padding-left:1mm; }
-        .item-name { font-size:11px;line-height:1.3;overflow-wrap:anywhere; }
-        .item-detail { font-size:10px; }
+        .item-name { font-size:12px;line-height:1.35;overflow-wrap:anywhere; }
+        .item-detail { font-size:11px; }
         .totals { font-size:12px; }
         .totals-row { display:flex;justify-content:space-between;gap:8px;padding:1mm 0; }
         .totals-row span:last-child { text-align:right; }
         .totals-row.grand { font-size:14px;font-weight:700;border-top:1px solid #000;border-bottom:1px solid #000;padding:2mm 0;margin:1mm 0; }
         .totals-row.change { font-size:13px;font-weight:700; }
         .badge { font-size:10px;font-weight:700;text-transform:uppercase; }
-        .footer-text { font-size:10px;line-height:1.6;overflow-wrap:anywhere; }
+        .footer-text { font-size:11px;line-height:1.6;overflow-wrap:anywhere; }
         .footer-text p + p { margin-top:2mm; }
         @media print {
             @page { margin:0; }

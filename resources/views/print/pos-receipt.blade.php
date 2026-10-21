@@ -85,7 +85,6 @@
         <thead>
             <tr>
                 <th>Désignation</th>
-                <th style="text-align:center;width:30px">Qté</th>
                 <th>Montant</th>
             </tr>
         </thead>
@@ -94,9 +93,8 @@
             <tr>
                 <td>
                     <div class="item-name">{{ $item->item_name }}</div>
-                    <!-- <div class="item-detail">{{ $item->unit_price }}</div> -->
+                    <div class="item-detail">{{ \App\Helpers\FormatHelper::money($item->unit_price) }} × {{ $item->quantity }}</div>
                 </td>
-                <td style="text-align:center;">{{ $item->quantity }}</td>
                 <td>{{ \App\Helpers\FormatHelper::money($item->subtotal) }}</td>
             </tr>
             @endforeach

@@ -94,7 +94,7 @@
             <tr>
                 <td>
                     <div class="item-name">{{ $item->item_name }}</div>
-                    <div class="item-detail">{{ \App\Helpers\FormatHelper::money($item->unit_price) }} × {{ $item->quantity }}</div>
+                    <!-- <div class="item-detail">{{ $item->unit_price }}</div> -->
                 </td>
                 <td style="text-align:center;">{{ $item->quantity }}</td>
                 <td>{{ \App\Helpers\FormatHelper::money($item->subtotal) }}</td>

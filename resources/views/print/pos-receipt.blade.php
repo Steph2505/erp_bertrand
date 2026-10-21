@@ -32,15 +32,12 @@
         .badge { font-size:10px;font-weight:700;text-transform:uppercase; }
         .footer-text { font-size:10px;line-height:1.6;overflow-wrap:anywhere; }
         .footer-text p + p { margin-top:2mm; }
-        @media screen {
-            .receipt { min-height:80mm; }
-        }
         @media print {
             @page { margin:0; }
             html, body { width:80mm;margin:0;padding:0;background:#fff; }
             body { print-color-adjust:exact;-webkit-print-color-adjust:exact; }
             .no-print { display:none!important; }
-            .receipt { width:72mm;margin:0 auto;padding:3mm 1mm; }
+            .receipt { width:72mm;margin:0 auto;padding:2mm 1mm; }
             tr, .totals-row, .meta-row { break-inside:avoid; }
         }
     </style>
@@ -160,7 +157,6 @@
         @else
             <p>Merci pour votre confiance<br>{{ \App\Models\Setting::get('company_name', config('app.name')) }}</p>
         @endif
-        <p style="font-size:9px;">{{ $sale->created_at->format('d/m/Y H:i:s') }}</p>
     </div>
 
 </div>
@@ -171,7 +167,7 @@
             await document.fonts.ready;
         }
 
-        const heightMm = Math.ceil(document.querySelector('.receipt').offsetHeight / 96 * 25.4) + 10;
+        const heightMm = Math.ceil(document.querySelector('.receipt').getBoundingClientRect().height / 96 * 25.4) + 3;
         const style = document.createElement('style');
         style.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 0; }';
         document.head.appendChild(style);

@@ -116,6 +116,7 @@ return [
             ['label' => 'Paiements de vente',      'route' => 'reports.sale-payments'],
             ['label' => 'Rapport de dépenses',     'route' => 'reports.expenses'],
             ['label' => 'Rapport de caisse',       'route' => 'reports.pos'],
+            ['label' => 'Ventes par caissier',     'route' => 'reports.cashiers'],
             ['label' => 'Journal d\'activité',     'route' => 'reports.activity'],
         ],
     ],

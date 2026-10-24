@@ -241,6 +241,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/api/pos',            'apiPos')->name('api.pos');
         Route::get('/agents',             'agents')->name('agents');
         Route::get('/api/agents',         'apiAgents')->name('api.agents');
+        Route::get('/cashiers',           'cashiers')->name('cashiers');
+        Route::get('/api/cashiers',       'apiCashiers')->name('api.cashiers');
         Route::get('/activity',           'activity')->name('activity');
         Route::get('/api/activity',       'apiActivity')->name('api.activity');
     });

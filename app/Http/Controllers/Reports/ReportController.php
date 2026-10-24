@@ -1092,6 +1092,121 @@ class ReportController extends Controller
 
     // ── Représentants ─────────────────────────────────────────────────────────
 
+    public function cashiers(Request $request): View|RedirectResponse
+    {
+        try {
+            [$from, $to] = $this->dates($request);
+            $sort = $request->input('sort', 'revenue');
+
+            return view('pages.reports.cashiers', compact('from', 'to', 'sort'));
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement du rapport des ventes par caissier', ['filters' => $request->all()]);
+            return redirect()->route('dashboard')->with('error', 'Une erreur est survenue lors du chargement du rapport.');
+        }
+    }
+
+    public function apiCashiers(Request $request): JsonResponse
+    {
+        try {
+            [$from, $to] = $this->dates($request);
+            $sort = $request->input('sort', 'revenue');
+            if (! in_array($sort, ['revenue', 'profit', 'sales', 'name'], true)) {
+                $sort = 'revenue';
+            }
+
+            $costsBySale = DB::table('sale_items')
+                ->select('sale_id')
+                ->selectRaw("SUM(CASE
+                    WHEN item_type = 'pack' THEN quantity * COALESCE(unit_cost, 0)
+                    ELSE quantity * units_per_item * COALESCE(unit_cost, 0)
+                END) as cost")
+                ->selectRaw('SUM(CASE WHEN unit_cost IS NULL THEN 1 ELSE 0 END) as missing_cost_lines')
+                ->groupBy('sale_id');
+
+            $returnsBySale = DB::table('sale_returns')
+                ->select('sale_id')
+                ->selectRaw('SUM(total) as returned_total')
+                ->groupBy('sale_id');
+
+            $salesByCashier = DB::table('sales')
+                ->leftJoin('pos_sessions', 'pos_sessions.id', '=', 'sales.pos_session_id')
+                ->leftJoin('users', 'users.id', '=', 'pos_sessions.user_id')
+                ->leftJoinSub($costsBySale, 'sale_costs', fn($join) => $join->on('sale_costs.sale_id', '=', 'sales.id'))
+                ->leftJoinSub($returnsBySale, 'sale_returns', fn($join) => $join->on('sale_returns.sale_id', '=', 'sales.id'))
+                ->where('sales.is_pos', true)
+                ->whereIn('sales.status', ['confirmed', 'completed'])
+                ->whereBetween('sales.sale_date', [$from, $to . ' 23:59:59'])
+                ->whereNull('sales.deleted_at')
+                ->groupBy('pos_sessions.user_id', 'users.name')
+                ->select(
+                    'pos_sessions.user_id',
+                    DB::raw("COALESCE(users.name, 'Non attribué (sans session)') as cashier_name"),
+                    DB::raw('COUNT(DISTINCT sales.id) as sales_count'),
+                    DB::raw('COUNT(DISTINCT sales.pos_session_id) as sessions_count'),
+                    DB::raw('SUM(sales.total) as gross_revenue'),
+                    DB::raw('SUM(COALESCE(sale_returns.returned_total, 0)) as returned_total'),
+                    DB::raw('SUM(COALESCE(sale_costs.cost, 0)) as cost'),
+                    DB::raw('SUM(COALESCE(sale_costs.missing_cost_lines, 0)) as missing_cost_lines')
+                )
+                ->get()
+                ->map(function ($row) {
+                    $row->gross_revenue = (float) $row->gross_revenue;
+                    $row->returned_total = (float) $row->returned_total;
+                    $row->net_revenue = $row->gross_revenue - $row->returned_total;
+                    $row->cost = (float) $row->cost;
+                    $row->profit = $row->net_revenue - $row->cost;
+                    $row->sales_count = (int) $row->sales_count;
+                    $row->sessions_count = (int) $row->sessions_count;
+                    $row->missing_cost_lines = (int) $row->missing_cost_lines;
+                    $row->margin = $row->net_revenue > 0
+                        ? round(($row->profit / $row->net_revenue) * 100, 1)
+                        : 0;
+
+                    return $row;
+                });
+
+            $rows = match ($sort) {
+                'profit' => $salesByCashier->sortByDesc('profit')->values(),
+                'sales' => $salesByCashier->sortByDesc('sales_count')->values(),
+                'name' => $salesByCashier->sortBy('cashier_name')->values(),
+                default => $salesByCashier->sortByDesc('net_revenue')->values(),
+            };
+
+            $topSeller = $salesByCashier->sortByDesc('net_revenue')->first();
+            $topProfit = $salesByCashier->sortByDesc('profit')->first();
+
+            return response()->json([
+                'rows' => $rows->map(fn($row) => [
+                    'cashier_name' => $row->cashier_name,
+                    'sales_count' => $row->sales_count,
+                    'sessions_count' => $row->sessions_count,
+                    'gross_revenue' => $row->gross_revenue,
+                    'returned_total' => $row->returned_total,
+                    'net_revenue' => $row->net_revenue,
+                    'cost' => $row->cost,
+                    'profit' => $row->profit,
+                    'margin' => $row->margin,
+                    'missing_cost_lines' => $row->missing_cost_lines,
+                    'top_seller' => $topSeller && $row->user_id === $topSeller->user_id,
+                    'top_profit' => $topProfit && $row->user_id === $topProfit->user_id,
+                ]),
+                'totals' => [
+                    'sales_count' => (int) $salesByCashier->sum('sales_count'),
+                    'sessions_count' => (int) $salesByCashier->sum('sessions_count'),
+                    'gross_revenue' => (float) $salesByCashier->sum('gross_revenue'),
+                    'returned_total' => (float) $salesByCashier->sum('returned_total'),
+                    'net_revenue' => (float) $salesByCashier->sum('net_revenue'),
+                    'cost' => (float) $salesByCashier->sum('cost'),
+                    'profit' => (float) $salesByCashier->sum('profit'),
+                    'missing_cost_lines' => (int) $salesByCashier->sum('missing_cost_lines'),
+                ],
+            ]);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors du chargement du rapport des ventes par caissier', ['filters' => $request->all()]);
+            return response()->json(['message' => 'Impossible de charger le rapport des ventes par caissier.'], 500);
+        }
+    }
+
     public function agents(Request $request): View|RedirectResponse
     {
         try {

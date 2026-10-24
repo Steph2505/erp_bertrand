@@ -132,6 +132,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/sessions',            [PosSessionController::class, 'index'])->name('sessions.index');
         Route::get('/sessions/api/list',   [PosSessionController::class, 'apiIndex'])->name('sessions.api.list');
         Route::post('/sessions/open',      [PosSessionController::class, 'open'])->name('sessions.open');
+        Route::post('/sessions/{session}/verify-access', [PosSessionController::class, 'verifyReturnAccessPin'])->name('sessions.verify-access');
         Route::post('/sessions/{session}/close', [PosSessionController::class, 'close'])->name('sessions.close');
         Route::get('/sessions/{session}',  [PosSessionController::class, 'show'])->name('sessions.show');
         // Gestion des caisses
@@ -251,6 +252,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/{user}',    [UserController::class, 'show'])->name('show');
         Route::put('/{user}',    [UserController::class, 'update'])->name('update');
         Route::patch('/{user}/toggle', [UserController::class, 'toggleActive'])->name('toggle');
+        Route::delete('/{user}/pos-pin', [UserController::class, 'resetPosPin'])->name('reset-pin');
     });
     Route::get('/profile',   [UserController::class, 'profile'])->name('users.profile');
     Route::put('/profile',   [UserController::class, 'updateProfile'])->name('users.profile.update');

@@ -6,33 +6,39 @@
     <title>Ticket {{ $sale->reference }}</title>
     <style>
         * { margin:0;padding:0;box-sizing:border-box; }
-        body { font-family:'Courier New',Courier,monospace;font-size:12px;color:#000;background:#fff; }
-        .receipt { width:300px;margin:0 auto;padding:20px 10px; }
+        body { font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#000;background:#fff; }
+        .receipt { width:72mm;margin:0 auto;padding:3mm 1mm; }
         .center { text-align:center; }
-        .company-name { font-size:16px;font-weight:700;margin-bottom:2px; }
-        .company-sub { font-size:10px;color:#444;line-height:1.5; }
-        .divider-dashed { border:none;border-top:1px dashed #000;margin:10px 0; }
-        .divider-solid { border:none;border-top:1px solid #000;margin:10px 0; }
-        .meta { font-size:11px;line-height:1.8; }
-        .meta-row { display:flex;justify-content:space-between; }
-        table { width:100%;border-collapse:collapse;font-size:11px; }
-        th { text-align:left;font-weight:700;padding:3px 0;border-bottom:1px solid #000; }
-        th:last-child { text-align:right; }
-        td { padding:4px 0;vertical-align:top; }
-        td:last-child { text-align:right;white-space:nowrap;padding-left:8px; }
-        .item-name { font-size:11px;line-height:1.4; }
-        .item-detail { font-size:10px;color:#555; }
+        .company-name { font-size:16px;font-weight:700;margin-bottom:2px;overflow-wrap:anywhere; }
+        .company-sub { font-size:11px;line-height:1.5;overflow-wrap:anywhere; }
+        .divider-dashed { border:none;border-top:1px dashed #000;margin:2mm 0; }
+        .divider-solid { border:none;border-top:1px solid #000;margin:2mm 0; }
+        .meta { font-size:12px;line-height:1.65; }
+        .meta-row { display:flex;justify-content:space-between;gap:8px; }
+        .meta-row span:last-child { text-align:right;overflow-wrap:anywhere; }
+        table { width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px; }
+        th { text-align:left;font-weight:700;padding:1mm 0;border-bottom:1px solid #000; }
+        th:nth-child(2), td:nth-child(2) { width:10mm;text-align:center; }
+        th:last-child { width:23mm;text-align:right; }
+        td { padding:1.2mm 0;vertical-align:top;overflow-wrap:anywhere; }
+        td:last-child { text-align:right;white-space:normal;padding-left:1mm; }
+        .item-name { font-size:12px;line-height:1.35;overflow-wrap:anywhere; }
+        .item-detail { font-size:11px; }
         .totals { font-size:12px; }
-        .totals-row { display:flex;justify-content:space-between;padding:3px 0; }
-        .totals-row.grand { font-size:14px;font-weight:700;border-top:1px solid #000;border-bottom:1px solid #000;padding:6px 0;margin:4px 0; }
+        .totals-row { display:flex;justify-content:space-between;gap:8px;padding:1mm 0; }
+        .totals-row span:last-child { text-align:right; }
+        .totals-row.grand { font-size:14px;font-weight:700;border-top:1px solid #000;border-bottom:1px solid #000;padding:2mm 0;margin:1mm 0; }
         .totals-row.change { font-size:13px;font-weight:700; }
         .badge { font-size:10px;font-weight:700;text-transform:uppercase; }
-        .footer-text { font-size:10px;color:#444;line-height:1.6; }
-        .barcode-placeholder { font-size:9px;color:#999;border:1px dashed #ccc;padding:6px;margin-top:8px; }
+        .footer-text { font-size:11px;line-height:1.6;overflow-wrap:anywhere; }
+        .footer-text p + p { margin-top:2mm; }
         @media print {
+            @page { margin:0; }
+            html, body { width:80mm;margin:0;padding:0;background:#fff; }
             body { print-color-adjust:exact;-webkit-print-color-adjust:exact; }
             .no-print { display:none!important; }
-            .receipt { width:100%; }
+            .receipt { width:72mm;margin:0 auto;padding:2mm 1mm; }
+            tr, .totals-row, .meta-row { break-inside:avoid; }
         }
     </style>
 </head>
@@ -70,9 +76,6 @@
         @if($sale->createdBy)
         <div class="meta-row"><span>Caissier</span><span>{{ $sale->createdBy->name }}</span></div>
         @endif
-        @if($sale->warehouse)
-        <div class="meta-row"><span>Site</span><span>{{ $sale->warehouse->name }}</span></div>
-        @endif
     </div>
 
     <hr class="divider-solid">
@@ -82,7 +85,6 @@
         <thead>
             <tr>
                 <th>Désignation</th>
-                <th style="text-align:center;width:30px">Qté</th>
                 <th>Montant</th>
             </tr>
         </thead>
@@ -93,7 +95,6 @@
                     <div class="item-name">{{ $item->item_name }}</div>
                     <div class="item-detail">{{ \App\Helpers\FormatHelper::money($item->unit_price) }} × {{ $item->quantity }}</div>
                 </td>
-                <td style="text-align:center;">{{ $item->quantity }}</td>
                 <td>{{ \App\Helpers\FormatHelper::money($item->subtotal) }}</td>
             </tr>
             @endforeach
@@ -152,23 +153,21 @@
         @if(\App\Models\Setting::get('invoice_footer'))
             <p>{{ \App\Models\Setting::get('invoice_footer') }}</p>
         @else
-            <p>Merci pour votre achat !<br>À bientôt chez {{ \App\Models\Setting::get('company_name', config('app.name')) }}</p>
+            <p>Merci pour votre confiance<br>{{ \App\Models\Setting::get('company_name', config('app.name')) }}</p>
         @endif
-        <p style="margin-top:8px;font-size:9px;color:#aaa;">{{ now()->format('d/m/Y H:i:s') }}</p>
     </div>
 
 </div>
 
 <script>
-    // "size: 80mm auto" n'est pas une syntaxe CSS valide (le mot-clé "auto" ne peut
-    // pas être combiné à une longueur) — Chrome l'ignore silencieusement et retombe
-    // sur le format Letter en paysage. On calcule donc la hauteur réelle du ticket
-    // et on injecte une règle @page avec deux longueurs explicites (seule syntaxe
-    // honorée par le moteur d'impression), pour obtenir un vrai format ticket 80mm.
-    (function () {
-        const heightMm = Math.ceil(document.querySelector('.receipt').offsetHeight / 96 * 25.4) + 10;
+    (async function () {
+        if (document.fonts?.ready) {
+            await document.fonts.ready;
+        }
+
+        const heightMm = Math.ceil(document.querySelector('.receipt').getBoundingClientRect().height / 96 * 25.4) + 3;
         const style = document.createElement('style');
-        style.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 5mm; }';
+        style.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 0; }';
         document.head.appendChild(style);
     })();
 </script>

@@ -65,21 +65,12 @@
     </div>
 </div>
 
-@if($session->isOpen())
+@if($session->isOpen() && auth()->user()->can('close pos sessions'))
 <div class="card mb-24" style="padding:20px;background:#fffbeb;border-color:#fde68a;">
     <h3 style="font-size:14px;font-weight:600;color:#92400e;margin-bottom:12px;">Clôturer la caisse</h3>
-    <form method="POST" action="{{ route('pos.sessions.close', $session) }}" class="pos-close-panel__form"
-          @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && $el.submit())">
+        <form method="POST" action="{{ route('pos.sessions.close', $session) }}" data-success-url="{{ route('pos.sessions.show', $session) }}" class="pos-close-panel__form" data-no-loader
+            @submit.prevent="window.confirmDialog('Confirmer la clôture de caisse ?', {variant:'danger', confirmLabel:'Clôturer'}).then(ok => ok && window.closeSessionAndDownload($el))">
         @csrf
-        <div class="form-group" style="margin-bottom:0;">
-            <label>Montant compté en caisse *</label>
-            <input type="number" name="closing_balance" step="1" min="0" class="form-control pos-close-panel__input-balance" required
-                placeholder="Entrer le montant">
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-            <label>Note</label>
-            <input type="text" name="note" class="form-control pos-close-panel__input-note" placeholder="Observation (optionnel)">
-        </div>
         <button title="Clôturer la session de caisse en cours" type="submit" class="btn btn--danger">
             Clôturer la caisse
         </button>

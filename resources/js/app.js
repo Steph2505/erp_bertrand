@@ -112,6 +112,117 @@ Alpine.store('pageLoader', {
 window.showPageLoader = (message) => Alpine.store('pageLoader').show(message);
 window.hidePageLoader = () => Alpine.store('pageLoader').hide();
 
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted && document.querySelector('[data-pos-active-session]')) {
+        window.location.reload();
+    }
+});
+
+window.closeSessionAndDownload = async (form) => {
+    window.showPageLoader();
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: { Accept: 'application/pdf' },
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/pdf')) {
+            if (response.redirected) {
+                window.location.assign(response.url);
+                return;
+            }
+            throw new Error('Le rapport PDF n’a pas pu être téléchargé.');
+        }
+
+        const blob = await response.blob();
+        const disposition = response.headers.get('content-disposition') || '';
+        const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'rapport-caisse.pdf';
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+        window.toastAfterReload('Caisse clôturée. Rapport téléchargé.');
+        window.location.assign(form.dataset.successUrl);
+    } catch (error) {
+        window.hidePageLoader();
+        window.toast(error.message || 'Une erreur est survenue lors de la clôture.', 'error');
+    }
+};
+
+window.submitPosSessionOpening = async (form) => {
+    window.showPageLoader();
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Impossible d’ouvrir cette session.');
+        }
+
+        if (result.success && result.redirect) {
+            window.toastAfterReload('Session de caisse ouverte.');
+            window.location.assign(result.redirect);
+            return;
+        }
+
+        throw new Error('Réponse inattendue du serveur.');
+    } catch (error) {
+        window.hidePageLoader();
+        form.querySelectorAll('[name="pin"], [name="pin_confirmation"]').forEach((input) => {
+            input.value = '';
+        });
+        form.querySelector('[name="pin"]')?.focus();
+        window.toast(error.message || 'Une erreur est survenue lors de l’ouverture.', 'error');
+    }
+};
+
+window.verifyPosSessionAccess = async (form) => {
+    window.showPageLoader('Vérification du PIN...');
+
+    try {
+        const response = await fetch(form.dataset.verifyUrl, {
+            method: 'POST',
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'PIN invalide.');
+        }
+
+        if (result.success && result.redirect) {
+            window.location.assign(result.redirect);
+            return;
+        }
+
+        throw new Error('Réponse inattendue du serveur.');
+    } catch (error) {
+        window.hidePageLoader();
+        form.querySelectorAll('[name="pin"], [name="pin_confirmation"]').forEach((input) => {
+            input.value = '';
+        });
+        form.querySelector('[name="pin"]')?.focus();
+        window.toast(error.message || 'La vérification du PIN a échoué.', 'error');
+    }
+};
+
 const _nativeFormSubmit = HTMLFormElement.prototype.submit;
 HTMLFormElement.prototype.submit = function () {
     if (!this.hasAttribute('data-no-loader')) {

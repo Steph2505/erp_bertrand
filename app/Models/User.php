@@ -17,7 +17,7 @@ class User extends Authenticatable
         'name', 'email', 'phone', 'avatar', 'password', 'is_active', 'last_login_at',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'pos_pin_hash', 'remember_token'];
 
     protected function casts(): array
     {

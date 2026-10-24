@@ -49,6 +49,22 @@
                 <span class="badge badge--{{ $user->is_active ? 'green' : 'gray' }}">{{ $user->is_active ? 'Actif' : 'Inactif' }}</span>
             </div>
         </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label>PIN de caisse</label>
+            @if($user->pos_pin_hash)
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <span style="font-size:13px;color:#64748B;">Un PIN est défini. Il reste secret et ne peut pas être consulté.</span>
+                    <form method="POST" action="{{ route('users.reset-pin', $user) }}"
+                          onsubmit="return confirm('Réinitialiser le PIN de caisse de cet utilisateur ?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn--ghost btn--sm">Réinitialiser le PIN</button>
+                    </form>
+                </div>
+            @else
+                <span style="font-size:13px;color:#64748B;">Aucun PIN défini. Il sera créé par le caissier à sa prochaine ouverture.</span>
+            @endif
+        </div>
     </div>
 
     <div class="card user-profile__card">

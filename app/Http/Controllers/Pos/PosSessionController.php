@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\PosSession;
 use App\Models\User;
 use App\Notifications\PosSessionClosedAlert;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class PosSessionController extends Controller
@@ -33,6 +38,9 @@ class PosSessionController extends Controller
                 ->when(
                     ! $request->user()->hasAnyRole(['Admin', 'Super Admin']),
                     fn($q) => $q->where('user_id', $request->user()->id)
+                        ->whereHas('caisse', fn($caisseQuery) => $caisseQuery
+                            ->where('manager_id', $request->user()->id)
+                            ->orWhereHas('authorizedUsers', fn($userQuery) => $userQuery->whereKey($request->user()->id)))
                 )
                 ->orderByDesc('opened_at')
                 ->paginate(10, ['*'], 'page', $request->integer('page', 1));
@@ -66,7 +74,7 @@ class PosSessionController extends Controller
         }
     }
 
-    public function open(Request $request): RedirectResponse
+    public function open(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'caisse_id'       => 'required|exists:caisses,id',
@@ -76,49 +84,153 @@ class PosSessionController extends Controller
 
         $caisse = \App\Models\Caisse::find($request->caisse_id);
         if (! $caisse->canBeOpenedBy($request->user())) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Cette caisse ne vous est pas attribuée.'], 403);
+            }
             return back()->withInput()->with('error', 'Cette caisse est assignée à un autre utilisateur.');
         }
 
+        $isAdmin = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
+        if (! $isAdmin) {
+            $request->validate(['pin' => 'required|digits:6']);
+        }
+
         try {
-            DB::transaction(function () use ($request) {
+            $result = DB::transaction(function () use ($request, $caisse, $isAdmin) {
+                $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
+                if (! $isAdmin) {
+                    $pinError = $this->verifyOrSetPosPin($request, $user);
+                    if ($pinError) {
+                        return $pinError;
+                    }
+                }
+
                 // Fermer toute session ouverte de cet utilisateur
-                PosSession::where('user_id', auth()->id())
+                PosSession::where('user_id', $user->id)
                     ->whereNull('closed_at')
                     ->update(['closed_at' => now()]);
 
-                PosSession::create([
-                    'caisse_id'       => $request->caisse_id,
-                    'user_id'         => auth()->id(),
+                $session = PosSession::create([
+                    'caisse_id'       => $caisse->id,
+                    'user_id'         => $user->id,
                     'warehouse_id'    => $request->warehouse_id,
                     'opening_balance' => $request->opening_balance,
                     'total_sales'     => 0,
                     'opened_at'       => now(),
                 ]);
+
+                return ['session' => $session];
             });
+
+            if (isset($result['error'])) {
+                return response()->json(['message' => $result['error']], $result['status']);
+            }
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors de l\'ouverture de la caisse', ['request' => $request->except('_token')]);
+            $this->logError($e, 'Erreur lors de l\'ouverture de la caisse', ['request' => $request->except(['_token', 'pin', 'pin_confirmation'])]);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Une erreur est survenue lors de l\'ouverture de la caisse.'], 500);
+            }
             return back()->withInput()->with('error', 'Une erreur est survenue lors de l\'ouverture de la caisse.');
+        }
+
+        if (! $isAdmin) {
+            $request->session()->flash('pos_access_verified_for', $result['session']->id);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'redirect' => route('pos.index')]);
         }
 
         return redirect()->route('pos.index')->with('success', 'Caisse ouverte avec succès.');
     }
 
-    public function close(Request $request, PosSession $session): RedirectResponse
+    public function verifyReturnAccessPin(Request $request, PosSession $session): JsonResponse
     {
-        if ($session->user_id !== auth()->id() && ! auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
+        $this->authorizeReturnAccess($request, $session);
+        $request->validate(['pin' => 'required|digits:6']);
+
+        $error = DB::transaction(function () use ($request) {
+            $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
+            return $this->verifyOrSetPosPin($request, $user);
+        });
+
+        if ($error) {
+            return response()->json(['message' => $error['error']], $error['status']);
+        }
+
+        $request->session()->flash('pos_access_verified_for', $session->id);
+
+        return response()->json(['success' => true, 'redirect' => route('pos.index')]);
+    }
+
+    private function authorizeReturnAccess(Request $request, PosSession $session): void
+    {
+        abort_unless(
+            $session->isOpen()
+            && $session->user_id === $request->user()->id
+            && $session->caisse?->canBeOpenedBy($request->user()),
+            404
+        );
+    }
+
+    private function verifyOrSetPosPin(Request $request, User $user): ?array
+    {
+        if (! $user->pos_pin_hash) {
+            $request->validate(['pin_confirmation' => 'required|same:pin']);
+            $user->forceFill(['pos_pin_hash' => Hash::make($request->input('pin'))])->save();
+
+            return null;
+        }
+
+        $key = 'pos-pin:' . $user->id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return [
+                'error' => 'Trop de tentatives. Réessayez dans ' . RateLimiter::availableIn($key) . ' secondes.',
+                'status' => 429,
+            ];
+        }
+
+        if (! Hash::check($request->input('pin'), $user->pos_pin_hash)) {
+            RateLimiter::hit($key, 60);
+
+            return ['error' => 'PIN incorrect.', 'status' => 422];
+        }
+
+        RateLimiter::clear($key);
+
+        return null;
+    }
+
+    public function close(Request $request, PosSession $session): Response
+    {
+        $user = $request->user();
+        $isAdmin = $user->hasAnyRole(['Admin', 'Super Admin']);
+
+        if (! $isAdmin && ! $user->can('close pos sessions')) {
+            abort(403, 'Vous n’avez pas le droit de clôturer une session de caisse.');
+        }
+
+        if ($session->user_id !== $user->id && ! $isAdmin) {
             abort(403, 'Vous ne pouvez clôturer que vos propres sessions de caisse.');
         }
 
-        $request->validate([
-            'closing_balance' => 'required|numeric|min:0',
-            'note'            => 'nullable|string|max:500',
-        ]);
-
         try {
             $session->update([
-                'closing_balance' => $request->closing_balance,
-                'note'            => $request->note,
+                'closing_balance' => $session->expected_closing,
                 'closed_at'       => now(),
+            ]);
+
+            $session->load([
+                'caisse',
+                'warehouse',
+                'user',
+                'sales.customer',
+                'sales.items',
+                'sales.payments.paymentAccount',
             ]);
 
             $recipients = User::permission('receive notifications')
@@ -127,21 +239,26 @@ class PosSessionController extends Controller
                 ->get();
 
             if ($recipients->isNotEmpty()) {
-                Notification::send($recipients, new PosSessionClosedAlert($session->load(['caisse', 'user'])));
+                Notification::send($recipients, new PosSessionClosedAlert($session));
             }
+
+            $filename = 'rapport-caisse-' . $session->id . '-' . $session->closed_at->format('Ymd-His') . '.pdf';
+
+            return Pdf::loadView('pages.pos.session-report', compact('session'))
+                ->setPaper('a4')
+                ->download($filename);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la clôture de la caisse', ['session_id' => $session->id]);
             return back()->withInput()->with('error', 'Une erreur est survenue lors de la clôture de la caisse.');
         }
-
-        return redirect()->route('pos.sessions.index')
-            ->with('success', 'Caisse clôturée avec succès.');
     }
 
     public function show(PosSession $session): View|RedirectResponse
     {
-        if ($session->user_id !== auth()->id() && ! auth()->user()->hasAnyRole(['Admin', 'Super Admin'])) {
-            abort(403, 'Vous ne pouvez consulter que vos propres sessions de caisse.');
+        $user = auth()->user();
+        if (! $user->hasAnyRole(['Admin', 'Super Admin'])
+            && ($session->user_id !== $user->id || ! $session->caisse?->canBeOpenedBy($user))) {
+            abort(404);
         }
 
         try {

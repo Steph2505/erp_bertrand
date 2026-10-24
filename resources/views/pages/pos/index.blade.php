@@ -188,13 +188,21 @@
                 </select>
             </div>
 
-            <div class="form-group" data-opening-code-panel hidden style="display:none;">
-                <label>Code de vérification reçu par mail</label>
-                <input type="text" name="verification_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
-                       autocomplete="one-time-code" class="form-control" placeholder="Code à 6 chiffres">
-                <button type="button" class="btn btn--ghost btn--sm" style="margin-top:8px;"
-                        @click="window.resendPosSessionOpeningCode($el.closest('form'))">Renvoyer le code</button>
-            </div>
+            @unless(auth()->user()->hasAnyRole(['Admin', 'Super Admin']))
+                <div class="form-group">
+                    <label for="opening_pin">{{ auth()->user()->pos_pin_hash ? 'PIN de caisse' : 'Créez votre PIN de caisse' }}</label>
+                    <input id="opening_pin" type="password" name="pin" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                           autocomplete="off" class="form-control" placeholder="PIN à 6 chiffres" required>
+                </div>
+                @unless(auth()->user()->pos_pin_hash)
+                    <div class="form-group">
+                        <label for="opening_pin_confirmation">Confirmez votre PIN</label>
+                        <input id="opening_pin_confirmation" type="password" name="pin_confirmation" inputmode="numeric"
+                               pattern="[0-9]{6}" maxlength="6" autocomplete="off" class="form-control"
+                               placeholder="Confirmez le PIN à 6 chiffres" required>
+                    </div>
+                @endunless
+            @endunless
 
             <div class="modal-footer-std" style="gap:8px;">
                 <a title="Voir la liste des caisses" href="{{ route('pos.caisses.index') }}" class="btn btn--ghost">

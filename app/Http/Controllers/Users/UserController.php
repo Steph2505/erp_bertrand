@@ -8,6 +8,7 @@ use App\Notifications\UserCredentials;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -163,6 +164,19 @@ class UserController extends Controller
 
         $msg = $user->is_active ? 'Utilisateur activé.' : 'Utilisateur désactivé. Il n\'a plus accès au système.';
         return back()->with('success', $msg);
+    }
+
+    public function resetPosPin(User $user): RedirectResponse
+    {
+        try {
+            $user->forceFill(['pos_pin_hash' => null])->save();
+            RateLimiter::clear('pos-pin:' . $user->id);
+        } catch (Throwable $e) {
+            $this->logError($e, 'Erreur lors de la réinitialisation du PIN de caisse', ['user_id' => $user->id]);
+            return back()->with('error', 'Une erreur est survenue lors de la réinitialisation du PIN.');
+        }
+
+        return back()->with('success', 'PIN réinitialisé. Le caissier devra en créer un nouveau à sa prochaine ouverture de caisse.');
     }
 
     public function profile(): View|RedirectResponse

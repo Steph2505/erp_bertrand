@@ -4,17 +4,17 @@ namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\PosSession;
-use App\Models\PosSessionOpeningCode;
 use App\Models\User;
 use App\Notifications\PosSessionClosedAlert;
-use App\Notifications\PosSessionOpeningCodeNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -80,7 +80,6 @@ class PosSessionController extends Controller
             'caisse_id'       => 'required|exists:caisses,id',
             'opening_balance' => 'required|numeric|min:0',
             'warehouse_id'    => 'nullable|exists:warehouses,id',
-            'verification_code' => 'nullable|digits:6',
         ]);
 
         $caisse = \App\Models\Caisse::find($request->caisse_id);
@@ -92,43 +91,29 @@ class PosSessionController extends Controller
         }
 
         $isAdmin = $request->user()->hasAnyRole(['Admin', 'Super Admin']);
-        if (! $isAdmin && ! $request->filled('verification_code')) {
-            return $this->sendOpeningCode($request, $caisse);
+        if (! $isAdmin) {
+            $request->validate(['pin' => 'required|digits:6']);
         }
 
         try {
             $result = DB::transaction(function () use ($request, $caisse, $isAdmin) {
+                $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
                 if (! $isAdmin) {
-                    $challenge = PosSessionOpeningCode::where('user_id', $request->user()->id)
-                        ->where('caisse_id', $caisse->id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (! $challenge || $challenge->consumed_at || $challenge->expires_at->isPast()) {
-                        return ['error' => 'Code expiré ou introuvable. Demandez un nouveau code.', 'status' => 422];
+                    $pinError = $this->verifyOrSetPosPin($request, $user);
+                    if ($pinError) {
+                        return $pinError;
                     }
-
-                    if ($challenge->attempts >= 5) {
-                        return ['error' => 'Trop de tentatives. Demandez un nouveau code.', 'status' => 422];
-                    }
-
-                    if (! Hash::check($request->verification_code, $challenge->code_hash)) {
-                        $challenge->increment('attempts');
-
-                        return ['error' => 'Code incorrect. Vérifiez le code reçu par mail.', 'status' => 422];
-                    }
-
-                    $challenge->update(['consumed_at' => now(), 'attempts' => 0]);
                 }
 
                 // Fermer toute session ouverte de cet utilisateur
-                PosSession::where('user_id', $request->user()->id)
+                PosSession::where('user_id', $user->id)
                     ->whereNull('closed_at')
                     ->update(['closed_at' => now()]);
 
                 $session = PosSession::create([
                     'caisse_id'       => $caisse->id,
-                    'user_id'         => $request->user()->id,
+                    'user_id'         => $user->id,
                     'warehouse_id'    => $request->warehouse_id,
                     'opening_balance' => $request->opening_balance,
                     'total_sales'     => 0,
@@ -141,57 +126,40 @@ class PosSessionController extends Controller
             if (isset($result['error'])) {
                 return response()->json(['message' => $result['error']], $result['status']);
             }
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Throwable $e) {
-            $this->logError($e, 'Erreur lors de l\'ouverture de la caisse', ['request' => $request->except(['_token', 'verification_code'])]);
+            $this->logError($e, 'Erreur lors de l\'ouverture de la caisse', ['request' => $request->except(['_token', 'pin', 'pin_confirmation'])]);
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Une erreur est survenue lors de l\'ouverture de la caisse.'], 500);
             }
             return back()->withInput()->with('error', 'Une erreur est survenue lors de l\'ouverture de la caisse.');
         }
 
-        if ($request->expectsJson()) {
-            if (! $isAdmin) {
-                $request->session()->flash('pos_access_verified_for', $result['session']->id);
-            }
+        if (! $isAdmin) {
+            $request->session()->flash('pos_access_verified_for', $result['session']->id);
+        }
 
+        if ($request->expectsJson()) {
             return response()->json(['success' => true, 'redirect' => route('pos.index')]);
         }
 
         return redirect()->route('pos.index')->with('success', 'Caisse ouverte avec succès.');
     }
 
-    public function verifyReturnAccessCode(Request $request, PosSession $session): JsonResponse
+    public function verifyReturnAccessPin(Request $request, PosSession $session): JsonResponse
     {
         $this->authorizeReturnAccess($request, $session);
-        $data = $request->validate(['verification_code' => 'required|digits:6']);
+        $request->validate(['pin' => 'required|digits:6']);
 
-        $error = DB::transaction(function () use ($request, $session, $data) {
-            $challenge = PosSessionOpeningCode::where('user_id', $request->user()->id)
-                ->where('caisse_id', $session->caisse_id)
-                ->lockForUpdate()
-                ->first();
+        $error = DB::transaction(function () use ($request) {
+            $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
 
-            if (! $challenge || ! $challenge->consumed_at) {
-                return 'Code d’ouverture introuvable pour cette session.';
-            }
-
-            if ($challenge->attempts >= 5) {
-                return 'Trop de tentatives. Réessayez lors d’une nouvelle ouverture de caisse.';
-            }
-
-            if (! Hash::check($data['verification_code'], $challenge->code_hash)) {
-                $challenge->increment('attempts');
-
-                return 'Code incorrect. Vérifiez le code reçu par mail.';
-            }
-
-            $challenge->update(['attempts' => 0]);
-
-            return null;
+            return $this->verifyOrSetPosPin($request, $user);
         });
 
         if ($error) {
-            return response()->json(['message' => $error], 422);
+            return response()->json(['message' => $error['error']], $error['status']);
         }
 
         $request->session()->flash('pos_access_verified_for', $session->id);
@@ -209,45 +177,32 @@ class PosSessionController extends Controller
         );
     }
 
-    private function sendOpeningCode(Request $request, \App\Models\Caisse $caisse, bool $enforceCooldown = true): JsonResponse
+    private function verifyOrSetPosPin(Request $request, User $user): ?array
     {
-        $user = $request->user();
-        $challenge = PosSessionOpeningCode::where('user_id', $user->id)
-            ->where('caisse_id', $caisse->id)
-            ->first();
+        if (! $user->pos_pin_hash) {
+            $request->validate(['pin_confirmation' => 'required|same:pin']);
+            $user->forceFill(['pos_pin_hash' => Hash::make($request->input('pin'))])->save();
 
-        if ($enforceCooldown && $challenge?->last_sent_at?->gt(now()->subMinute())) {
-            return response()->json(['message' => 'Attendez une minute avant de demander un nouveau code.'], 429);
+            return null;
         }
 
-        $plainCode = (string) random_int(100000, 999999);
-        $challenge = PosSessionOpeningCode::updateOrCreate(
-            ['user_id' => $user->id, 'caisse_id' => $caisse->id],
-            [
-                'code_hash'  => Hash::make($plainCode),
-                'attempts'   => 0,
-                'expires_at' => now()->addMinutes(10),
-                'last_sent_at' => now(),
-                'consumed_at' => null,
-            ]
-        );
-
-        try {
-            $user->notify(new PosSessionOpeningCodeNotification($plainCode, $caisse->name));
-        } catch (Throwable $e) {
-            $challenge->update(['consumed_at' => now()]);
-            $this->logError($e, 'Erreur lors de l\'envoi du code d\'ouverture de caisse', [
-                'user_id' => $user->id,
-                'caisse_id' => $caisse->id,
-            ]);
-
-            return response()->json(['message' => 'Le mail contenant le code n\'a pas pu être envoyé. Réessayez plus tard.'], 500);
+        $key = 'pos-pin:' . $user->id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return [
+                'error' => 'Trop de tentatives. Réessayez dans ' . RateLimiter::availableIn($key) . ' secondes.',
+                'status' => 429,
+            ];
         }
 
-        return response()->json([
-            'requires_code' => true,
-            'message' => 'Un code à usage unique a été envoyé à votre adresse mail. Il expire dans 10 minutes.',
-        ]);
+        if (! Hash::check($request->input('pin'), $user->pos_pin_hash)) {
+            RateLimiter::hit($key, 60);
+
+            return ['error' => 'PIN incorrect.', 'status' => 422];
+        }
+
+        RateLimiter::clear($key);
+
+        return null;
     }
 
     public function close(Request $request, PosSession $session): Response

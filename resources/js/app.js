@@ -174,17 +174,6 @@ window.submitPosSessionOpening = async (form) => {
             throw new Error(result.message || 'Impossible d’ouvrir cette session.');
         }
 
-        if (result.requires_code) {
-            const codePanel = form.querySelector('[data-opening-code-panel]');
-            codePanel.hidden = false;
-            codePanel.style.display = '';
-            codePanel.querySelector('input').focus();
-            form.querySelector('[data-open-submit]').textContent = 'Vérifier et ouvrir';
-            window.hidePageLoader();
-            window.toast(result.message, 'success');
-            return;
-        }
-
         if (result.success && result.redirect) {
             window.toastAfterReload('Session de caisse ouverte.');
             window.location.assign(result.redirect);
@@ -194,17 +183,16 @@ window.submitPosSessionOpening = async (form) => {
         throw new Error('Réponse inattendue du serveur.');
     } catch (error) {
         window.hidePageLoader();
+        form.querySelectorAll('[name="pin"], [name="pin_confirmation"]').forEach((input) => {
+            input.value = '';
+        });
+        form.querySelector('[name="pin"]')?.focus();
         window.toast(error.message || 'Une erreur est survenue lors de l’ouverture.', 'error');
     }
 };
 
-window.resendPosSessionOpeningCode = (form) => {
-    form.querySelector('[name="verification_code"]').value = '';
-    window.submitPosSessionOpening(form);
-};
-
 window.verifyPosSessionAccess = async (form) => {
-    window.showPageLoader('Vérification du code...');
+    window.showPageLoader('Vérification du PIN...');
 
     try {
         const response = await fetch(form.dataset.verifyUrl, {
@@ -216,7 +204,7 @@ window.verifyPosSessionAccess = async (form) => {
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(result.message || 'Code invalide.');
+            throw new Error(result.message || 'PIN invalide.');
         }
 
         if (result.success && result.redirect) {
@@ -227,7 +215,11 @@ window.verifyPosSessionAccess = async (form) => {
         throw new Error('Réponse inattendue du serveur.');
     } catch (error) {
         window.hidePageLoader();
-        window.toast(error.message || 'La vérification a échoué.', 'error');
+        form.querySelectorAll('[name="pin"], [name="pin_confirmation"]').forEach((input) => {
+            input.value = '';
+        });
+        form.querySelector('[name="pin"]')?.focus();
+        window.toast(error.message || 'La vérification du PIN a échoué.', 'error');
     }
 };
 

@@ -139,7 +139,7 @@ class UserController extends Controller
                 'is_active' => $data['is_active'] ?? $user->is_active,
             ]);
 
-            $user->syncRoles($data['role'] ? [$data['role']] : []);
+            $user->syncRoles(isset($data['role']) ? [$data['role']] : []);
             $user->syncPermissions($data['permissions'] ?? []);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la mise à jour de l\'utilisateur', ['user_id' => $user->id, 'data' => $data]);

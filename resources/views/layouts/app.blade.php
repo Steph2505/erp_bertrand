@@ -107,7 +107,46 @@
 
         {{-- Navigation --}}
         <nav class="sidebar__nav">
-            @foreach(config('sidebar') as $item)
+            @php
+                $sidebarUser = auth()->user();
+                $sidebarEntries = [];
+                $pendingSectionLabel = null;
+
+                foreach (config('sidebar') as $entry) {
+                    if ($entry['type'] === 'separator') {
+                        $pendingSectionLabel = $entry['label'];
+                        continue;
+                    }
+
+                    $permission = $entry['permission'] ?? null;
+                    if ($permission && ! $sidebarUser?->can($permission)) {
+                        continue;
+                    }
+
+                    if ($entry['type'] === 'group') {
+                        $entry['visible_items'] = collect($entry['items'])->filter(function ($child) use ($sidebarUser) {
+                            $childPermission = $child['permission'] ?? null;
+
+                            return (! $childPermission || $sidebarUser?->can($childPermission))
+                                && \Illuminate\Support\Facades\Route::has($child['route']);
+                        });
+
+                        if ($entry['visible_items']->isEmpty()) {
+                            continue;
+                        }
+                    } elseif (! \Illuminate\Support\Facades\Route::has($entry['route'])) {
+                        continue;
+                    }
+
+                    if ($pendingSectionLabel !== null) {
+                        $sidebarEntries[] = ['type' => 'separator', 'label' => $pendingSectionLabel];
+                        $pendingSectionLabel = null;
+                    }
+
+                    $sidebarEntries[] = $entry;
+                }
+            @endphp
+            @foreach($sidebarEntries as $item)
                 @php $itemPerm = $item['permission'] ?? null; @endphp
                 @if($itemPerm && !auth()->user()?->can($itemPerm)) @continue @endif
 
@@ -129,11 +168,7 @@
 
                 @elseif($item['type'] === 'group')
                     @php
-                        $visibleChildren = collect($item['items'])->filter(function ($child) {
-                            $perm = $child['permission'] ?? null;
-                            if ($perm && !auth()->user()?->can($perm)) return false;
-                            return \Illuminate\Support\Facades\Route::has($child['route']);
-                        });
+                        $visibleChildren = $item['visible_items'];
                         $isGroupActive = $visibleChildren->contains(fn($c) => request()->routeIs($c['route'] . '*'));
                     @endphp
                     @if($visibleChildren->isNotEmpty())

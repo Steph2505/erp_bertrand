@@ -36,7 +36,7 @@
         </div>
         <table class="data-table">
             <thead><tr>
-                <th>Référence</th><th>Client</th><th>Heure</th>
+                <th>Référence</th><th>Client</th><th>Date et heure</th>
                 <th>Total</th><th>Payé</th><th>Statut</th><th class="th-right">Actions</th>
             </tr></thead>
             <tbody>
@@ -44,13 +44,13 @@
                     <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Chargement...</td></tr>
                 </template>
                 <template x-if="!loading && rows.length === 0">
-                    <tr><td colspan="7" class="sale-index__empty-row"><td>Aucune vente POS</td></tr>
+                    <tr><td colspan="7" class="sale-index__empty-row">Aucune vente POS</td></tr>
                 </template>
                 <template x-for="s in rows" :key="s.id">
                     <tr>
-                        <td><a :title="'Ouvrir : ' + (s.reference)" :href="'/pos/'+s.reference+'/ref'" class="pos-ref-link" x-text="s.reference"></a></td>
+                        <td><a :title="'Ouvrir : ' + (s.reference)" :href="'/pos/ref/'+encodeURIComponent(s.reference)" class="pos-ref-link" x-text="s.reference"></a></td>
                         <td x-text="s.customer"></td>
-                        <td class="text-muted text-md" x-text="s.time"></td>
+                        <td class="text-muted text-md" x-text="s.date_time"></td>
                         <td><strong x-text="s.total"></strong></td>
                         <td class="text-md" x-text="s.amount_paid"></td>
                         <td><span x-html="s.pay_badge"></span></td>

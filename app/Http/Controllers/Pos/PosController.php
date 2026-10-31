@@ -8,6 +8,7 @@ use App\Models\CustomerGroup;
 use App\Models\PosSession;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\User;
 use App\Models\Warehouse;
 use App\Repositories\ProductRepository;
 use App\Services\PackStockService;
@@ -70,47 +71,128 @@ class PosController extends Controller
     public function searchItems(Request $request): JsonResponse
     {
         try {
-            $q           = $request->get('q', '');
-            $warehouseId = $request->get('warehouse_id') ? (int) $request->get('warehouse_id') : null;
-            $customer    = $request->get('customer_id') ? \App\Models\Customer::with('group')->find($request->get('customer_id')) : null;
+            $validated = $request->validate([
+                'q'            => 'nullable|string|max:191',
+                'filter'       => 'nullable|string|in:packable',
+                'category_id'  => 'nullable|integer|exists:categories,id',
+                'warehouse_id' => 'nullable|integer|exists:warehouses,id',
+                'customer_id'  => 'nullable|integer|exists:customers,id',
+                'page'         => 'nullable|integer|min:1',
+            ]);
 
-            $products = \App\Models\Product::where('is_active', true)
-                ->where('name', 'like', "%$q%")
+            $q           = $validated['q'] ?? '';
+            $warehouseId = $request->get('warehouse_id') ? (int) $request->get('warehouse_id') : null;
+            $customer    = ! empty($validated['customer_id'])
+                ? Customer::with('group')->findOrFail($validated['customer_id'])
+                : null;
+            $filter      = $validated['filter'] ?? null;
+            $categoryId  = $validated['category_id'] ?? null;
+
+            $products = \App\Models\Product::query()
+                ->where('products.is_active', true)
+                ->where(function ($query) use ($q) {
+                    $query->where('products.name', 'like', "%$q%")
+                        ->orWhere('products.variation', 'like', "%$q%");
+                })
+                ->when($filter === 'packable', fn ($query) => $query->where('products.can_be_packed', true))
+                ->when($categoryId, fn ($query, $id) => $query->where('products.category_id', $id))
                 ->when($warehouseId, fn($query) => $query->whereHas('stocks', fn($s) =>
                     $s->where('warehouse_id', $warehouseId)->where('quantity', '>', 0)
-                ))
-                ->limit(500)
-                ->get(['id', 'name', 'variation', 'selling_price', 'wholesale_price', 'pack_price', 'stock_quantity', 'can_be_packed', 'pack_quantity', 'category_id'])
-                ->map(fn($p) => [
-                    'id'              => $p->id,
-                    'name'            => $p->display_name,
-                    'price'           => $p->priceFor($customer),
-                    'wholesale_price' => $p->wholesale_price !== null ? (float) $p->wholesale_price : null,
-                    'stock'         => $warehouseId ? $p->stockInWarehouse($warehouseId) : $p->stock_quantity,
-                    'can_be_packed' => (bool) $p->can_be_packed,
-                    'pack_quantity' => (int) ($p->pack_quantity ?? 1),
-                    'pack_price'    => (float) ($p->pack_price ?? ($p->selling_price * ($p->pack_quantity ?? 1))),
-                    'image_url'     => $p->getFirstMediaUrl('images') ?: null,
-                    'type'          => 'product',
-                    'category_id'   => $p->category_id,
-                ]);
+                ));
 
-            $packs = \App\Models\Pack::where('is_active', true)
-                ->where('name', 'like', "%$q%")
-                ->with(['items.product', 'defaultPrice'])
-                ->limit(5)
+            $productsQuery = $products->select([
+                'products.id',
+                'products.name',
+                'products.variation',
+                'products.selling_price',
+                'products.wholesale_price',
+                'products.pack_price',
+                'products.stock_quantity',
+                'products.can_be_packed',
+                'products.pack_quantity',
+                'products.category_id',
+            ])->selectRaw("'product' as type");
+
+            $packsQuery = \App\Models\Pack::query()
+                ->leftJoin('pack_prices', function ($join) {
+                    $join->on('pack_prices.pack_id', '=', 'packs.id')
+                        ->whereNull('pack_prices.price_group_id');
+                })
+                ->where('packs.is_active', true)
+                ->where('packs.name', 'like', "%{$q}%")
+                ->select([
+                    'packs.id',
+                    'packs.name',
+                    DB::raw('NULL as variation'),
+                    DB::raw('pack_prices.selling_price as selling_price'),
+                    DB::raw('NULL as wholesale_price'),
+                    DB::raw('NULL as pack_price'),
+                    DB::raw('NULL as stock_quantity'),
+                    DB::raw('0 as can_be_packed'),
+                    DB::raw('1 as pack_quantity'),
+                    DB::raw('NULL as category_id'),
+                    DB::raw("'pack' as type"),
+                ])
+                ->when($filter === 'packable' || $categoryId, fn ($query) => $query->whereRaw('1 = 0'));
+
+            $paginator = DB::query()
+                ->fromSub($productsQuery->unionAll($packsQuery), 'catalog_items')
+                ->orderBy('name')
+                ->orderBy('type')
+                ->paginate(15, ['*'], 'page', $request->integer('page', 1));
+
+            $pageItems = $paginator->getCollection();
+            $productIds = $pageItems->where('type', 'product')->pluck('id');
+            $packIds = $pageItems->where('type', 'pack')->pluck('id');
+
+            $productModels = \App\Models\Product::with([
+                'media',
+                'stocks' => fn ($query) => $query->when($warehouseId, fn ($stockQuery) => $stockQuery->where('warehouse_id', $warehouseId)),
+            ])->whereIn('id', $productIds)->get()->keyBy('id');
+            $packModels = \App\Models\Pack::with(['media', 'items.product'])
+                ->with('defaultPrice')
+                ->whereIn('id', $packIds)
                 ->get()
-                ->map(fn($p) => [
-                    'id'          => $p->id,
-                    'name'        => $p->name,
-                    'price'       => $p->default_selling_price,
-                    'stock'       => app(PackStockService::class)->availablePackCount($p->id, $warehouseId),
-                    'type'        => 'pack',
-                    'composition' => $p->items->map(fn($i) => "{$i->quantity}× {$i->product->display_name}")->implode(', '),
-                    'image_url'   => $p->getFirstMediaUrl('images') ?: null,
-                ]);
+                ->keyBy('id');
 
-            return response()->json($products->concat($packs)->values());
+            $items = $pageItems->map(function ($item) use ($productModels, $packModels, $customer, $warehouseId) {
+                if ($item->type === 'pack') {
+                    $pack = $packModels->get($item->id);
+
+                    return [
+                        'id'          => $pack->id,
+                        'name'        => $pack->name,
+                        'price'       => $pack->default_selling_price,
+                        'stock'       => app(PackStockService::class)->availablePackCount($pack->id, $warehouseId),
+                        'type'        => 'pack',
+                        'composition' => $pack->items->map(fn ($packItem) => "{$packItem->quantity}× {$packItem->product->display_name}")->implode(', '),
+                        'image_url'   => $pack->getFirstMediaUrl('images') ?: null,
+                    ];
+                }
+
+                $product = $productModels->get($item->id);
+
+                return [
+                    'id'              => $product->id,
+                    'name'            => $product->display_name,
+                    'price'           => $product->priceFor($customer),
+                    'wholesale_price' => $product->wholesale_price !== null ? (float) $product->wholesale_price : null,
+                    'stock'           => $warehouseId ? (int) ($product->stocks->first()?->quantity ?? 0) : $product->stock_quantity,
+                    'can_be_packed'    => (bool) $product->can_be_packed,
+                    'pack_quantity'    => (int) ($product->pack_quantity ?? 1),
+                    'pack_price'       => (float) ($product->pack_price ?? ($product->selling_price * ($product->pack_quantity ?? 1))),
+                    'image_url'        => $product->getFirstMediaUrl('images') ?: null,
+                    'type'             => 'product',
+                    'category_id'      => $product->category_id,
+                ];
+            })->values();
+
+            return response()->json([
+                'data'         => $items,
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'total'        => $paginator->total(),
+            ]);
         } catch (Throwable $e) {
             $this->logError($e, 'Erreur lors de la recherche d\'articles pour la vente', ['query' => $request->get('q')]);
             return response()->json(['message' => 'Une erreur est survenue lors de la recherche.'], 500);
@@ -224,7 +306,7 @@ class PosController extends Controller
 
     public function pay(Request $request, Sale $sale): JsonResponse
     {
-        abort_unless($sale->is_pos, 404);
+        abort_unless($sale->is_pos && $this->canAccessSale($sale, $request->user()), 404);
 
         $due = round((float) $sale->total - (float) $sale->amount_paid, 2);
 
@@ -265,9 +347,15 @@ class PosController extends Controller
         ]);
     }
 
-    public function showByReference(string $reference): View|RedirectResponse
+    public function showByReference(Request $request, string $reference): View|RedirectResponse
     {
-        $sale = Sale::where('reference', $reference)->where('is_pos', true)->firstOrFail();
+        $sale = Sale::where('reference', $reference)
+            ->where('is_pos', true)
+            ->when(
+                ! $request->user()->hasAnyRole(['Admin', 'Super Admin']),
+                fn ($query) => $query->where('created_by', $request->user()->id)
+            )
+            ->firstOrFail();
 
         try {
             $sale->load(['customer', 'items', 'posSession.caisse', 'warehouse', 'createdBy']);
@@ -278,8 +366,10 @@ class PosController extends Controller
         }
     }
 
-    public function receipt(Sale $sale): View|RedirectResponse
+    public function receipt(Request $request, Sale $sale): View|RedirectResponse
     {
+        abort_unless($sale->is_pos && $this->canAccessSale($sale, $request->user()), 404);
+
         try {
             $sale->load(['customer', 'items', 'warehouse', 'posSession.caisse', 'createdBy']);
             return view('print.pos-receipt', compact('sale'));
@@ -302,8 +392,13 @@ class PosController extends Controller
     public function apiList(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
             $paginator = Sale::with(['customer'])
                 ->where('is_pos', true)
+                ->when(
+                    ! $user->hasAnyRole(['Admin', 'Super Admin']),
+                    fn ($query) => $query->where('created_by', $user->id)
+                )
                 ->when($request->date, fn($q, $d) => $q->whereDate('sale_date', $d))
                 ->latest()
                 ->paginate(10, ['*'], 'page', $request->integer('page', 1));
@@ -313,7 +408,7 @@ class PosController extends Controller
                     'id'             => $s->id,
                     'reference'      => $s->reference,
                     'customer'       => $s->customer?->name ?? 'Client comptoir',
-                    'time'           => $s->created_at->format('H:i'),
+                    'date_time'      => $s->created_at->format('d/m/Y H:i'),
                     'total'          => \App\Helpers\FormatHelper::money($s->total),
                     'amount_paid'    => \App\Helpers\FormatHelper::money($s->amount_paid),
                     'amount_due'     => (float) $s->amount_due,
@@ -333,5 +428,11 @@ class PosController extends Controller
             $this->logError($e, 'Erreur lors du chargement des ventes POS', ['filters' => $request->all()]);
             return response()->json(['message' => 'Impossible de charger les ventes.'], 500);
         }
+    }
+
+    private function canAccessSale(Sale $sale, User $user): bool
+    {
+        return $user->hasAnyRole(['Admin', 'Super Admin'])
+            || (int) $sale->created_by === (int) $user->id;
     }
 }

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             // ── Lieux & Matériel ──────────────────────────────────────────────
             WarehouseSeeder::class,
             CaisseSeeder::class,
+            PosPaginationProductSeeder::class,
 
             // ── Contacts ──────────────────────────────────────────────────────
             SupplierSeeder::class,

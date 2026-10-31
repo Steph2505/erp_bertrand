@@ -478,6 +478,18 @@
     }
 }
 
+.pos-catalog__pagination {
+    justify-content: center;
+    gap: $sp-12;
+    flex-wrap: wrap;
+}
+
+.pos-catalog__pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+}
+
 // ─── Carte produit POS (version index) ───────────────────────────────────────
 .pos-item {
     background: $bg-white;
@@ -683,6 +695,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
     gap: $sp-20;
+    align-items: stretch;
+
+    &:has(.caisse-card--editing) {
+        align-items: start;
+    }
 
     @include mobile {
         grid-template-columns: 1fr;

@@ -226,7 +226,7 @@
         <div class="pos-catalog__header">
             <div class="pos-catalog__search">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
-                <input type="text" x-model="search" placeholder="Rechercher un article ou pack...">
+                <input type="text" x-model="search" @input.debounce.300ms="changeCatalogFilter()" placeholder="Rechercher un article ou pack...">
             </div>
             {{-- Client + raccourci création --}}
             <div style="min-width:200px;position:relative;" @click.outside="customerOpen=false; showCreateCustomerPOS=false; customerSearch=customers.find(c=>c.id===customerSelect)?.name??''">
@@ -286,18 +286,18 @@
 
         {{-- Filtres --}}
         <div class="pos-catalog__categories">
-            <button title="Sélectionner tous les éléments" @click="filterCat=''"
+            <button title="Sélectionner tous les éléments" @click="changeCatalogFilter('')"
                     class="pos-catalog__category-btn"
                     :class="{'pos-catalog__category-btn--active': filterCat===''}">
                 Tous
             </button>
-            <button title="Packs" @click="filterCat='packable'"
+            <button title="Packs" @click="changeCatalogFilter('packable')"
                     class="pos-catalog__category-btn"
                     :class="{'pos-catalog__category-btn--active': filterCat==='packable'}">
                 Packs
             </button>
             @foreach($categories as $category)
-                <button title="Filtrer les articles de la catégorie {{ $category->name }}" @click="filterCat='cat_{{ $category->id }}'"
+                <button title="Filtrer les articles de la catégorie {{ $category->name }}" @click="changeCatalogFilter('cat_{{ $category->id }}')"
                         class="pos-catalog__category-btn"
                         :class="{'pos-catalog__category-btn--active': filterCat==='cat_{{ $category->id }}'}">
                     {{ $category->name }}
@@ -306,7 +306,10 @@
         </div>
 
         <div class="pos-grid">
-            <template x-if="filtered.length === 0">
+            <template x-if="catalogLoading">
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748B;">Chargement des articles...</div>
+            </template>
+            <template x-if="!catalogLoading && filtered.length === 0">
                 <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94A3B8;">
                     <div style="font-size:40px;margin-bottom:12px;">🔍</div>
                     Aucun article trouvé
@@ -340,6 +343,26 @@
                     </template>
                 </div>
             </template>
+        </div>
+        <div x-show="catalogLastPage > 1" class="table-wrapper__footer pos-catalog__pagination">
+            <span x-text="((catalogPage - 1) * 15 + 1) + '–' + Math.min(catalogPage * 15, catalogTotal) + ' sur ' + catalogTotal + ' articles'"></span>
+            <div class="pos-catalog__pagination-controls">
+                <button title="Page précédente" type="button" @click="loadProducts(catalogPage - 1)"
+                        :disabled="catalogPage <= 1 || catalogLoading" class="btn btn--ghost btn--sm btn--icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                </button>
+                <template x-for="page in catalogPages" :key="page">
+                    <button type="button" :title="page === '…' ? 'Pages intermédiaires' : 'Aller à la page ' + page"
+                            @click="page !== '…' && loadProducts(page)"
+                            class="btn btn--sm" :class="page === catalogPage ? 'btn--primary' : 'btn--ghost'"
+                            :disabled="page === '…' || catalogLoading" x-text="page"
+                            style="min-width:34px;justify-content:center;"></button>
+                </template>
+                <button title="Page suivante" type="button" @click="loadProducts(catalogPage + 1)"
+                        :disabled="catalogPage >= catalogLastPage || catalogLoading" class="btn btn--ghost btn--sm btn--icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -459,6 +482,10 @@
 function posApp() {
     return {
         products: [],
+        catalogPage: 1,
+        catalogLastPage: 1,
+        catalogTotal: 0,
+        catalogLoading: false,
         cart: [],
         search: '',
         filterCat: '',
@@ -503,20 +530,65 @@ function posApp() {
             return list;
         },
 
+        get catalogPages() {
+            const total = this.catalogLastPage;
+            const current = this.catalogPage;
+            if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+
+            const pages = [1];
+            if (current > 3) pages.push('…');
+            for (let page = Math.max(2, current - 1); page <= Math.min(total - 1, current + 1); page++) {
+                pages.push(page);
+            }
+            if (current < total - 2) pages.push('…');
+            pages.push(total);
+            return pages;
+        },
+
         async init() {
             await this.loadProducts();
             this.$watch('total', v => { if (this.fullPayment) this.amountReceived = v; });
             this.$watch('fullPayment', v => { if (v) this.amountReceived = this.total; else this.amountReceived = 0; });
         },
 
-        async loadProducts() {
-            const params = new URLSearchParams({ q: '' });
+        async loadProducts(page = 1) {
+            this.catalogLoading = true;
+            const params = new URLSearchParams({
+                q: this.search,
+                page: page,
+                filter: this.filterCat === 'packable' ? 'packable' : '',
+            });
+            if (this.filterCat.startsWith('cat_')) {
+                params.set('category_id', this.filterCat.slice(4));
+            }
             if (this.sessionWarehouseId) params.set('warehouse_id', this.sessionWarehouseId);
-            const res = await fetch('/pos/api/search?' + params.toString());
-            this.products = await res.json();
-            const map = {};
-            this.products.forEach(p => { map[p.type + '_' + p.id] = p.stock; });
-            this.stockMap = map;
+            try {
+                const res = await fetch('/pos/api/search?' + params.toString(), {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error('Impossible de charger les articles POS.');
+
+                const result = await res.json();
+                this.products = result.data;
+                this.catalogPage = result.current_page;
+                this.catalogLastPage = result.last_page;
+                this.catalogTotal = result.total;
+                const map = {};
+                this.products.forEach(p => { map[p.type + '_' + p.id] = p.stock; });
+                this.stockMap = map;
+            } catch (error) {
+                console.error(error);
+                this.products = [];
+                this.catalogTotal = 0;
+                this.catalogLastPage = 1;
+            } finally {
+                this.catalogLoading = false;
+            }
+        },
+
+        changeCatalogFilter(filter = this.filterCat) {
+            this.filterCat = filter;
+            this.loadProducts(1);
         },
 
         handleItemClick(item) {

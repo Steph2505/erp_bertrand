@@ -114,7 +114,10 @@
 {{-- Cards --}}
 <div class="caisse-grid" x-show="caisses.length > 0">
     <template x-for="caisse in caisses" :key="caisse.id">
-        <div class="caisse-card" :class="caisse.is_active ? '' : 'caisse-card--inactive'"
+        <div class="caisse-card" :class="{
+                   'caisse-card--inactive': !caisse.is_active,
+                   'caisse-card--editing': editOpen
+               }"
                x-data="{ editOpen: false, mgrSearch: '', mgrOpen: false, mgrId: caisse.manager_id || '', mgrName: caisse.manager_name || '', authorizedUserIds: caisse.authorized_user_ids || [] }">
 
             {{-- En-tête --}}

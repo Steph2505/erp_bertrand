@@ -5,10 +5,14 @@ on:
     branches: [dev]
   workflow_dispatch:
 
-# Sur dev on itère vite : un nouveau push annule le déploiement en cours.
+# cancel-in-progress: false, même sur dev. Annuler un déploiement en cours
+# peut le tuer entre « artisan down » et « artisan up » : le site resterait
+# fermé. On préfère laisser finir — ça dure ~3 min.
+# Les runs suivants sont de toute façon sérialisés par le mutex SSH
+# o2switch-ssh-sc1zeucoder défini dans deploy.yml.
 concurrency:
   group: deploy-espacemokolodobala-dev
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:

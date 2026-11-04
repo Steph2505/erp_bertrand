@@ -2,6 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
+use App\Models\PaymentAccount;
+use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,6 +16,7 @@ class DatabaseSeeder extends Seeder
             // ── Référentiels ──────────────────────────────────────────────────
             RoleSeeder::class,
             PermissionSeeder::class,
+            // UserSeeder 
             UserSeeder::class,
             SettingSeeder::class,
             UnitSeeder::class,
@@ -21,13 +26,15 @@ class DatabaseSeeder extends Seeder
             // ── Lieux & Matériel ──────────────────────────────────────────────
             WarehouseSeeder::class,
             CaisseSeeder::class,
-            PosPaginationProductSeeder::class,
+            // PosPaginationProductSeeder::class,
 
             // ── Contacts ──────────────────────────────────────────────────────
+            // SupplierSeeder et CustomerSeeder créent des contacts génériques de démonstration.
             SupplierSeeder::class,
             CustomerSeeder::class,
 
             // ── Catalogue ─────────────────────────────────────────────────────
+            // Données de démonstration : ne pas activer en production.
             // ProductSeeder::class,
             // PackSeeder::class,
 
@@ -45,18 +52,18 @@ class DatabaseSeeder extends Seeder
         $this->command->table(
             ['Entité', 'Nb'],
             [
-                ['Utilisateurs',       \App\Models\User::count()],
+                ['Utilisateurs',       User::count()],
                 // ['Produits',           \App\Models\Product::count()],
                 // ['Packs',              \App\Models\Pack::count()],
-                ['Clients',            \App\Models\Customer::count()],
-                ['Fournisseurs',       \App\Models\Supplier::count()],
+                ['Clients',            Customer::count()],
+                ['Fournisseurs',       Supplier::count()],
                 // ['Achats',             \App\Models\Purchase::count()],
                 // ['Ventes',             \App\Models\Sale::count()],
                 // ['Dépenses',           \App\Models\Expense::count()],
-                ['Comptes paiement',   \App\Models\PaymentAccount::count()],
+                ['Comptes paiement',   PaymentAccount::count()],
             ]
         );
         $this->command->newLine();
-        $this->command->line('  Connexion admin : <fg=green>admin@bertrand-store.com</> / <fg=yellow>password</>');
+        $this->command->line('  Créez ou vérifiez les comptes utilisateurs via le processus sécurisé de déploiement.');
     }
 }

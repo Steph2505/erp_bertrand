@@ -10,7 +10,9 @@ class CaisseSeeder extends Seeder
     public function run(): void
     {
         $caisses = [
-            ['name' => 'Caisse Boutique Principale', 'description' => 'Caisse principale boutique'],
+            ['name' => 'Caisse A', 'description' => 'Caisse principale boutique'],
+            ['name' => 'Caisse B', 'description' => 'Caisse secondaire boutique'],
+            ['name' => 'Caisse C', 'description' => 'Caisse de caisse'],
         ];
 
         foreach ($caisses as $c) {

@@ -31,7 +31,7 @@
         <div class="stat-card__info">
             <div class="stat-card__label">Encaissements {{ $year }}</div>
             <div class="stat-card__value stat-card__value--success">{{ \App\Helpers\FormatHelper::money($totals->encaissements) }}</div>
-            <div class="stat-card__trend stat-card__trend--flat">Paiements reçus sur ventes</div>
+            <div class="stat-card__trend stat-card__trend--flat">Ventes encaissées moins remboursements</div>
         </div>
         <div class="stat-card__icon stat-card__icon--green">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -41,7 +41,7 @@
         <div class="stat-card__info">
             <div class="stat-card__label">Décaissements {{ $year }}</div>
             <div class="stat-card__value stat-card__value--danger">{{ \App\Helpers\FormatHelper::money($totals->decaissements) }}</div>
-            <div class="stat-card__trend stat-card__trend--flat">Achats + Dépenses</div>
+            <div class="stat-card__trend stat-card__trend--flat">Achats + Remboursements + Dépenses</div>
         </div>
         <div class="stat-card__icon stat-card__icon--red">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg>
@@ -93,6 +93,7 @@
             <th>Mois</th>
             <th class="th-success">Encaissements</th>
             <th class="th-info">dont Achats payés</th>
+            <th class="th-warning">dont Remboursements</th>
             <th class="th-warning">dont Dépenses</th>
             <th class="th-danger">Total Décaissements</th>
             <th class="text-right">Flux net</th>
@@ -100,7 +101,7 @@
         </tr></thead>
         <tbody>
             <tr class="account-table__amount-muted">
-                <td colspan="5">Solde d'ouverture {{ $year }}</td>
+                <td colspan="6">Solde d'ouverture {{ $year }}</td>
                 <td class="text-right" colspan="2">{{ \App\Helpers\FormatHelper::money($totals->opening_balance) }}</td>
             </tr>
             @foreach($months as $m)
@@ -108,6 +109,7 @@
                 <td><strong>{{ $m->label }}</strong></td>
                 <td class="account-table__amount-in">{{ \App\Helpers\FormatHelper::money($m->encaissements) }}</td>
                 <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($m->dec_achats) }}</td>
+                <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($m->dec_retours) }}</td>
                 <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($m->dec_depenses) }}</td>
                 <td class="account-table__amount-out">{{ \App\Helpers\FormatHelper::money($m->decaissements) }}</td>
                 <td class="text-right">
@@ -127,6 +129,7 @@
                 <td>TOTAL {{ $year }}</td>
                 <td class="account-table__amount-in">{{ \App\Helpers\FormatHelper::money($totals->encaissements) }}</td>
                 <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($totals->dec_achats) }}</td>
+                <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($totals->dec_retours) }}</td>
                 <td class="account-table__amount-muted">{{ \App\Helpers\FormatHelper::money($totals->dec_depenses) }}</td>
                 <td class="account-table__amount-out">{{ \App\Helpers\FormatHelper::money($totals->decaissements) }}</td>
                 {{-- Couleur dynamique selon positif/négatif --}}

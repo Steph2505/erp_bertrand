@@ -12,7 +12,7 @@
         table { border-collapse: collapse; width: 100%; }
         .details td { padding: 4px 8px 4px 0; vertical-align: top; }
         .summary { margin: 14px 0 18px; }
-        .summary td { background: #f3f4f6; border: 1px solid #d1d5db; padding: 9px; width: 25%; }
+        .summary td { background: #f3f4f6; border: 1px solid #d1d5db; padding: 9px; width: 20%; }
         .label { color: #6b7280; display: block; font-size: 8px; margin-bottom: 4px; text-transform: uppercase; }
         .value { font-size: 12px; font-weight: bold; }
         .sale { border: 1px solid #d1d5db; margin-bottom: 14px; page-break-inside: avoid; }
@@ -58,8 +58,9 @@
     <table class="summary">
         <tr>
             <td><span class="label">Fond d'ouverture</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->opening_balance) }}</span></td>
-            <td><span class="label">Total des ventes</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->total_sales) }}</span></td>
-            <td><span class="label">Montant encaissé</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->sales->sum('amount_paid')) }}</span></td>
+            <td><span class="label">Encaissements espèces</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->cash_sales) }}</span></td>
+            <td><span class="label">Remboursements espèces</span><span class="value">-{{ \App\Helpers\FormatHelper::money($session->cash_refunds) }}</span></td>
+            <td><span class="label">Attendu en caisse</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->expected_closing) }}</span></td>
             <td><span class="label">Fond de fermeture</span><span class="value">{{ \App\Helpers\FormatHelper::money($session->closing_balance) }}</span></td>
         </tr>
     </table>
@@ -130,6 +131,32 @@
     @empty
         <div class="empty">Aucune transaction enregistrée pour cette session.</div>
     @endforelse
+
+    <h2>Remboursements de la session</h2>
+    @if($session->returns->isEmpty())
+        <div class="empty">Aucun remboursement enregistré dans cette session.</div>
+    @else
+        <table class="payments">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Date</th>
+                    <th>Vente / mode</th>
+                    <th class="right">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($session->returns as $return)
+                    <tr>
+                        <td>{{ $return->reference }}</td>
+                        <td>{{ $return->return_date?->format('d/m/Y') ?? '—' }}</td>
+                        <td>{{ $return->sale?->reference ?? '—' }} — {{ ucfirst(str_replace('_', ' ', $return->payments->first()?->payment_method ?? '—')) }}</td>
+                        <td class="right">-{{ \App\Helpers\FormatHelper::money($return->total) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
     <div class="footer">Rapport de session de caisse {{ $session->id }}.</div>
 </body>

@@ -13,7 +13,7 @@ class CustomerSeeder extends Seeder
         $gpPart = CustomerGroup::where('name', 'Détaillant')->first();
 
         $customers = [
-            ['name' => 'Client divers',       'email' => 'clientdivers@gmail.com',    'phone' => '', 'group' => $gpPart],
+            ['name' => 'Client divers', 'email' => 'clientdivers@gmail.com',    'phone' => '', 'group' => $gpPart],
         ];
 
         foreach ($customers as $c) {

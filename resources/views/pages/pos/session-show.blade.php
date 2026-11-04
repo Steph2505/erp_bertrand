@@ -32,26 +32,31 @@
 </div>
 
 {{-- Stat cards --}}
-<div class="stat-grid mb-24" style="grid-template-columns:repeat(4,1fr);">
+<div class="stat-grid mb-24" style="grid-template-columns:repeat(5,1fr);">
     <div class="card card--padded">
         <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Fond d'ouverture</div>
         <div class="text-2xl font-800">{{ \App\Helpers\FormatHelper::money($session->opening_balance) }}</div>
         <div class="text-sm text-muted mt-4">{{ $session->opened_at->format('H:i') }}</div>
     </div>
     <div class="card card--padded">
-        <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Total ventes</div>
-        <div class="text-2xl font-800" style="color:#16a34a;">{{ \App\Helpers\FormatHelper::money($session->total_sales) }}</div>
-        <div class="text-sm text-muted mt-4">{{ $session->sales->count() }} transaction(s)</div>
+        <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Encaissements espèces</div>
+        <div class="text-2xl font-800" style="color:#16a34a;">{{ \App\Helpers\FormatHelper::money($session->cash_sales) }}</div>
+        <div class="text-sm text-muted mt-4">{{ $session->sales->count() }} vente(s) — brut {{ \App\Helpers\FormatHelper::money($session->total_sales) }}</div>
+    </div>
+    <div class="card card--padded">
+        <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Remboursements espèces</div>
+        <div class="text-2xl font-800" style="color:#dc2626;">{{ \App\Helpers\FormatHelper::money($session->cash_refunds) }}</div>
+        <div class="text-sm text-muted mt-4">{{ $session->returns->count() }} retour(s) enregistré(s)</div>
     </div>
     <div class="card card--padded">
         <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Attendu en caisse</div>
-        <div class="text-2xl font-800" style="color:#3b82f6;">{{ \App\Helpers\FormatHelper::money($session->opening_balance + $session->total_sales) }}</div>
-        <div class="text-sm text-muted mt-4">Fond + Ventes</div>
+        <div class="text-2xl font-800" style="color:#3b82f6;">{{ \App\Helpers\FormatHelper::money($session->expected_closing) }}</div>
+        <div class="text-sm text-muted mt-4">Fond + encaissements espèces − remboursements espèces</div>
     </div>
     <div class="card card--padded">
         <div class="text-xs text-muted uppercase" style="letter-spacing:.04em;font-weight:700;margin-bottom:6px;">Fond de fermeture</div>
         @if($session->closing_balance !== null)
-            @php $ecart = $session->closing_balance - ($session->opening_balance + $session->total_sales); @endphp
+            @php $ecart = $session->closing_balance - $session->expected_closing; @endphp
             <div class="text-2xl font-800 {{ $ecart == 0 ? 'text-success' : ($ecart > 0 ? 'text-info' : 'text-danger') }}">
                 {{ \App\Helpers\FormatHelper::money($session->closing_balance) }}
             </div>
@@ -79,7 +84,7 @@
 @endif
 
 {{-- Liste des ventes --}}
-<div class="table-wrapper">
+<div class="table-wrapper mb-24">
     <div class="table-wrapper__header">
         <strong>Ventes de la session</strong>
         <span class="sale-index__header-total">
@@ -118,6 +123,37 @@
             </tr>
             @empty
             <tr class="sale-index__empty-row"><td colspan="6">Aucune vente dans cette session</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-wrapper__header">
+        <strong>Remboursements de la session</strong>
+        <span>{{ $session->returns->count() }} remboursement(s) — Espèces : <strong>{{ \App\Helpers\FormatHelper::money($session->cash_refunds) }}</strong></span>
+    </div>
+    <table class="data-table">
+        <thead><tr>
+            <th>Référence</th>
+            <th>Vente liée</th>
+            <th>Date</th>
+            <th>Motif</th>
+            <th>Mode</th>
+            <th class="th-right">Montant</th>
+        </tr></thead>
+        <tbody>
+            @forelse($session->returns as $return)
+            <tr>
+                <td>{{ $return->reference }}</td>
+                <td>{{ $return->sale?->reference ?? '—' }}</td>
+                <td>{{ \App\Helpers\FormatHelper::date($return->return_date) }}</td>
+                <td>{{ $return->reason ?? '—' }}</td>
+                <td>{{ ucfirst(str_replace('_', ' ', $return->payments->first()?->payment_method ?? '—')) }}</td>
+                <td class="th-right"><strong>{{ \App\Helpers\FormatHelper::money($return->total) }}</strong></td>
+            </tr>
+            @empty
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:#64748B;">Aucun remboursement enregistré dans cette session.</td></tr>
             @endforelse
         </tbody>
     </table>

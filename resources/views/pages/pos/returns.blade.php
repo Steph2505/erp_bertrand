@@ -21,7 +21,9 @@
         <thead><tr>
             <th>Référence</th>
             <th>Vente liée</th>
+            <th>Articles retournés</th>
             <th>Date retour</th>
+            <th>Session de caisse</th>
             <th>Montant retourné</th>
             <th>Motif</th>
             <th>Créé par</th>
@@ -35,13 +37,25 @@
                         {{ $ret->sale->reference }}
                     </a>
                 </td>
+                <td>
+                    @if($ret->items->isEmpty())
+                        <em>Détail indisponible pour cet ancien retour</em>
+                    @else
+                    @foreach($ret->items as $item)
+                        <div>{{ $item->item_name }} × {{ $item->quantity }}
+                            <small>({{ $item->stock_condition === 'resellable' ? 'réintégré' : 'défectueux' }})</small>
+                        </div>
+                    @endforeach
+                    @endif
+                </td>
                 <td class="sale-returns__date">{{ \App\Helpers\FormatHelper::date($ret->return_date) }}</td>
+                <td>{{ $ret->posSession?->id ? 'Session #' . $ret->posSession->id : 'Hors session' }}</td>
                 <td><strong class="sale-returns__amount">{{ \App\Helpers\FormatHelper::money($ret->total) }}</strong></td>
                 <td class="sale-returns__meta">{{ $ret->reason ?? '—' }}</td>
                 <td class="sale-returns__meta">{{ $ret->createdBy?->name ?? '—' }}</td>
             </tr>
             @empty
-            <tr class="sale-returns__empty-row"><td colspan="6">Aucun retour enregistré</td></tr>
+            <tr class="sale-returns__empty-row"><td colspan="8">Aucun retour enregistré</td></tr>
             @endforelse
         </tbody>
     </table>

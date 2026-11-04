@@ -14,7 +14,7 @@ class SettingSeeder extends Seeder
 ['company_name',     'Espace Mokolo Obala',  'company'],
 ['company_address',  'Cameroun, Centre-Obala', 'company'],
 ['company_phone',    '+225 27 20 00 00 00','company'],
-['company_email',    'contact@mokolo.com', 'company'],
+['company_email',    'espacemokolo@gmail.com', 'company'],
 ['company_tax_id',   'xxx','company'],
 ['company_website',  '', 'company'],
 ['currency',   'XAF', 'company'],

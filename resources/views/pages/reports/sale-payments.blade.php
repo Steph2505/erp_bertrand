@@ -5,7 +5,7 @@
 @section('content')
 <div x-data="{...listPage('{{ route('reports.api.sale-payments') }}')}" x-init="filters = {date_from: '{{ $from }}', date_to: '{{ $to }}'}; fetch()">
 <div class="page-header">
-    <div class="page-header__title"><h2>Paiements de vente</h2><p>Encaissements reçus des clients</p></div>
+    <div class="page-header__title"><h2>Paiements de vente</h2><p>Encaissements reçus et remboursements clients</p></div>
     <div class="page-header__actions">
         <div class="filter-tabs">
             <a title="Aller à : Achats" href="{{ route('reports.purchase-payments') }}" class="filter-tabs__btn">Achats</a>
@@ -24,8 +24,8 @@
 
 <div class="table-wrapper">
     <div class="table-wrapper__header">
-        <strong>Encaissements</strong>
-        <span style="font-size:13px;color:#64748B;">Total : <strong style="color:#12864B;" x-text="extra.sum_amount ?? '—'">—</strong></span>
+        <strong>Mouvements de ventes</strong>
+        <span style="font-size:13px;color:#64748B;">Solde net : <strong style="color:#12864B;" x-text="extra.sum_amount ?? '—'">—</strong></span>
     </div>
     <div style="position:relative;">
         <div x-show="loading && rows.length > 0" style="position:absolute;inset:0;background:rgba(255,255,255,.6);z-index:5;display:flex;align-items:center;justify-content:center;">
@@ -33,14 +33,14 @@
         </div>
         <table class="data-table">
             <thead><tr>
-                <th>Date</th><th>Référence</th><th>Vente</th><th>Client</th><th>Mode</th><th>Compte</th><th style="text-align:right">Montant</th>
+                <th>Date</th><th>Référence</th><th>Vente</th><th>Client</th><th>Type</th><th>Mode</th><th>Compte</th><th style="text-align:right">Montant</th>
             </tr></thead>
             <tbody>
                 <template x-if="loading && rows.length === 0">
-                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Chargement...</td></tr>
+                    <tr><td colspan="8" style="text-align:center;padding:40px;color:#64748B;">Chargement...</td></tr>
                 </template>
                 <template x-if="!loading && rows.length === 0">
-                    <tr><td colspan="7" style="text-align:center;padding:40px;color:#64748B;">Aucun encaissement sur la période</td></tr>
+                    <tr><td colspan="8" style="text-align:center;padding:40px;color:#64748B;">Aucun mouvement sur la période</td></tr>
                 </template>
                 <template x-for="(pmt, idx) in rows" :key="idx">
                     <tr>
@@ -53,9 +53,10 @@
                             <template x-if="!pmt.sale_url">—</template>
                         </td>
                         <td x-text="pmt.customer_name"></td>
+                        <td><span class="badge" :class="pmt.is_refund ? 'badge--red' : 'badge--green'" x-text="pmt.is_refund ? 'Remboursement' : 'Encaissement'"></span></td>
                         <td><span class="badge badge--gray" x-text="pmt.payment_method"></span></td>
                         <td style="font-size:12px;color:#64748B;" x-text="pmt.account_name ?? '—'"></td>
-                        <td style="text-align:right;font-weight:600;color:#12864B;" x-text="pmt.amount"></td>
+                        <td style="text-align:right;font-weight:600;" :style="pmt.is_refund ? 'color:#C4231A' : 'color:#12864B'" x-text="pmt.amount"></td>
                     </tr>
                 </template>
             </tbody>

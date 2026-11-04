@@ -113,6 +113,10 @@
     }
 }
 
+.sale-return-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 // ─── Card padding standard ────────────────────────────────────────────────────
 .card--padded {
     padding: $sp-20;

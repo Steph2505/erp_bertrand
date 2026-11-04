@@ -7,7 +7,7 @@
     <div class="page-header">
         <div class="page-header__title">
             <h2>Ventes par caissier</h2>
-            <p>Classement des caissiers selon le chiffre d'affaires net et le bénéfice brut estimé</p>
+            <p>Les ventes sont attribuées au caissier de la session et les retours à l’utilisateur qui les a traités.</p>
         </div>
     </div>
 
@@ -77,7 +77,7 @@
                         <th style="text-align:right">Sessions</th>
                         <th style="text-align:right">Ventes</th>
                         <th style="text-align:right">CA brut</th>
-                        <th style="text-align:right">Retours</th>
+                        <th style="text-align:right">Retours traités</th>
                         <th style="text-align:right">CA net</th>
                         <th style="text-align:right">Coût</th>
                         <th style="text-align:right">Bénéfice brut estimé</th>

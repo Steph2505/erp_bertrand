@@ -37,6 +37,7 @@
             <th style="text-align:right;color:#12864B;">Encaissements</th>
             <th style="text-align:right;color:#C4231A;">Décaissements</th>
             <th style="text-align:right;color:#2563EB;">dont Achats</th>
+            <th style="text-align:right;color:#B45309;">dont Remboursements</th>
             <th style="text-align:right;color:#B45309;">dont Dépenses</th>
             <th style="text-align:right;color:#7C3AED;">dont Transferts (net)</th>
             <th style="text-align:right">Solde calculé</th>
@@ -46,7 +47,7 @@
         <tbody>
             @php
                 $totOpening = 0; $totEnc = 0; $totDec = 0;
-                $totDecAchats = 0; $totDecDep = 0; $totTransferts = 0;
+                $totDecAchats = 0; $totDecRetours = 0; $totDecDep = 0; $totTransferts = 0;
                 $totCalc = 0; $totReel = 0;
             @endphp
             @forelse($accounts as $acc)
@@ -56,6 +57,7 @@
                     $totEnc        += $acc->encaissements;
                     $totDec        += $acc->decaissements;
                     $totDecAchats  += $acc->dec_achats ?? 0;
+                    $totDecRetours += $acc->dec_retours ?? 0;
                     $totDecDep     += $acc->dec_depenses ?? 0;
                     $totTransferts += $acc->transferts_net ?? 0;
                     $totCalc       += $acc->solde_calcule;
@@ -72,6 +74,7 @@
                     <td style="text-align:right;color:#12864B;font-weight:600;">+ {{ \App\Helpers\FormatHelper::money($acc->encaissements) }}</td>
                     <td style="text-align:right;color:#C4231A;font-weight:600;">− {{ \App\Helpers\FormatHelper::money($acc->decaissements) }}</td>
                     <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($acc->dec_achats ?? 0) }}</td>
+                    <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($acc->dec_retours ?? 0) }}</td>
                     <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($acc->dec_depenses ?? 0) }}</td>
                     <td style="text-align:right;color:{{ ($acc->transferts_net ?? 0) >= 0 ? '#12864B' : '#C4231A' }};font-size:12px;">
                         {{ ($acc->transferts_net ?? 0) >= 0 ? '+' : '' }}{{ \App\Helpers\FormatHelper::money($acc->transferts_net ?? 0) }}
@@ -87,7 +90,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="11" style="text-align:center;padding:40px;color:#64748B;">Aucun compte configuré</td></tr>
+                <tr><td colspan="12" style="text-align:center;padding:40px;color:#64748B;">Aucun compte configuré</td></tr>
             @endforelse
         </tbody>
         @if($accounts->count() > 1)
@@ -98,6 +101,7 @@
                 <td style="text-align:right;color:#12864B;">+ {{ \App\Helpers\FormatHelper::money($totEnc) }}</td>
                 <td style="text-align:right;color:#C4231A;">− {{ \App\Helpers\FormatHelper::money($totDec) }}</td>
                 <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totDecAchats) }}</td>
+                <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totDecRetours) }}</td>
                 <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totDecDep) }}</td>
                 <td style="text-align:right;color:#64748B;font-size:12px;">{{ \App\Helpers\FormatHelper::money($totTransferts) }}</td>
                 <td style="text-align:right">{{ \App\Helpers\FormatHelper::money($totCalc) }}</td>
